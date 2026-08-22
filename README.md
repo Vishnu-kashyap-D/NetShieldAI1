@@ -118,6 +118,18 @@ python -m cyber_ai.latency_benchmark --input-csv MachineLearningCVE\Friday-Worki
 
 Writes `reports/latency_benchmark.json` with mean/p50/p95/max latency (ms) for: Autoencoder-only (every window), Autoencoder+BiLSTM (only anomaly-flagged windows), SHAP-only (only Medium/High windows), and the realistic blended full-pipeline latency across the actual mix of Normal/Medium/High windows a live stream would see.
 
+## Panel Demo Traffic
+
+`demo/panel_demo_traffic.csv` is a small (185-row), deliberately-paced sequence of **real** CICIDS2017 rows — never synthetic — for demonstrating the pipeline live without waiting on a random timer to surface something interesting: calm BENIGN, a DDoS burst, back to BENIGN, a Port Scanning burst, back to BENIGN, a Botnet Activity burst, closing BENIGN. Regenerate it with `python scripts/build_demo_csv.py` (see that file's docstring for how candidate slices are picked and scored against the real trained model rather than assumed).
+
+Run it through the real pipeline:
+
+```powershell
+python -m cyber_ai.predict --input-csv demo\panel_demo_traffic.csv --include-all-windows --shap --shap-max-alerts 30
+```
+
+On the current trained model this demo file honestly shows both a strength and a known limitation worth narrating live: the DDoS and Botnet Activity bursts are caught with ~99%/~75% confidence respectively, while the Port Scanning burst is only partially caught (2 of 6 windows) — a real, visible instance of the sequential-gate recall ceiling described in [Known Limitations](#known-limitations), not a demo failure. Point it out proactively rather than hoping it doesn't come up.
+
 ## Dynamic Feedback Loop
 
 1. Open the alert CSV.

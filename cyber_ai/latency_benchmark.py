@@ -153,6 +153,12 @@ def main() -> None:
         "autoencoder_plus_bilstm": _percentiles(autoencoder_plus_bilstm_ms),
         "shap_only": _percentiles(shap_only_ms),
         "full_pipeline_blended": _percentiles(full_pipeline_ms),
+        "raw_latencies_ms": {
+            "autoencoder_only": autoencoder_only_ms,
+            "autoencoder_plus_bilstm": autoencoder_plus_bilstm_ms,
+            "shap_only": shap_only_ms,
+            "full_pipeline_blended": full_pipeline_ms,
+        },
         "notes": (
             "autoencoder_only measures every sampled window. autoencoder_plus_bilstm and "
             "shap_only measure only the subset of windows that actually reached that stage "
