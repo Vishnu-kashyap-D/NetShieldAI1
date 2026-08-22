@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1800" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4A5568"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C53030"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="1800" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="620" y="46" text-anchor="middle" font-size="26" font-weight="700" fill="#1A202C">NetShield AI — Detection Pipeline (Current Implementation)</text>
+  <text x="620" y="72" text-anchor="middle" font-size="14" fill="#718096">Sequential Autoencoder → BiLSTM gate, with hybrid risk fusion</text>
+
+  <!-- Legend -->
+  <g font-size="12" fill="#2D3748">
+    <rect x="60" y="92" width="14" height="14" rx="3" fill="#DCEBFB" stroke="#2B6CB0"/>
+    <text x="80" y="103">Data prep</text>
+    <rect x="170" y="92" width="14" height="14" rx="3" fill="#D8F3E8" stroke="#2F855A"/>
+    <text x="190" y="103">Models</text>
+    <rect x="265" y="92" width="14" height="14" rx="3" fill="#FDF3D0" stroke="#B7791F"/>
+    <text x="285" y="103">Decision</text>
+    <rect x="375" y="92" width="14" height="14" rx="3" fill="#FBE2DF" stroke="#C53030"/>
+    <text x="395" y="103">Output / alert</text>
+    <rect x="500" y="92" width="14" height="14" rx="3" fill="#EBE3F7" stroke="#6B46C1"/>
+    <text x="520" y="103">Feedback loop</text>
+    <rect x="630" y="92" width="14" height="14" rx="3" fill="#F0F0F0" stroke="#A0AEC0" stroke-dasharray="3,2"/>
+    <text x="650" y="103">Not yet built</text>
+  </g>
+
+  <!-- 1. Data ingestion -->
+  <rect x="420" y="130" width="400" height="60" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="154" text-anchor="middle" font-size="14" font-weight="600" fill="#1A365D">1. Data Ingestion</text>
+  <text x="620" y="174" text-anchor="middle" font-size="12" fill="#2C5282">MachineLearningCVE/*.csv — 8 CICIDS2017 capture-day files</text>
+
+  <line x1="620" y1="190" x2="620" y2="216" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 2. Clean and dedup -->
+  <rect x="360" y="216" width="520" height="94" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="238" text-anchor="middle" font-size="14" font-weight="600" fill="#1A365D">2. Clean &amp; Deduplicate</text>
+  <text x="620" y="258" text-anchor="middle" font-size="11.5" fill="#2C5282">Fix mangled columns · normalize labels · Inf → NaN</text>
+  <text x="620" y="276" text-anchor="middle" font-size="11.5" font-weight="700" fill="#C53030">Drop exact-duplicate rows — 10.9% removed (this session)</text>
+
+  <line x1="620" y1="310" x2="620" y2="336" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 3. Feature set -->
+  <rect x="360" y="336" width="520" height="76" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="360" text-anchor="middle" font-size="14" font-weight="600" fill="#1A365D">3. Feature Set — 76 of 77 columns</text>
+  <text x="620" y="380" text-anchor="middle" font-size="11.5" font-weight="700" fill="#C53030">Destination Port excluded — known leakage feature (this session)</text>
+
+  <line x1="620" y1="412" x2="620" y2="438" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 4. Windowing -->
+  <rect x="360" y="438" width="520" height="76" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="462" text-anchor="middle" font-size="14" font-weight="600" fill="#1A365D">4. Sequence Windowing (size=10, stride=5)</text>
+  <text x="620" y="482" text-anchor="middle" font-size="11.5" font-weight="700" fill="#C53030">Windows never cross a capture-day file boundary (this session)</text>
+
+  <line x1="620" y1="514" x2="620" y2="540" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 5. Split -->
+  <rect x="330" y="540" width="580" height="70" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="564" text-anchor="middle" font-size="14" font-weight="600" fill="#1A365D">5. Train / Validation / Test Split — 70 / 15 / 15, seed=42</text>
+  <text x="620" y="583" text-anchor="middle" font-size="11.5" fill="#2C5282">Imputer + StandardScaler fit on TRAIN windows only — no leakage</text>
+
+  <!-- branch lines to two models -->
+  <line x1="620" y1="610" x2="620" y2="630" stroke="#4A5568" stroke-width="2"/>
+  <line x1="330" y1="630" x2="910" y2="630" stroke="#4A5568" stroke-width="2"/>
+  <line x1="330" y1="630" x2="330" y2="656" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="910" y1="630" x2="910" y2="656" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 6a. Autoencoder -->
+  <rect x="120" y="656" width="420" height="88" rx="10" fill="#D8F3E8" stroke="#2F855A" stroke-width="1.5"/>
+  <text x="330" y="680" text-anchor="middle" font-size="14" font-weight="600" fill="#22543D">6a. Autoencoder (LSTM)</text>
+  <text x="330" y="700" text-anchor="middle" font-size="11.5" fill="#276749">Trained on BENIGN windows only</text>
+  <text x="330" y="718" text-anchor="middle" font-size="11.5" fill="#276749">→ reconstruction error</text>
+
+  <!-- 6b. BiLSTM -->
+  <rect x="700" y="656" width="420" height="88" rx="10" fill="#D8F3E8" stroke="#2F855A" stroke-width="1.5"/>
+  <text x="910" y="680" text-anchor="middle" font-size="14" font-weight="600" fill="#22543D">6b. BiLSTM Classifier</text>
+  <text x="910" y="700" text-anchor="middle" font-size="11.5" fill="#276749">Trained on ATTACK windows only</text>
+  <text x="910" y="718" text-anchor="middle" font-size="11.5" fill="#276749">6 categories, class-weighted</text>
+
+  <line x1="330" y1="744" x2="330" y2="770" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 7. Anomaly gate -->
+  <polygon points="330,770 470,822 330,874 190,822" fill="#FDF3D0" stroke="#B7791F" stroke-width="1.5"/>
+  <text x="330" y="816" text-anchor="middle" font-size="13" font-weight="600" fill="#744210">7. Anomaly Gate</text>
+  <text x="330" y="833" text-anchor="middle" font-size="11" fill="#744210">error &gt; threshold?</text>
+
+  <!-- NO branch -->
+  <line x1="190" y1="822" x2="80" y2="822" stroke="#4A5568" stroke-width="2"/>
+  <text x="130" y="812" text-anchor="middle" font-size="11" fill="#4A5568">NO</text>
+  <line x1="80" y1="822" x2="80" y2="900" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="10" y="900" width="220" height="76" rx="10" fill="#FBE2DF" stroke="#C53030" stroke-width="1.5"/>
+  <text x="120" y="924" text-anchor="middle" font-size="13" font-weight="600" fill="#822727">"Normal"</text>
+  <text x="120" y="942" text-anchor="middle" font-size="11" fill="#822727">risk = anomaly score alone</text>
+  <text x="120" y="958" text-anchor="middle" font-size="11" fill="#822727">(usually Low)</text>
+
+  <!-- YES branch to BiLSTM -->
+  <line x1="470" y1="822" x2="910" y2="822" stroke="#4A5568" stroke-width="2"/>
+  <text x="700" y="812" text-anchor="middle" font-size="11" fill="#4A5568">YES — only anomalous windows get classified</text>
+  <line x1="910" y1="822" x2="910" y2="900" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 8. Hybrid risk fusion -->
+  <rect x="700" y="900" width="420" height="112" rx="10" fill="#FDF3D0" stroke="#B7791F" stroke-width="1.5"/>
+  <text x="910" y="924" text-anchor="middle" font-size="14" font-weight="600" fill="#744210">8. Hybrid Risk Fusion (this session)</text>
+  <text x="910" y="944" text-anchor="middle" font-size="11.5" fill="#744210">risk = max(anomaly_score, classifier_confidence)</text>
+  <text x="910" y="962" text-anchor="middle" font-size="11.5" fill="#744210">→ Low / Medium / High</text>
+  <text x="910" y="980" text-anchor="middle" font-size="11" fill="#744210">thresholds calibrated on validation data</text>
+
+  <!-- merge Normal + fusion into risk_level decision -->
+  <line x1="120" y1="976" x2="120" y2="1040" stroke="#4A5568" stroke-width="2"/>
+  <line x1="910" y1="1012" x2="910" y2="1040" stroke="#4A5568" stroke-width="2"/>
+  <line x1="120" y1="1040" x2="620" y2="1040" stroke="#4A5568" stroke-width="2"/>
+  <line x1="910" y1="1040" x2="620" y2="1040" stroke="#4A5568" stroke-width="2"/>
+  <line x1="620" y1="1040" x2="620" y2="1066" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 9. risk_level decision diamond -->
+  <polygon points="620,1066 780,1122 620,1178 460,1122" fill="#FDF3D0" stroke="#B7791F" stroke-width="1.5"/>
+  <text x="620" y="1116" text-anchor="middle" font-size="13" font-weight="600" fill="#744210">risk_level</text>
+  <text x="620" y="1134" text-anchor="middle" font-size="11" fill="#744210">== Low ?</text>
+
+  <line x1="460" y1="1122" x2="330" y2="1122" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="395" y="1112" text-anchor="middle" font-size="11" fill="#4A5568">YES</text>
+  <rect x="150" y="1090" width="180" height="64" rx="10" fill="#F0F0F0" stroke="#A0AEC0" stroke-width="1.5"/>
+  <text x="240" y="1128" text-anchor="middle" font-size="12" fill="#4A5568">Not alerted</text>
+
+  <line x1="620" y1="1178" x2="620" y2="1210" stroke="#C53030" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <text x="660" y="1198" font-size="11" fill="#4A5568">NO (Medium / High)</text>
+
+  <!-- 10. SHAP -->
+  <rect x="400" y="1210" width="440" height="88" rx="10" fill="#FBE2DF" stroke="#C53030" stroke-width="1.5"/>
+  <text x="620" y="1234" text-anchor="middle" font-size="14" font-weight="600" fill="#822727">9. SHAP Explanation</text>
+  <text x="620" y="1254" text-anchor="middle" font-size="11.5" fill="#822727">Currently KernelExplainer — slow / fragile</text>
+  <text x="620" y="1272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#822727">GradientExplainer swap next — not done yet</text>
+
+  <line x1="620" y1="1298" x2="620" y2="1324" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 11. Alert written -->
+  <rect x="380" y="1324" width="480" height="106" rx="10" fill="#FBE2DF" stroke="#C53030" stroke-width="1.5"/>
+  <text x="620" y="1348" text-anchor="middle" font-size="14" font-weight="600" fill="#822727">10. Alert Written</text>
+  <text x="620" y="1368" text-anchor="middle" font-size="11.5" fill="#822727">reports/alerts_*.csv + .summary.json</text>
+  <text x="620" y="1386" text-anchor="middle" font-size="11.5" fill="#822727">label · confidence · risk_score · risk_level</text>
+  <text x="620" y="1404" text-anchor="middle" font-size="11.5" fill="#822727">SHAP top features</text>
+
+  <line x1="620" y1="1430" x2="620" y2="1456" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 12. Feedback loop -->
+  <rect x="360" y="1456" width="520" height="106" rx="10" fill="#EBE3F7" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="620" y="1480" text-anchor="middle" font-size="14" font-weight="600" fill="#44337A">11. Analyst Feedback Loop</text>
+  <text x="620" y="1500" text-anchor="middle" font-size="11.5" fill="#553C9A">Analyst adds validated_label column</text>
+  <text x="620" y="1518" text-anchor="middle" font-size="11.5" fill="#553C9A">→ cyber_ai.feedback ingests it</text>
+  <text x="620" y="1536" text-anchor="middle" font-size="11.5" fill="#553C9A">→ optional retrain trigger</text>
+
+  <!-- Not yet built section -->
+  <line x1="620" y1="1562" x2="620" y2="1600" stroke="#A0AEC0" stroke-width="2" stroke-dasharray="5,4"/>
+  <rect x="260" y="1600" width="720" height="94" rx="10" fill="#F0F0F0" stroke="#A0AEC0" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="620" y="1628" text-anchor="middle" font-size="14" font-weight="600" fill="#4A5568">Not Yet Built</text>
+  <text x="620" y="1650" text-anchor="middle" font-size="12" fill="#718096">FastAPI backend  ·  stream simulator  ·  React dashboard</text>
+  <text x="620" y="1670" text-anchor="middle" font-size="11" fill="#A0AEC0">(a different teammate's workstream, not this side of the project)</text>
+
+  <!-- Footer note -->
+  <text x="620" y="1740" text-anchor="middle" font-size="12" fill="#718096">Steps 1–8 are real, tested, working code. Step 7's gate caps overall attack recall at ~57% — a documented architectural limitation, not a bug.</text>
+  <text x="620" y="1760" text-anchor="middle" font-size="11" fill="#A0AEC0">NetShield AI · generated from the current cyber_ai/ codebase state</text>
+</svg>

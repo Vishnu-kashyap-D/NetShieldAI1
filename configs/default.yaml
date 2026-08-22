@@ -1,0 +1,33 @@
+data:
+  data_dir: MachineLearningCVE
+  feedback_csvs: []
+  max_rows: null
+  max_rows_per_class: 50000
+  random_state: 42
+
+preprocessing:
+  window_size: 10
+  stride: 5
+  validation_size: 0.15
+  test_size: 0.15
+
+training:
+  batch_size: 256
+  autoencoder_epochs: 12
+  classifier_epochs: 12
+  learning_rate: 0.001
+  early_stopping_patience: 3
+
+models:
+  latent_dim: 32
+  autoencoder_units: 64
+  classifier_units: 64
+  dropout: 0.25
+
+anomaly:
+  threshold_strategy: balanced_accuracy
+  threshold_quantile: 0.995
+
+paths:
+  artifacts_dir: artifacts
+  reports_dir: reports
