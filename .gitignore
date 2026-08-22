@@ -1,0 +1,12 @@
+artifacts/
+artifacts_smoke/
+artifacts_category_smoke/
+reports/
+reports_smoke/
+reports_category_smoke/
+data/feedback/*.csv
+MachineLearningCVE/
+__pycache__/
+*.pyc
+.venv/
+venv/
