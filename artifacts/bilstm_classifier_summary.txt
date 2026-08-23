@@ -1,0 +1,28 @@
+Model: "bilstm_threat_classifier"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ traffic_window (InputLayer  [(None, 10, 76)]          0         
+ )                                                               
+                                                                 
+ bilstm_context (Bidirectio  (None, 10, 128)           72192     
+ nal)                                                            
+                                                                 
+ context_dropout (Dropout)   (None, 10, 128)           0         
+                                                                 
+ bilstm_summary (Bidirectio  (None, 64)                41216     
+ nal)                                                            
+                                                                 
+ classification_hidden (Den  (None, 64)                4160      
+ se)                                                             
+                                                                 
+ classification_dropout (Dr  (None, 64)                0         
+ opout)                                                          
+                                                                 
+ threat_type (Dense)         (None, 6)                 390       
+                                                                 
+=================================================================
+Total params: 117958 (460.77 KB)
+Trainable params: 117958 (460.77 KB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
