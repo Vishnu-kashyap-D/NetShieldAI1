@@ -1,0 +1,28 @@
+Model: "sequence_autoencoder"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ traffic_window (InputLayer  [(None, 10, 76)]          0         
+ )                                                               
+                                                                 
+ encoder_lstm (LSTM)         (None, 64)                36096     
+                                                                 
+ encoder_dropout (Dropout)   (None, 64)                0         
+                                                                 
+ latent_behavior (Dense)     (None, 32)                2080      
+                                                                 
+ repeat_latent (RepeatVecto  (None, 10, 32)            0         
+ r)                                                              
+                                                                 
+ decoder_lstm (LSTM)         (None, 10, 64)            24832     
+                                                                 
+ decoder_dropout (Dropout)   (None, 10, 64)            0         
+                                                                 
+ reconstructed_window (Time  (None, 10, 76)            4940      
+ Distributed)                                                    
+                                                                 
+=================================================================
+Total params: 67948 (265.42 KB)
+Trainable params: 67948 (265.42 KB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________

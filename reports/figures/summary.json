@@ -1,0 +1,11 @@
+{
+  "roc_auc_by_category": {
+    "Botnet Activity": 0.9815922399416024,
+    "Brute Force": 0.9943531763351868,
+    "Data Exfiltration": 0.9978876545141605,
+    "DoS / DDoS": 0.9993215512746815,
+    "Malware Traffic": 0.9978491926634269,
+    "Port Scanning": 0.9998430023296075
+  },
+  "figures_dir": "V:\\vishnu\\notes pdf\\7th SEM\\Major-project(P2)\\prototype\\me\\reports\\figures"
+}
