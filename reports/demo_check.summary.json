@@ -1,0 +1,19 @@
+{
+  "input_rows": 185,
+  "windows_scored": 36,
+  "anomalous_windows": 10,
+  "alerts_written": 36,
+  "anomaly_threshold": 0.8343746826946727,
+  "output_csv": "E:\\NetShield_AI\\NetShieldAI1\\reports\\demo_check.csv",
+  "predicted_label_counts": {
+    "Normal": 26,
+    "DoS / DDoS": 5,
+    "Botnet Activity": 3,
+    "Port Scanning": 2
+  },
+  "risk_level_counts": {
+    "Low": 26,
+    "High": 9,
+    "Medium": 1
+  }
+}

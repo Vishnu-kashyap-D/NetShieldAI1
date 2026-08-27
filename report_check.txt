@@ -1,0 +1,48 @@
+Total paragraphs: 125
+Total tables: 6
+
+--- Headings ---
+[Heading 1] Abstract
+[Heading 1] 1. Introduction
+[Heading 2] 1.1 Problem Statement
+[Heading 2] 1.2 Objectives
+[Heading 1] 2. System Architecture
+[Heading 1] 3. Dataset
+[Heading 1] 4. Methodology
+[Heading 2] 4.1 Data Integrity & Preprocessing
+[Heading 2] 4.2 Sequence Windowing & Splits
+[Heading 2] 4.3 Autoencoder — Anomaly Detection
+[Heading 2] 4.4 BiLSTM — Threat Classification
+[Heading 2] 4.5 Hybrid Risk Fusion
+[Heading 2] 4.6 Explainable AI — SHAP
+[Heading 2] 4.7 Analyst Feedback Loop
+[Heading 1] 5. Backend & Live Detection Infrastructure
+[Heading 2] 5.1 Data Model
+[Heading 2] 5.2 API Surface
+[Heading 2] 5.3 Stream Simulator
+[Heading 2] 5.4 Feedback → Retrain Loop, Verified End to End
+[Heading 1] 6. Results
+[Heading 2] 6.1 Progressive Improvement
+[Heading 2] 6.2 Current Model Performance
+[Heading 2] 6.3 Per-Class Performance
+[Heading 2] 6.4 Reconstruction Error Distribution
+[Heading 2] 6.5 Latency Benchmark
+[Heading 2] 6.6 Panel Demo Validation
+[Heading 1] 7. Known Limitations
+[Heading 1] 8. Current Project Status
+[Heading 1] 9. Future Work
+[Heading 1] 10. Conclusion
+[Heading 1] Appendix A. How to Run
+[Heading 3] Train
+[Heading 3] Predict / Alert (CLI)
+[Heading 3] Report Figures
+[Heading 3] Backend API
+[Heading 3] Stream Simulator
+
+--- Table sizes (rows x cols) ---
+0 8 x 2 | header: ['Category', 'Row count']
+1 11 x 2 | header: ['Endpoint', 'Purpose']
+2 6 x 6 | header: ['Stage', 'AE accuracy', 'AE recall', 'AE bal. acc.', 'BiLSTM acc.', 'BiLSTM macro-F1']
+3 7 x 6 | header: ['Category', 'Precision', 'Recall', 'F1', 'Support', 'ROC-AUC']
+4 5 x 4 | header: ['Stage', 'Mean', 'P95', 'Applies to']
+5 10 x 3 | header: ['Area', 'Status', 'Detail']
