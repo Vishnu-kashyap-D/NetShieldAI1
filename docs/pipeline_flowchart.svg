@@ -134,8 +134,8 @@
   <!-- 10. SHAP -->
   <rect x="400" y="1210" width="440" height="88" rx="10" fill="#FBE2DF" stroke="#C53030" stroke-width="1.5"/>
   <text x="620" y="1234" text-anchor="middle" font-size="14" font-weight="600" fill="#822727">9. SHAP Explanation</text>
-  <text x="620" y="1254" text-anchor="middle" font-size="11.5" fill="#822727">Currently KernelExplainer — slow / fragile</text>
-  <text x="620" y="1272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#822727">GradientExplainer swap next — not done yet</text>
+  <text x="620" y="1254" text-anchor="middle" font-size="11.5" fill="#822727">GradientExplainer — works natively on Keras models</text>
+  <text x="620" y="1272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#822727">Verified stable: same top feature across repeated runs</text>
 
   <line x1="620" y1="1298" x2="620" y2="1324" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
 
@@ -158,11 +158,11 @@
   <!-- Not yet built section -->
   <line x1="620" y1="1562" x2="620" y2="1600" stroke="#A0AEC0" stroke-width="2" stroke-dasharray="5,4"/>
   <rect x="260" y="1600" width="720" height="94" rx="10" fill="#F0F0F0" stroke="#A0AEC0" stroke-width="1.5" stroke-dasharray="6,4"/>
-  <text x="620" y="1628" text-anchor="middle" font-size="14" font-weight="600" fill="#4A5568">Not Yet Built</text>
-  <text x="620" y="1650" text-anchor="middle" font-size="12" fill="#718096">FastAPI backend  ·  stream simulator  ·  React dashboard</text>
-  <text x="620" y="1670" text-anchor="middle" font-size="11" fill="#A0AEC0">(a different teammate's workstream, not this side of the project)</text>
+  <text x="620" y="1628" text-anchor="middle" font-size="14" font-weight="600" fill="#4A5568">React Dashboard — Not Yet Built</text>
+  <text x="620" y="1650" text-anchor="middle" font-size="12" fill="#718096">FastAPI backend and stream simulator are built and tested (backend/)</text>
+  <text x="620" y="1670" text-anchor="middle" font-size="11" fill="#A0AEC0">Dashboard is the last piece before full end-to-end integration</text>
 
   <!-- Footer note -->
-  <text x="620" y="1740" text-anchor="middle" font-size="12" fill="#718096">Steps 1–8 are real, tested, working code. Step 7's gate caps overall attack recall at ~57% — a documented architectural limitation, not a bug.</text>
+  <text x="620" y="1740" text-anchor="middle" font-size="12" fill="#718096">Steps 1–11 are real, tested, working code. Step 7's gate caps overall attack recall at ~54% — a documented architectural limitation, not a bug.</text>
   <text x="620" y="1760" text-anchor="middle" font-size="11" fill="#A0AEC0">NetShield AI · generated from the current cyber_ai/ codebase state</text>
 </svg>
