@@ -14,6 +14,8 @@ This project implements a hybrid Autoencoder + BiLSTM threat detection pipeline 
 8. Alerting and reporting to CSV/JSON.
 9. Analyst feedback ingestion for model retraining.
 
+A FastAPI [backend](#backend) and a browser [dashboard](#frontend-dashboard) sit on top of this pipeline for live ingestion, alert review, and analyst feedback.
+
 ## Setup
 
 ```powershell
@@ -146,6 +148,24 @@ To retrain immediately using the feedback store:
 ```powershell
 python -m cyber_ai.feedback --alerts-csv reports\alerts_YYYYMMDD_HHMMSS.csv --retrain
 ```
+
+## Report Assets
+
+Regenerate the confusion matrix, ROC curves, reconstruction error distribution, and per-class metrics table as image/CSV files (used for the project report and panel slides) from the currently trained artifacts:
+
+```powershell
+python -m cyber_ai.report_assets
+```
+
+Writes `reports/figures/confusion_matrix.png`, `reports/figures/roc_curves.png`, `reports/figures/reconstruction_error_distribution.png`, `reports/figures/per_class_metrics.csv`, and `reports/figures/summary.json`, all rebuilt from the exact held-out test split the current `artifacts/preprocessing.joblib` and models were trained/evaluated on. If `data/feedback/validated_traffic.csv` has grown since training with labels the trained encoder doesn't recognize (e.g. an analyst-entered category name rather than a raw CICIDS label), those rows are skipped with a printed warning rather than failing the run.
+
+## Backend
+
+`backend/` is a FastAPI service that wraps this pipeline for live use: upload/replay traffic CSVs, persist scored alerts to MySQL, expose them (plus stats, feedback, and retraining) over a REST API, and hot-reload the model in place after a retrain — no server restart needed. See [backend/README.md](backend/README.md) for setup (MySQL config, `.env`, `uvicorn app.main:app`) and the full API surface (`/api/health`, `/api/ingest/*`, `/api/alerts`, `/api/stats/*`, `/api/feedback`, `/api/retrain`).
+
+## Frontend Dashboard
+
+`frontend/netshield-dashboard.html` is a single self-contained HTML/JS dashboard (no build step) for reviewing alerts, risk levels, and SHAP explanations, and for submitting analyst feedback. It can run against the live backend API or in a standalone demo mode with no backend running — open the file directly in a browser.
 
 ## Data Cleaning Details
 
