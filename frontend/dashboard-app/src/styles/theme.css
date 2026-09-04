@@ -78,7 +78,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dot.pulse,
-  .skeleton {
+  .skeleton,
+  .row-flash {
     animation: none;
   }
 }
@@ -343,6 +344,37 @@ button:focus-visible {
   letter-spacing: -0.3px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+/* Shared severity-stripe treatment for a clickable table row -- an inset box-shadow
+   (not border-left) so it composes cleanly with border-collapse on a <tr>. Used by
+   both the Dashboard's recent-alerts table and the Alerts page's queue table, so
+   severity reads as the same shape in both places. */
+.severity-row {
+  box-shadow: inset 3px 0 0 0 transparent;
+}
+.severity-row--high {
+  box-shadow: inset 3px 0 0 0 var(--risk-high);
+}
+.severity-row--medium {
+  box-shadow: inset 3px 0 0 0 var(--risk-med);
+}
+.severity-row--low {
+  box-shadow: inset 3px 0 0 0 var(--risk-low);
+}
+
+/* A brief highlight for a row that just arrived on the latest poll -- teal (the
+   security-operations/live accent), never violet (that's model-intelligence). */
+.row-flash {
+  animation: rowFlash 2.2s ease;
+}
+@keyframes rowFlash {
+  from {
+    background: var(--teal-bg);
+  }
+  to {
+    background: transparent;
+  }
 }
 
 .visually-hidden {

@@ -5,6 +5,7 @@ import { usePolledAsync } from "../../hooks/usePolledAsync";
 import { ApiUnavailableError, NotFoundError } from "../../data/errors";
 import { RiskBadge } from "../../components/common/RiskBadge";
 import { SectionCard } from "../../components/common/SectionCard";
+import { IconArrowLeft, IconModelShield } from "../../components/common/icons";
 import { MetricCard } from "../../components/alertDetail/MetricCard";
 import { DetectionInfoGrid, type DetectionInfoItem } from "../../components/alertDetail/DetectionInfoGrid";
 import { ShapExplanationCard } from "../../components/alertDetail/ShapExplanationCard";
@@ -33,10 +34,7 @@ export function AlertDetailPage() {
   return (
     <section className="alert-detail-page">
       <Link to="/alerts" className="back-link">
-        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 12H5" />
-          <path d="M12 19l-7-7 7-7" />
-        </svg>
+        <IconArrowLeft />
         Back to Alerts
       </Link>
 
@@ -90,7 +88,8 @@ function AlertDetailContent({ alert }: { alert: AlertDetailOut }) {
 
   return (
     <>
-      <header className="alert-detail-header">
+      {/* WHAT HAPPENED + WHAT WAS PREDICTED, at a glance */}
+      <header className={`alert-detail-header alert-detail-header--${alert.risk_level.toLowerCase()}`}>
         <div className="alert-detail-title-row">
           <h1>{alert.predicted_label}</h1>
           <RiskBadge level={alert.risk_level} />
@@ -100,49 +99,74 @@ function AlertDetailContent({ alert }: { alert: AlertDetailOut }) {
         </div>
       </header>
 
-      <div className="metric-grid">
-        <MetricCard
-          label="Confidence"
-          value={alert.is_anomaly ? formatPercent(alert.confidence) : "N/A"}
-          help={
-            alert.is_anomaly
-              ? "How sure the BiLSTM classifier is about the predicted category."
-              : "Not computed — the anomaly gate never passed this window to the classifier."
-          }
-        />
-        <MetricCard
-          label="Anomaly score"
-          value={alert.anomaly_score.toFixed(4)}
-          help="The Autoencoder's reconstruction error for this window — higher means it looked less like normal traffic."
-        />
-        <MetricCard
-          label="Anomaly threshold"
-          value={alert.anomaly_threshold.toFixed(4)}
-          help="The calibrated cutoff this window's anomaly score was compared against."
-        />
-        <MetricCard
-          label="Risk score"
-          value={alert.risk_score.toFixed(4)}
-          help="Fused score: the higher of the normalized anomaly score and the classifier's confidence."
-        />
-        <MetricCard label="Risk level" value={<RiskBadge level={alert.risk_level} />} help="Low/Medium/High bucket from the calibrated risk-score cutoffs." />
-        <MetricCard
-          label="Is anomaly"
-          value={alert.is_anomaly ? "Yes" : "No"}
-          help="Whether the anomaly gate flagged this window at all — only flagged windows reach the classifier."
-        />
-      </div>
-
-      <SectionCard title="Detection information" subtitle="Window and pipeline metadata for this alert">
+      {/* WHAT HAPPENED -- the raw event this alert is about */}
+      <SectionCard title="What happened" subtitle="Window and pipeline metadata for this alert">
         <DetectionInfoGrid items={detectionInfo} />
       </SectionCard>
 
-      <div className="shap-grid">
-        <ShapExplanationCard kind="classifier" raw={alert.top_classifier_features} riskLevel={alert.risk_level} />
-        <ShapExplanationCard kind="anomaly" raw={alert.top_anomaly_features} riskLevel={alert.risk_level} />
-      </div>
+      {/* WHAT DID THE MODEL PREDICT + HOW RISKY IS IT */}
+      <SectionCard title="Model decision" subtitle="Confidence and risk, and the anomaly gate that led to them">
+        <div className="metric-group">
+          <div className="metric-group-label">Decision</div>
+          <div className="metric-grid">
+            <MetricCard label="Risk level" value={<RiskBadge level={alert.risk_level} />} help="Low/Medium/High bucket from the calibrated risk-score cutoffs." />
+            <MetricCard
+              label="Risk score"
+              value={alert.risk_score.toFixed(4)}
+              help="Fused score: the higher of the normalized anomaly score and the classifier's confidence."
+            />
+            <MetricCard
+              label="Confidence"
+              value={alert.is_anomaly ? formatPercent(alert.confidence) : "N/A"}
+              help={
+                alert.is_anomaly
+                  ? "How sure the BiLSTM classifier is about the predicted category."
+                  : "Not computed — the anomaly gate never passed this window to the classifier."
+              }
+            />
+          </div>
+        </div>
+        <div className="metric-group">
+          <div className="metric-group-label">Detection gate</div>
+          <div className="metric-grid">
+            <MetricCard
+              label="Is anomaly"
+              value={alert.is_anomaly ? "Yes" : "No"}
+              help="Whether the anomaly gate flagged this window at all — only flagged windows reach the classifier."
+            />
+            <MetricCard
+              label="Anomaly score"
+              value={alert.anomaly_score.toFixed(4)}
+              help="The Autoencoder's reconstruction error for this window — higher means it looked less like normal traffic."
+            />
+            <MetricCard
+              label="Anomaly threshold"
+              value={alert.anomaly_threshold.toFixed(4)}
+              help="The calibrated cutoff this window's anomaly score was compared against."
+            />
+          </div>
+        </div>
+      </SectionCard>
 
-      <ExplainabilityChat alert={alert} />
+      {/* WHY -- SHAP evidence and the explainability chatbot as one workflow */}
+      <div className="explainability-zone">
+        <div className="explainability-zone-head">
+          <span className="explainability-zone-icon">
+            <IconModelShield />
+          </span>
+          <div>
+            <h2>Why did NetShield make this decision?</h2>
+            <p>Signed SHAP evidence from the trained models, and a chatbot grounded in that same evidence.</p>
+          </div>
+        </div>
+
+        <div className="shap-grid">
+          <ShapExplanationCard kind="classifier" raw={alert.top_classifier_features} riskLevel={alert.risk_level} />
+          <ShapExplanationCard kind="anomaly" raw={alert.top_anomaly_features} riskLevel={alert.risk_level} />
+        </div>
+
+        <ExplainabilityChat alert={alert} />
+      </div>
 
       <FeedbackSection alert={alert} />
 

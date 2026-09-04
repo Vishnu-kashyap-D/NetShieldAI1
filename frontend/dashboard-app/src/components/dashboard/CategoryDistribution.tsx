@@ -12,5 +12,7 @@ export function CategoryDistribution({ counts }: { counts: Record<string, number
     displayValue: String(counts[category] ?? 0),
   }));
 
-  return <BarList items={items} labelWidth="118px" accent="brand" />;
+  // Teal, not violet: this is a security-operations analytics view (threat volume),
+  // not a model-intelligence surface -- see the SOC redesign color hierarchy.
+  return <BarList items={items} labelWidth="118px" accent="teal" />;
 }

@@ -1,12 +1,12 @@
 .detection-info-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: var(--space-3);
 }
 .detection-info-cell {
   background: var(--bg-panel-raised);
   border: 1px solid var(--line-soft);
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   padding: 10px 12px;
   min-width: 0;
 }

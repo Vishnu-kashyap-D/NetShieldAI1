@@ -1,9 +1,9 @@
 .demo-scenario-panel {
   background: var(--bg-panel);
   border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  padding: 18px 20px;
-  margin-bottom: 20px;
+  border-radius: var(--r-md);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
 }
 
 .demo-scenario-head {
@@ -76,7 +76,7 @@
   font-style: italic;
 }
 .demo-scenario-link {
-  color: var(--brand);
+  color: var(--teal);
   font-weight: 600;
 }
 .demo-scenario-link:hover {
@@ -108,7 +108,7 @@
   font-family: var(--font-mono);
 }
 .demo-scenario-alert-chip:hover {
-  border-color: var(--brand);
+  border-color: var(--teal);
   color: var(--text-hi);
 }
 

@@ -1,41 +1,39 @@
-import type { RiskLevel, ShapDirection } from "../../types/api";
+import type { RiskLevel } from "../../types/api";
 import { parseShapFeatures } from "../../data/shap";
+import { FEATURE_GLOSSARY } from "../../data/featureGlossary";
 import { SectionCard } from "../common/SectionCard";
-import { BarList } from "../common/BarList";
+import { ShapDivergingBars } from "./ShapDivergingBars";
 import "./ShapExplanationCard.css";
 
 type ShapKind = "classifier" | "anomaly";
 
+// Exact technical meaning per kind -- SHAP explains one specific model output, relative
+// to the background sample used for that explanation call. Classifier: never say
+// "toward BENIGN" for a negative value -- it only means the predicted class's own
+// output went down, not that any other specific class (BENIGN or otherwise) went up.
 const CONFIG: Record<
   ShapKind,
-  { title: string; description: string; accent: "brand" | "teal"; directionMeaning: string }
+  { title: string; description: string; positiveCaption: string; negativeCaption: string; note: string }
 > = {
   classifier: {
     title: "Classifier explanation",
-    description: "Features contributing to this model output — the BiLSTM classifier's predicted category.",
-    accent: "brand",
-    directionMeaning:
-      "This explains the predicted class's probability, relative to this explanation's background sample. " +
-      "Positive means the feature increased that probability; negative means it decreased it — not automatically " +
-      "\"toward BENIGN,\" since it may reflect movement toward any other category. This is an attribution of the " +
-      "model's output, not proof of causation.",
+    description: "Why the BiLSTM classifier predicted this category.",
+    positiveCaption: "Increased predicted-class output",
+    negativeCaption: "Decreased predicted-class output",
+    note:
+      "Relative to the background sample used for this explanation. A decreased value means the predicted class's " +
+      "own output went down -- it does not mean the traffic was pushed toward BENIGN specifically, or toward any " +
+      "other single category this data identifies.",
   },
   anomaly: {
     title: "Anomaly explanation",
-    description: "Features contributing to this model output — the Autoencoder's anomaly (reconstruction error) score.",
-    accent: "teal",
-    directionMeaning:
-      "This explains the reconstruction-error output, relative to this explanation's background sample. Positive " +
-      "means the feature increased that error (more anomalous); negative means it decreased it (more normal-looking). " +
-      "This is an attribution of the model's output, not proof of causation.",
+    description: "Why the Autoencoder scored this window as anomalous.",
+    positiveCaption: "Increased anomaly contribution",
+    negativeCaption: "Decreased anomaly contribution",
+    note:
+      "Relative to the background sample used for this explanation. An increased value made the reconstruction " +
+      "error higher (more anomalous); a decreased value made it lower (more like normal traffic).",
   },
-};
-
-const DIRECTION_LABEL: Record<ShapDirection, string> = {
-  positive: "+",
-  negative: "−",
-  neutral: "0",
-  unknown: "?",
 };
 
 interface ShapExplanationCardProps {
@@ -46,49 +44,31 @@ interface ShapExplanationCardProps {
 }
 
 /**
- * One SHAP explanation panel (classifier or anomaly) -- kept as two entirely
- * separate cards rather than merged, since they explain two different model
- * outputs (cyber_ai/explain.py's explain_classifier_windows and
- * explain_autoencoder_windows are independent computations). The bar itself
- * stays a single-hue magnitude display (BarList is deliberately unsigned --
- * see its own doc comment), sized by `mean_abs_shap`; the +/-/0/? chip in
- * front of each row is the only signed element, sourced from `direction`
- * (cyber_ai/explain.py::_top_features). Older alerts scored before the
- * signed-SHAP change only have `mean_abs_shap` -- those rows show "?" rather
- * than guessing a sign that was never computed for them.
+ * One SHAP explanation panel (classifier or anomaly) -- two separate cards, since they
+ * explain two different model outputs (cyber_ai/explain.py's explain_classifier_windows
+ * and explain_autoencoder_windows are independent computations). Uses the real signed
+ * shap_value/direction already computed server-side -- this component never re-derives,
+ * approximates, or recalculates a SHAP value; it only renders what's already stored.
  */
 export function ShapExplanationCard({ kind, raw, riskLevel }: ShapExplanationCardProps) {
-  const { title, description, accent, directionMeaning } = CONFIG[kind];
+  const { title, description, positiveCaption, negativeCaption, note } = CONFIG[kind];
   const features = parseShapFeatures(raw)
     .slice()
     .sort((a, b) => b.mean_abs_shap - a.mean_abs_shap);
 
   return (
-    <SectionCard title={title} subtitle={description}>
+    <SectionCard title={title} subtitle={description} className="shap-card">
       {features.length > 0 ? (
         <>
-          <BarList
-            items={features.map((f) => {
-              const direction = f.direction ?? "unknown";
-              return {
-                key: f.feature,
-                label: f.feature,
-                value: Math.abs(f.mean_abs_shap),
-                displayValue: `${DIRECTION_LABEL[direction]} ${f.mean_abs_shap.toFixed(4)}`,
-                labelPrefix: (
-                  <span className={`shap-direction-chip shap-direction-chip--${direction}`} title={`Direction: ${direction}`}>
-                    {DIRECTION_LABEL[direction]}
-                  </span>
-                ),
-              };
-            })}
-            labelWidth="220px"
-            accent={accent}
+          <ShapDivergingBars
+            features={features}
+            positiveCaption={positiveCaption}
+            negativeCaption={negativeCaption}
+            glossary={FEATURE_GLOSSARY}
           />
           <p className="shap-caveat">
-            Bars are ranked by mean absolute SHAP contribution (magnitude, regardless of direction) — this shows
-            which features drove the model's output, not proof that any single feature caused the underlying traffic
-            to be an attack. {directionMeaning}
+            Ranked by magnitude (mean absolute SHAP), regardless of direction -- this shows which features drove the
+            model's output, not proof that any single feature caused the underlying traffic to be an attack. {note}
           </p>
         </>
       ) : (

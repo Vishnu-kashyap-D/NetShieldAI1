@@ -3,10 +3,10 @@
   align-items: flex-start;
   gap: 12px;
   background: var(--risk-high-bg);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
+  border: 1px solid rgba(239, 74, 92, 0.35);
+  border-radius: var(--r-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 .health-banner-icon {
   font-size: 18px;

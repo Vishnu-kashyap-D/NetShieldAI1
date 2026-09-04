@@ -2,6 +2,14 @@
   position: relative;
   height: 180px;
 }
+.ts-chart-axis-max {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-low);
+}
 .ts-chart-inner {
   width: 100%;
   height: 100%;
@@ -11,16 +19,25 @@
   overflow: visible;
 }
 
-.ts-baseline {
+.ts-gridline {
   stroke: var(--line-soft);
   stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.ts-baseline {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.ts-elevated-marker {
+  fill: var(--risk-high);
+  filter: drop-shadow(0 0 3px var(--risk-high));
 }
 
 .ts-bar-group {
   outline: none;
 }
 .ts-bar-group:focus-visible rect:first-child {
-  fill: rgba(168, 85, 247, 0.06);
+  fill: rgba(41, 209, 200, 0.08);
 }
 
 .ts-seg-low {
@@ -46,13 +63,13 @@
   transform: translateX(-50%);
   background: var(--bg-panel-raised);
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--r-sm);
   padding: 9px 11px;
   font-size: 11.5px;
   color: var(--text-mid);
   min-width: 130px;
   pointer-events: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-md);
   z-index: 5;
 }
 .ts-tooltip-time {

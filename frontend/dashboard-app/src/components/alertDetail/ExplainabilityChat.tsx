@@ -3,6 +3,7 @@ import type { AlertDetailOut, ChatMessage, ChatSources } from "../../types/api";
 import { useDataProvider } from "../../data/DataModeContext";
 import { ApiUnavailableError, NotFoundError } from "../../data/errors";
 import { SectionCard } from "../common/SectionCard";
+import { IconModelShield, IconSend } from "../common/icons";
 import "./ExplainabilityChat.css";
 
 interface DisplayMessage {
@@ -32,7 +33,7 @@ function SourceTags({ sources }: { sources: ChatSources }) {
   if (active.length === 0) return null;
   return (
     <div className="chat-sources">
-      <span className="chat-sources-label">Grounded in:</span>
+      <span className="chat-sources-label">Grounded in</span>
       {active.map((key) => (
         <span key={key} className="chat-source-tag">
           {SOURCE_LABELS[key]}
@@ -46,7 +47,8 @@ function SourceTags({ sources }: { sources: ChatSources }) {
  * Explainability chatbot for one specific alert (backend/app/routers/chat.py::chat_about_alert,
  * or MockDataProvider's deterministic chat engine in mock mode). Every question/answer round
  * trip goes through DataProvider.askAboutAlert() -- this component never calls an LLM or the
- * backend directly, and never invents an answer of its own when a request fails.
+ * backend directly, never invents an answer of its own when a request fails, and never claims
+ * to have calculated the SHAP values it discusses (it only narrates what the alert already has).
  */
 export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
   const provider = useDataProvider();
@@ -65,9 +67,7 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
     const trimmed = question.trim();
     if (!trimmed || pending) return;
 
-    const history: ChatMessage[] = messages
-      .filter((m) => !m.isError)
-      .map((m) => ({ role: m.role, content: m.content }));
+    const history: ChatMessage[] = messages.filter((m) => !m.isError).map((m) => ({ role: m.role, content: m.content }));
 
     setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
     setInput("");
@@ -100,14 +100,19 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
 
   return (
     <SectionCard
-      title="Ask about this prediction"
-      subtitle="Grounded in this alert's own prediction and SHAP data -- it never invents an explanation the data doesn't support"
+      title={
+        <span className="chat-title">
+          <IconModelShield />
+          Ask about this prediction
+        </span>
+      }
+      subtitle="Answers only this alert's own prediction, risk metrics, and SHAP evidence -- never invented, never a new prediction"
       className="explainability-chat"
     >
       {messages.length === 0 ? (
         <div className="chat-empty">
-          <div className="chat-empty-title">Ask me anything about why NetShield made this prediction.</div>
-          <div className="chat-suggestions">
+          <div className="chat-empty-title">Ask anything about why NetShield made this specific call.</div>
+          <div className="chip-row">
             {SUGGESTED_QUESTIONS.map((q) => (
               <button key={q} type="button" className="chat-suggestion-chip" onClick={() => void send(q)} disabled={pending}>
                 {q}
@@ -119,8 +124,12 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
         <div className="chat-messages" ref={listRef} role="log" aria-live="polite">
           {messages.map((m, i) => (
             <div key={i} className={`chat-bubble-row chat-bubble-row--${m.role}`}>
+              {m.role === "assistant" && (
+                <span className="chat-avatar" aria-hidden="true">
+                  <IconModelShield />
+                </span>
+              )}
               <div className={`chat-bubble chat-bubble--${m.role}${m.isError ? " chat-bubble--error" : ""}`}>
-                <div className="chat-bubble-author">{m.role === "user" ? "You" : "NetShield Explainability"}</div>
                 <div className="chat-bubble-text">{m.content}</div>
                 {m.sources && <SourceTags sources={m.sources} />}
               </div>
@@ -128,8 +137,11 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
           ))}
           {pending && (
             <div className="chat-bubble-row chat-bubble-row--assistant">
+              <span className="chat-avatar" aria-hidden="true">
+                <IconModelShield />
+              </span>
               <div className="chat-bubble chat-bubble--assistant chat-bubble--pending">
-                <div className="chat-bubble-author">NetShield Explainability</div>
+                <span className="visually-hidden">NetShield is composing an answer</span>
                 <div className="chat-typing">
                   <span />
                   <span />
@@ -146,12 +158,13 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your question…"
+          placeholder="Ask about this alert's prediction or evidence…"
           aria-label="Ask about this prediction"
           disabled={pending}
         />
-        <button type="submit" className="btn primary" disabled={pending || !input.trim()}>
-          Send
+        <button type="submit" className="btn primary chat-send-btn" disabled={pending || !input.trim()} aria-label="Send question">
+          <IconSend />
+          <span className="chat-send-label">Send</span>
         </button>
       </form>
     </SectionCard>
