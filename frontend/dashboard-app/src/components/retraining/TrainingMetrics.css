@@ -1,0 +1,41 @@
+.training-metrics {
+  font-size: 12.5px;
+}
+.training-metrics-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.training-metrics-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px dashed var(--line-soft);
+  padding-bottom: 6px;
+}
+.training-metrics-row--nested {
+  display: block;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.training-metrics-row--nested > .training-metrics-key {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--text-hi);
+}
+.training-metrics-row--nested > .training-metrics-group {
+  margin-top: 2px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line-soft);
+}
+.training-metrics-key {
+  color: var(--text-mid);
+  text-transform: capitalize;
+}
+.training-metrics-value {
+  color: var(--text-hi);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: right;
+}

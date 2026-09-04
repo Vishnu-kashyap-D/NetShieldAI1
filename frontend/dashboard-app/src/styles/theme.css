@@ -1,0 +1,289 @@
+/*
+  Design tokens shared across the React app. Values are deliberately the same
+  as frontend/netshield-dashboard.html's palette (dark SOC console) for visual
+  continuity with the existing prototype -- that file is read-only reference,
+  not imported.
+*/
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  --bg-deep: #120e1b;
+  --bg-sidebar: #0f0c16;
+  --bg-panel: #1c1728;
+  --bg-panel-raised: #251e35;
+  --line: #392c50;
+  --line-soft: #2a2138;
+  --text-hi: #f5f1fb;
+  --text-mid: #ac9fcc;
+  --text-low: #6e6189;
+
+  --brand: #a855f7;
+  --brand-dim: #7c3aed;
+  --brand-bg: rgba(168, 85, 247, 0.16);
+  --teal: #2dd4c4;
+  --teal-bg: rgba(45, 212, 196, 0.15);
+  --orange: #d6a94d;
+  --orange-bg: rgba(214, 169, 77, 0.15);
+
+  --risk-low: #22c55e;
+  --risk-med: #f59e0b;
+  --risk-high: #ef4444;
+  --risk-low-bg: rgba(34, 197, 94, 0.13);
+  --risk-med-bg: rgba(245, 158, 11, 0.13);
+  --risk-high-bg: rgba(239, 68, 68, 0.13);
+
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Consolas", monospace;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-hi);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--brand);
+  color: #fff;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
+
+select,
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line);
+  color: var(--text-hi);
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-family: var(--font-body);
+}
+
+select:focus,
+input:focus,
+button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+/* ================= SHARED PRIMITIVES ================= */
+
+.btn {
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  color: var(--text-hi);
+  padding: 9px 15px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.12s ease;
+}
+.btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.btn.primary {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+.btn.primary:hover {
+  filter: brightness(1.08);
+  color: #fff;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.card-title {
+  font-weight: 700;
+  font-size: 15.5px;
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--text-low);
+  margin-top: 2px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.badge.risk-low {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+}
+.badge.risk-medium {
+  background: var(--risk-med-bg);
+  color: var(--risk-med);
+}
+.badge.risk-high {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+.badge.neutral {
+  background: var(--bg-panel-raised);
+  color: var(--text-mid);
+}
+.badge.ok {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+}
+.badge.warn {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+.badge.info {
+  background: var(--brand-bg);
+  color: var(--brand);
+}
+.badge.status-running {
+  background: var(--brand-bg);
+  color: var(--brand);
+  gap: 6px;
+}
+.badge.status-running .dot {
+  background: var(--brand);
+  box-shadow: 0 0 6px var(--brand);
+}
+.badge.status-completed {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+}
+.badge.status-failed {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot.pulse {
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.empty-state {
+  padding: 44px 20px;
+  text-align: center;
+  color: var(--text-low);
+}
+.empty-state .glyph {
+  font-size: 26px;
+  margin-bottom: 10px;
+  opacity: 0.6;
+}
+
+.error-state {
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--risk-high);
+  background: var(--risk-high-bg);
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-panel-raised) 25%, var(--line-soft) 37%, var(--bg-panel-raised) 63%);
+  background-size: 400% 100%;
+  animation: skeletonShine 1.4s ease infinite;
+  border-radius: 8px;
+}
+@keyframes skeletonShine {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.data-source-notice {
+  background: var(--orange-bg);
+  border: 1px solid rgba(214, 169, 77, 0.3);
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

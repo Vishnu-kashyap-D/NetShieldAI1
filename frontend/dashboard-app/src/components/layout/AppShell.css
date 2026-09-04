@@ -1,0 +1,33 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app-shell-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 9, 16, 0.6);
+  z-index: 40;
+}
+
+.main-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 26px 32px 60px;
+  flex: 1;
+}
+
+@media (max-width: 980px) {
+  .content {
+    padding: 20px;
+  }
+}

@@ -1,0 +1,124 @@
+.top-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--bg-deep);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-wrap: wrap;
+}
+
+.menu-btn {
+  display: none;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  color: var(--text-hi);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.menu-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+.top-header-spacer {
+  flex: 1;
+}
+
+.mode-indicator {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mode-indicator--mock {
+  background: var(--orange-bg);
+  color: var(--orange);
+  border: 1px solid rgba(214, 169, 77, 0.35);
+}
+.mode-indicator--mock .dot {
+  background: var(--orange);
+  box-shadow: 0 0 6px var(--orange);
+}
+.mode-indicator--real {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+.mode-indicator--real .dot {
+  background: var(--risk-low);
+  box-shadow: 0 0 6px var(--risk-low);
+}
+
+.mode-toggle {
+  display: flex;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 3px;
+}
+.mode-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--text-low);
+  padding: 7px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.mode-toggle button.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.analyst-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line-soft);
+}
+.analyst-chip-who {
+  text-align: right;
+}
+.analyst-chip-who .name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+.analyst-chip-who .role {
+  font-size: 10.5px;
+  color: var(--text-low);
+}
+
+@media (max-width: 980px) {
+  .menu-btn {
+    display: flex;
+  }
+  .analyst-chip-who {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-header {
+    padding: 12px 16px;
+  }
+  .mode-indicator span:not(.dot) {
+    display: none;
+  }
+}
