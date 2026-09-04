@@ -1,3 +1,29 @@
+.shap-direction-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.shap-direction-chip--positive {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+.shap-direction-chip--negative {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+}
+.shap-direction-chip--neutral,
+.shap-direction-chip--unknown {
+  background: var(--bg-panel-raised);
+  color: var(--text-low);
+}
+
 .shap-caveat {
   margin-top: 14px;
   padding-top: 12px;

@@ -34,6 +34,12 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
+    # Explainability chatbot (backend/app/chat_service.py). Server-side only -- never sent to
+    # the frontend. When unset, deterministic questions still work; open-ended questions get an
+    # honest "AI explanation service unavailable" answer instead of a crash (see chat_service.py).
+    anthropic_api_key: str | None = None
+    chat_llm_model: str = "claude-opus-5"
+
     @property
     def sqlalchemy_url(self) -> str:
         # Credentials must be percent-encoded -- a literal "@" or ":" in the password

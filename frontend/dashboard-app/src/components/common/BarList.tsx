@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import "./BarList.css";
 
 export interface BarListItem {
@@ -7,6 +8,12 @@ export interface BarListItem {
   value: number;
   /** Pre-formatted string shown at the end of the row. */
   displayValue: string;
+  /**
+   * Optional small element rendered before the label (e.g. a signed-direction chip). The bar
+   * itself stays unsigned/single-hue either way -- this only annotates the label, it never
+   * changes what `value` sizes the bar to.
+   */
+  labelPrefix?: ReactNode;
 }
 
 interface BarListProps {
@@ -32,6 +39,7 @@ export function BarList({ items, labelWidth = "auto", accent = "brand" }: BarLis
       {items.map((item) => (
         <div className="bar-list-row" style={{ gridTemplateColumns: `${labelWidth} 1fr auto` }} key={item.key}>
           <span className="bar-list-label" title={item.label}>
+            {item.labelPrefix}
             {item.label}
           </span>
           <div className="bar-list-track">

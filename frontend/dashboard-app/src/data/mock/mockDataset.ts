@@ -120,15 +120,33 @@ function pickPredictedCategory(
   );
 }
 
+/**
+ * Not real SHAP output -- there is no trained explainer running in mock mode (see
+ * shapPools.ts). `shap_value`/`direction` are synthesized the same way the real backend
+ * derives them (cyber_ai/explain.py::_aggregate_feature_scores): a signed value whose sign
+ * becomes `direction`, magnitude reported separately as `mean_abs_shap`. Most of a mock
+ * alert's top features point toward its predicted class (the dominant, "why it was classified
+ * this way" signal a real attack window would show), with 1-2 pointing away, so the UI and
+ * chatbot have real positive/negative examples to demonstrate against, not an all-positive list.
+ */
 export function buildShapJson(rng: ReturnType<typeof createRng>, category: Exclude<AttackCategory, "Normal">): string {
   const pool = SHAP_FEATURE_POOLS[category];
   const count = Math.min(pool.length, randInt(rng, 5, 8));
-  let remaining = randInt(rng, 60, 95) / 100; // top feature's importance, decays from here
+  let remaining = randInt(rng, 60, 95) / 100; // top feature's magnitude, decays from here
   const features: ShapFeature[] = [];
   for (let i = 0; i < count; i++) {
-    const value = i === 0 ? remaining : remaining * (0.35 + rng() * 0.35);
-    features.push({ feature: pool[i], mean_abs_shap: Math.round(value * 10000) / 10000 });
-    remaining = value;
+    const magnitude = i === 0 ? remaining : remaining * (0.35 + rng() * 0.35);
+    // First feature always positive (the clearest "pushed toward the predicted class" signal);
+    // later ones mostly positive with roughly a 1-in-4 chance of being a negative outlier.
+    const isNegative = i > 0 && rng() < 0.25;
+    const signedValue = isNegative ? -magnitude : magnitude;
+    features.push({
+      feature: pool[i],
+      shap_value: Math.round(signedValue * 10000) / 10000,
+      mean_abs_shap: Math.round(magnitude * 10000) / 10000,
+      direction: isNegative ? "negative" : "positive",
+    });
+    remaining = magnitude;
   }
   return JSON.stringify(features);
 }
