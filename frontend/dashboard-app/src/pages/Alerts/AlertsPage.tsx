@@ -77,6 +77,12 @@ export function AlertsPage() {
     setOffset(0);
   }
 
+  // "The live feed" only means something on page 1 with no filter narrowing it --
+  // that's the one view where a row appearing between polls represents a genuinely
+  // new alert rather than the analyst having just changed what they're looking at.
+  const isUnfilteredFirstPage =
+    offset === 0 && !filters.riskLevel && !filters.category && !filters.sourceFile && !filters.batchId;
+
   const dataSourceNotice = provider.getDataSourceNotice();
 
   return (
@@ -142,7 +148,7 @@ export function AlertsPage() {
                       Nothing on this page matches “{filters.search}”. Clear the search or try another page.
                     </div>
                   ) : (
-                    <AlertsTable alerts={visible} />
+                    <AlertsTable alerts={visible} enableLiveFlash={isUnfilteredFirstPage && !filters.search} />
                   )}
                   <AlertsPagination total={list.total} limit={list.limit} offset={list.offset} onOffsetChange={setOffset} />
                 </>

@@ -9,9 +9,20 @@ interface StatTileProps {
   badge?: string;
 }
 
+// A tile whose tone corresponds to a severity level gets a matching top stripe, so
+// severity reads as a shape (scannable in peripheral vision), not only as a color
+// inside the icon chip. "blue"/"purple" tiles (Total alerts, etc.) aren't a severity,
+// so they stay neutral -- no fabricated stripe on a number that isn't risk-graded.
+const STRIPE_BY_TONE: Partial<Record<StatTileProps["tone"], string>> = {
+  red: "stat-card--high",
+  orange: "stat-card--medium",
+  green: "stat-card--low",
+};
+
 export function StatTile({ icon, tone, value, label, badge }: StatTileProps) {
+  const stripeClass = STRIPE_BY_TONE[tone];
   return (
-    <div className="stat-card">
+    <div className={`stat-card${stripeClass ? ` ${stripeClass}` : ""}`}>
       <div className="stat-card-top">
         <div className={`icon-chip icon-chip--${tone}`}>{icon}</div>
         {badge && <span className="badge neutral">{badge}</span>}

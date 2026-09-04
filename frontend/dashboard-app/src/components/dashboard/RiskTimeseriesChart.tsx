@@ -34,8 +34,11 @@ export function RiskTimeseriesChart({ points }: { points: TimeseriesPointOut[] }
     return (value / maxTotal) * PLOT_HEIGHT;
   }
 
+  const gridLines = [0.25, 0.5, 0.75].map((f) => CHART_HEIGHT - 1 - f * PLOT_HEIGHT);
+
   return (
     <div className="ts-chart">
+      <div className="ts-chart-axis-max">{maxTotal}</div>
       <div className="ts-chart-inner">
         <svg
           viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
@@ -45,6 +48,9 @@ export function RiskTimeseriesChart({ points }: { points: TimeseriesPointOut[] }
           role="img"
           aria-label={`Alert volume over time across ${n} buckets, split by risk level`}
         >
+          {gridLines.map((y) => (
+            <line key={y} x1={0} y1={y} x2={chartWidth} y2={y} className="ts-gridline" />
+          ))}
           <line x1={0} y1={CHART_HEIGHT - 1} x2={chartWidth} y2={CHART_HEIGHT - 1} className="ts-baseline" />
 
           {points.map((point, index) => {
@@ -88,6 +94,14 @@ export function RiskTimeseriesChart({ points }: { points: TimeseriesPointOut[] }
                     className={`ts-seg-${r.key}${hover?.index === index ? " ts-seg--hovered" : ""}`}
                   />
                 ))}
+                {point.high > 0 && (
+                  <circle
+                    className="ts-elevated-marker"
+                    cx={x + barWidth / 2}
+                    cy={Math.max(4, CHART_HEIGHT - 1 - heights.high - heights.medium - heights.low - 6)}
+                    r={2}
+                  />
+                )}
               </g>
             );
           })}

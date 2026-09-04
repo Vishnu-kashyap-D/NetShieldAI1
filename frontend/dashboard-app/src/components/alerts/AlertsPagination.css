@@ -20,7 +20,8 @@
   min-width: 30px;
   height: 30px;
   padding: 0 6px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
   border: 1px solid var(--line);
   background: var(--bg-panel-raised);
   color: var(--text-mid);
@@ -29,10 +30,14 @@
   align-items: center;
   justify-content: center;
 }
+.pg-btn:hover:not(:disabled):not(.active) {
+  border-color: var(--teal);
+  color: var(--teal);
+}
 .pg-btn.active {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--on-teal);
   font-weight: 700;
 }
 .pg-btn:disabled {

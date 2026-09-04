@@ -6,6 +6,7 @@ import { PageHeader } from "../../components/common/PageHeader";
 import { SectionCard } from "../../components/common/SectionCard";
 import { AsyncSection } from "../../components/common/AsyncSection";
 import { StatTile, IconAlerts, IconWarningTriangle, IconCheckCircle } from "../../components/dashboard/StatTile";
+import { SecurityPosture } from "../../components/dashboard/SecurityPosture";
 import { RiskTimeseriesChart } from "../../components/dashboard/RiskTimeseriesChart";
 import { CategoryDistribution } from "../../components/dashboard/CategoryDistribution";
 import { RecentAlertsTable } from "../../components/dashboard/RecentAlertsTable";
@@ -59,7 +60,9 @@ export function Dashboard() {
 
       {health.data && <HealthBanner health={health.data} />}
 
-      <DemoScenarioPanel onWorkflowEvent={handleWorkflowEvent} />
+      <AsyncSection {...stats} emptyLabel="No alerts scored yet." loadingLabel="Loading summary…">
+        {(summary) => <SecurityPosture summary={summary} />}
+      </AsyncSection>
 
       <AsyncSection {...stats} emptyLabel="No alerts scored yet." loadingLabel="Loading summary…">
         {(summary) => (
@@ -140,6 +143,10 @@ export function Dashboard() {
           {(list) => <RecentAlertsTable alerts={list.items} now={now} />}
         </AsyncSection>
       </SectionCard>
+
+      {/* Presenter tool, not core operational content -- kept below the fold so it
+          never competes with the actual posture/trend/alert data above it. */}
+      <DemoScenarioPanel onWorkflowEvent={handleWorkflowEvent} />
     </section>
   );
 }

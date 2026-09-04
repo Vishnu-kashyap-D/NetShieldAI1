@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import "./BarList.css";
 
 export interface BarListItem {
@@ -8,12 +7,6 @@ export interface BarListItem {
   value: number;
   /** Pre-formatted string shown at the end of the row. */
   displayValue: string;
-  /**
-   * Optional small element rendered before the label (e.g. a signed-direction chip). The bar
-   * itself stays unsigned/single-hue either way -- this only annotates the label, it never
-   * changes what `value` sizes the bar to.
-   */
-  labelPrefix?: ReactNode;
 }
 
 interface BarListProps {
@@ -26,10 +19,9 @@ interface BarListProps {
 
 /**
  * A horizontal magnitude bar list: one hue, longer bar = larger value. Used for
- * both the category-distribution chart and SHAP feature-importance panels --
- * both are "how much", never "which of several signed directions", so a single
- * accent color per list is the correct, honest treatment (see dataviz guidance:
- * sequential/magnitude data gets one hue, not a categorical palette).
+ * category-style distributions where every row is "how much" of the same kind of
+ * thing, never a signed/diverging comparison -- see ShapDivergingBars for that case
+ * (SHAP feature contributions, which do have a direction).
  */
 export function BarList({ items, labelWidth = "auto", accent = "brand" }: BarListProps) {
   const maxValue = Math.max(1e-9, ...items.map((item) => item.value));
@@ -39,7 +31,6 @@ export function BarList({ items, labelWidth = "auto", accent = "brand" }: BarLis
       {items.map((item) => (
         <div className="bar-list-row" style={{ gridTemplateColumns: `${labelWidth} 1fr auto` }} key={item.key}>
           <span className="bar-list-label" title={item.label}>
-            {item.labelPrefix}
             {item.label}
           </span>
           <div className="bar-list-track">
