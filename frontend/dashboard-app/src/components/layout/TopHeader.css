@@ -2,13 +2,14 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 24px;
+  padding: var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--line-soft);
   background: var(--bg-deep);
   position: sticky;
   top: 0;
   z-index: 20;
   flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
 }
 
 .menu-btn {
@@ -18,10 +19,15 @@
   color: var(--text-hi);
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.menu-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
 }
 .menu-btn svg {
   width: 18px;
@@ -38,37 +44,42 @@
   align-items: center;
   gap: 7px;
   padding: 6px 12px;
-  border-radius: 100px;
+  border-radius: var(--r-pill);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4px;
   text-transform: uppercase;
   white-space: nowrap;
 }
+/* Demo/mock is informational, not a warning -- the neutral --info tone (not the
+   --orange used for actual medium-risk severity) keeps that distinction honest. */
 .mode-indicator--mock {
-  background: var(--orange-bg);
-  color: var(--orange);
-  border: 1px solid rgba(214, 169, 77, 0.35);
+  background: var(--info-bg);
+  color: var(--info);
+  border: 1px solid rgba(124, 147, 196, 0.35);
 }
 .mode-indicator--mock .dot {
-  background: var(--orange);
-  box-shadow: 0 0 6px var(--orange);
+  background: var(--info);
+  box-shadow: 0 0 6px var(--info);
 }
+/* Live API is a "this is real, live data" read, which is the security-operations
+   accent's job -- teal, not the risk-low green (that green means "benign traffic",
+   a different concept this pill shouldn't be confused with). */
 .mode-indicator--real {
-  background: var(--risk-low-bg);
-  color: var(--risk-low);
-  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: var(--teal-bg);
+  color: var(--teal);
+  border: 1px solid rgba(41, 209, 200, 0.35);
 }
 .mode-indicator--real .dot {
-  background: var(--risk-low);
-  box-shadow: 0 0 6px var(--risk-low);
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
 }
 
 .mode-toggle {
   display: flex;
   background: var(--bg-panel);
   border: 1px solid var(--line);
-  border-radius: 100px;
+  border-radius: var(--r-pill);
   padding: 3px;
 }
 .mode-toggle button {
@@ -76,13 +87,14 @@
   background: transparent;
   color: var(--text-low);
   padding: 7px 14px;
-  border-radius: 100px;
+  border-radius: var(--r-pill);
   font-size: 12px;
   font-weight: 600;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 .mode-toggle button.active {
-  background: var(--brand);
-  color: #fff;
+  background: var(--teal);
+  color: var(--on-teal);
 }
 
 .analyst-chip {
@@ -116,7 +128,7 @@
 
 @media (max-width: 640px) {
   .top-header {
-    padding: 12px 16px;
+    padding: var(--space-3) var(--space-4);
   }
   .mode-indicator span:not(.dot) {
     display: none;

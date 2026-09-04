@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useDataMode } from "../../data/DataModeContext";
 import { useSession } from "../../auth/session";
+import { IconMenu } from "../common/icons";
 import "./TopHeader.css";
 
 export function TopHeader({ onToggleSidebar }: { onToggleSidebar: () => void }) {
@@ -16,9 +17,7 @@ export function TopHeader({ onToggleSidebar }: { onToggleSidebar: () => void }) 
   return (
     <header className="top-header">
       <button className="menu-btn" onClick={onToggleSidebar} aria-label="Toggle navigation">
-        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round">
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+        <IconMenu />
       </button>
 
       <div className="top-header-spacer" />
