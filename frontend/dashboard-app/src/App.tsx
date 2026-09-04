@@ -9,7 +9,7 @@ import { AlertsPage } from "./pages/Alerts/AlertsPage";
 import { AlertDetailPage } from "./pages/AlertDetail/AlertDetailPage";
 import { FeedbackPage } from "./pages/Feedback/FeedbackPage";
 import { RetrainingPage } from "./pages/Retraining/RetrainingPage";
-import { PlaceholderPage } from "./pages/Placeholder/PlaceholderPage";
+import { AnalyticsPage } from "./pages/Analytics/AnalyticsPage";
 
 function App() {
   return (
@@ -29,16 +29,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="alerts/:id" element={<AlertDetailPage />} />
-              <Route
-                path="analytics"
-                element={
-                  <PlaceholderPage
-                    title="Analytics"
-                    subtitle="Deeper trend and model-performance views"
-                    note="Extended analytics beyond the Dashboard's overview charts are planned for a later phase."
-                  />
-                }
-              />
+              <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="feedback" element={<FeedbackPage />} />
               <Route path="retraining" element={<RetrainingPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

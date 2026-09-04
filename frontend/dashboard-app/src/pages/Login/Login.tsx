@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { DEFAULT_DEMO_ANALYST, useSession } from "../../auth/session";
+import { BrandMark } from "../../components/common/icons";
 import "./Login.css";
 
 const ROLES = ["Security Analyst", "Threat Hunter", "Administrator", "Viewer"];
@@ -36,10 +37,7 @@ export function Login() {
       <div className="login-card">
         <div className="login-brand">
           <div className="brand-mark">
-            <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
-              <path d="M12 2L4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3z" fill="#2E1065" />
-              <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <BrandMark size={26} />
           </div>
           <h1>Sign in to NetShield AI</h1>
           <p>Hybrid NIDS · Operations Console</p>
