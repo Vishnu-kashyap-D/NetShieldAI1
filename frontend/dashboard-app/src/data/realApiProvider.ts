@@ -2,6 +2,9 @@ import type { DataProvider, AlertListParams, IngestParams, TimeseriesParams } fr
 import type {
   AlertDetailOut,
   AlertListOut,
+  ChatIn,
+  ChatMessage,
+  ChatOut,
   FeedbackIn,
   FeedbackOut,
   HealthOut,
@@ -167,5 +170,14 @@ export class RealApiProvider implements DataProvider {
 
   getRetrainRun(id: number): Promise<TrainingRunOut> {
     return this.request<TrainingRunOut>(`/api/retrain/${id}`);
+  }
+
+  askAboutAlert(alertId: number, question: string, history?: ChatMessage[]): Promise<ChatOut> {
+    const body: ChatIn = { question, history };
+    return this.request<ChatOut>(`/api/alerts/${alertId}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
   }
 }

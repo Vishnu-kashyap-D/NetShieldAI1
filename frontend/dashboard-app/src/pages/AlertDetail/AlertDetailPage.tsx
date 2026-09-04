@@ -8,6 +8,7 @@ import { SectionCard } from "../../components/common/SectionCard";
 import { MetricCard } from "../../components/alertDetail/MetricCard";
 import { DetectionInfoGrid, type DetectionInfoItem } from "../../components/alertDetail/DetectionInfoGrid";
 import { ShapExplanationCard } from "../../components/alertDetail/ShapExplanationCard";
+import { ExplainabilityChat } from "../../components/alertDetail/ExplainabilityChat";
 import { FeedbackSection } from "../../components/alertDetail/FeedbackSection";
 import { RawFeaturesSection } from "../../components/alertDetail/RawFeaturesSection";
 import { formatFullDateTime, formatPercent } from "../../utils/format";
@@ -140,6 +141,8 @@ function AlertDetailContent({ alert }: { alert: AlertDetailOut }) {
         <ShapExplanationCard kind="classifier" raw={alert.top_classifier_features} riskLevel={alert.risk_level} />
         <ShapExplanationCard kind="anomaly" raw={alert.top_anomaly_features} riskLevel={alert.risk_level} />
       </div>
+
+      <ExplainabilityChat alert={alert} />
 
       <FeedbackSection alert={alert} />
 

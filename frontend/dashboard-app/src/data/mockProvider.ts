@@ -4,6 +4,8 @@ import type {
   AlertListOut,
   AlertOut,
   AttackCategory,
+  ChatMessage,
+  ChatOut,
   FeedbackIn,
   FeedbackOut,
   HealthOut,
@@ -16,6 +18,7 @@ import type {
 } from "../types/api";
 import { NotFoundError, RetrainAlreadyRunningError } from "./errors";
 import { buildFeatureVector } from "./mock/featureTemplates";
+import { mockChatAnswer } from "./mock/chatEngine";
 import { buildShapJson, generateMockAlerts, toAlertDetail, type GeneratedAlert } from "./mock/mockDataset";
 import { createRng, randInt } from "./mock/random";
 import type { SimulatedWorkflowEvent } from "./mock/scenario";
@@ -297,6 +300,14 @@ export class MockDataProvider implements DataProvider {
     const run = this.trainingRuns.find((r) => r.id === id);
     if (!run) throw new NotFoundError(`Training run ${id} not found`);
     return run;
+  }
+
+  // `history` is part of the DataProvider contract (used by the real backend's LLM fallback);
+  // mock mode's chat engine is fully deterministic and stateless per question, so it's unused here.
+  async askAboutAlert(alertId: number, question: string, _history?: ChatMessage[]): Promise<ChatOut> {
+    const entry = this.alerts.find((e) => e.alert.id === alertId);
+    if (!entry) throw new NotFoundError(`Alert ${alertId} not found`);
+    return mockChatAnswer(question, toAlertDetail(entry));
   }
 
   /**

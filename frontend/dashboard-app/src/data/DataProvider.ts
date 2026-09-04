@@ -1,6 +1,8 @@
 import type {
   AlertDetailOut,
   AlertListOut,
+  ChatMessage,
+  ChatOut,
   FeedbackIn,
   FeedbackOut,
   HealthOut,
@@ -98,4 +100,13 @@ export interface DataProvider {
    * @throws NotFoundError if no run with this id exists.
    */
   getRetrainRun(id: number): Promise<TrainingRunOut>;
+
+  /**
+   * POST /api/alerts/{id}/chat -- the explainability chatbot for one alert. `history` is this
+   * conversation's prior turns, oldest first (used only for multi-turn LLM context; deterministic
+   * answers are always stateless). Grounded entirely in that alert's own stored data -- never
+   * performs a new prediction and never reasons about any other alert.
+   * @throws NotFoundError if no alert with this id exists.
+   */
+  askAboutAlert(alertId: number, question: string, history?: ChatMessage[]): Promise<ChatOut>;
 }

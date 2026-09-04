@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from pathlib import Path
 
@@ -22,6 +23,8 @@ from cyber_ai.explain import explain_autoencoder_windows, explain_classifier_win
 from cyber_ai.hybrid_risk import compute_risk_score, normalize_anomaly_score, risk_levels_for
 from cyber_ai.modeling import classifier_probabilities, reconstruction_errors
 from cyber_ai.windowing import WindowSequence
+
+logger = logging.getLogger("netshield.backend")
 
 
 class DetectionEngine:
@@ -110,14 +113,25 @@ class DetectionEngine:
         if shap and len(classifier_starts) > 0:
             explain_starts = classifier_starts[:shap_max_alerts]
             background_starts = self._choose_background_starts(starts, shap_background)
-            classifier_explanations = explain_classifier_windows(
-                self.classifier, X, explain_starts, background_starts,
-                self.window_size, self.feature_names, nsamples=shap_samples,
-            )
-            anomaly_explanations = explain_autoencoder_windows(
-                self.autoencoder, X, explain_starts, background_starts,
-                self.window_size, self.feature_names, nsamples=shap_samples,
-            )
+            # Each explainer runs independently and is never allowed to fail the whole batch --
+            # a GradientExplainer error (numerical issue, shap-library version mismatch, etc.)
+            # degrades that one explanation to "unavailable" instead of losing every alert in
+            # this ingest call, which is the real prediction/risk output and must not be lost
+            # over an explainability failure.
+            try:
+                classifier_explanations = explain_classifier_windows(
+                    self.classifier, X, explain_starts, background_starts,
+                    self.window_size, self.feature_names, nsamples=shap_samples,
+                )
+            except Exception:
+                logger.exception("SHAP classifier explanation failed; continuing without it.")
+            try:
+                anomaly_explanations = explain_autoencoder_windows(
+                    self.autoencoder, X, explain_starts, background_starts,
+                    self.window_size, self.feature_names, nsamples=shap_samples,
+                )
+            except Exception:
+                logger.exception("SHAP anomaly explanation failed; continuing without it.")
 
         records: list[dict] = []
         for position in kept_positions:

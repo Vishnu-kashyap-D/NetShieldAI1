@@ -26,14 +26,51 @@ export type AttackCategory =
 /** Status values of a `training_runs` row. */
 export type RetrainStatus = "running" | "completed" | "failed";
 
+/** Which way a signed SHAP value points -- see cyber_ai/explain.py::SHAP_DIRECTION_MEANING. */
+export type ShapDirection = "positive" | "negative" | "neutral" | "unknown";
+
 /**
  * One entry of a parsed `top_classifier_features` / `top_anomaly_features` list.
  * The backend stores these as a JSON *string* (see AlertOut below); this is the
  * shape of each element once parsed, per cyber_ai/explain.py::_top_features.
+ *
+ * `shap_value`/`direction` are optional because an alert scored before the signed-SHAP
+ * change shipped only ever wrote `mean_abs_shap` -- those older rows parse with `shap_value`
+ * undefined and `direction` "unknown" rather than crashing or assuming a sign.
  */
 export interface ShapFeature {
   feature: string;
+  /** Signed mean SHAP contribution over the window. Undefined for pre-signed-SHAP rows. */
+  shap_value?: number;
+  /** Unsigned mean |SHAP| -- magnitude/importance regardless of direction. Used for ranking. */
   mean_abs_shap: number;
+  direction?: ShapDirection;
+}
+
+/** One turn of a chat conversation, oldest first -- mirrors backend/app/schemas.py::ChatMessageIn. */
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/** POST /api/alerts/{id}/chat request body. */
+export interface ChatIn {
+  question: string;
+  history?: ChatMessage[];
+}
+
+/** Which parts of the alert's data actually informed a chat answer. */
+export interface ChatSources {
+  prediction: boolean;
+  shap: boolean;
+  feature_values: boolean;
+  glossary: boolean;
+}
+
+/** POST /api/alerts/{id}/chat response. */
+export interface ChatOut {
+  answer: string;
+  sources: ChatSources;
 }
 
 /** The raw 76-value standardized feature vector stored on an alert (feature name -> value). */
