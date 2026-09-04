@@ -27,7 +27,7 @@
   font-variant-numeric: tabular-nums;
 }
 .feedback-log-alert-link {
-  color: var(--brand);
+  color: var(--teal);
   font-weight: 600;
   font-family: var(--font-mono);
 }

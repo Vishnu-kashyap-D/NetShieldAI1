@@ -5,9 +5,9 @@
 // nav icons and brand mark here; other per-component icons (StatTile, etc.) migrate in
 // later phases when those files are next touched for their own redesign work.
 
-export function BrandMark() {
+export function BrandMark({ size = 19 }: { size?: number }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" width="19" height="19">
+    <svg viewBox="0 0 24 24" fill="none" width={size} height={size}>
       <path d="M12 2L4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3z" fill="#2E1065" />
       <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
