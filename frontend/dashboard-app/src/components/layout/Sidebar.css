@@ -5,7 +5,7 @@
   border-right: 1px solid var(--line-soft);
   display: flex;
   flex-direction: column;
-  padding: 22px 16px;
+  padding: var(--space-5) var(--space-4);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -16,20 +16,22 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 4px 6px 22px;
+  padding: 4px 6px var(--space-5);
   border-bottom: 1px solid var(--line-soft);
-  margin-bottom: 14px;
+  margin-bottom: var(--space-4);
 }
 .brand-mark {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   flex-shrink: 0;
+  /* Identity stays the model-intelligence violet -- this is the one place in
+     the shell that intentionally does NOT follow teal, per the redesign spec. */
   background: linear-gradient(155deg, var(--brand), var(--brand-dim));
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 16px rgba(139, 124, 240, 0.4);
 }
 .brand-name {
   font-weight: 800;
@@ -48,7 +50,7 @@
   align-items: center;
   gap: 11px;
   padding: 10px 12px;
-  border-radius: 9px;
+  border-radius: var(--r-sm);
   color: var(--text-mid);
   font-size: 13.5px;
   font-weight: 500;
@@ -56,7 +58,7 @@
   background: none;
   width: 100%;
   text-align: left;
-  transition: all 0.12s ease;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 .nav-item svg {
   width: 17px;
@@ -69,8 +71,9 @@
   color: var(--text-hi);
 }
 .nav-item.active {
-  background: var(--brand-bg);
-  color: var(--brand);
+  /* Navigation is security-operations territory -> teal, not the model-intelligence violet. */
+  background: var(--teal-bg);
+  color: var(--teal);
   font-weight: 600;
 }
 
@@ -82,10 +85,11 @@
   text-align: left;
   background: var(--bg-panel);
   border: 1px solid var(--line-soft);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 10px 11px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-sm);
 }
 .avatar {
   width: 34px;
@@ -121,8 +125,9 @@
   margin-top: auto;
   background: var(--bg-panel);
   border: 1px solid var(--line-soft);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 14px;
+  box-shadow: var(--shadow-sm);
 }
 .sidebar-status .label {
   font-size: 10.5px;
@@ -172,7 +177,7 @@
     top: 0;
     z-index: 50;
     transform: translateX(-100%);
-    transition: transform 0.2s ease;
+    transition: transform var(--transition-base);
     box-shadow: 20px 0 40px rgba(0, 0, 0, 0.35);
   }
   .sidebar.sidebar--open {

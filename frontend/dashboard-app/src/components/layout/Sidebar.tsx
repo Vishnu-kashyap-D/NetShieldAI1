@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useDataProvider } from "../../data/DataModeContext";
 import { usePolledAsync } from "../../hooks/usePolledAsync";
 import { useSession } from "../../auth/session";
+import { BrandMark, IconGrid, IconShield, IconChart, IconCheck, IconRefresh } from "../common/icons";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
@@ -80,64 +81,8 @@ export function Sidebar({ mobileOpen, onNavigate }: { mobileOpen: boolean; onNav
         ) : (
           <div className="detail">Checking backend…</div>
         )}
-        <div className="ver">v0.3.0 · Phase 3</div>
+        <div className="ver">v0.4.0 · SOC redesign</div>
       </div>
     </aside>
-  );
-}
-
-function BrandMark() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" width="19" height="19">
-      <path d="M12 2L4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3z" fill="#2E1065" />
-      <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconGrid() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  );
-}
-
-function IconShield() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.7 21a2 2 0 01-3.4 0" />
-    </svg>
-  );
-}
-
-function IconChart() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 3v18h18" />
-      <path d="M7 16l4-5 3 3 5-7" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 12l2 2 4-4" />
-      <circle cx="12" cy="12" r="9" />
-    </svg>
-  );
-}
-
-function IconRefresh() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12a9 9 0 10-3.5 7.1" />
-      <path d="M21 4v6h-6" />
-    </svg>
   );
 }
