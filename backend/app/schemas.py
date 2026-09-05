@@ -99,6 +99,30 @@ class TrainingRunOut(BaseModel):
     finished_at: dt.datetime | None
 
 
+class ChatMessageIn(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
+class ChatIn(BaseModel):
+    question: str
+    # Prior turns of this same conversation, oldest first -- optional, only used to give the
+    # LLM fallback path multi-turn context. The deterministic matcher is always stateless.
+    history: list[ChatMessageIn] = []
+
+
+class ChatSourcesOut(BaseModel):
+    prediction: bool
+    shap: bool
+    feature_values: bool
+    glossary: bool
+
+
+class ChatOut(BaseModel):
+    answer: str
+    sources: ChatSourcesOut
+
+
 class HealthOut(BaseModel):
     status: str
     model_loaded: bool

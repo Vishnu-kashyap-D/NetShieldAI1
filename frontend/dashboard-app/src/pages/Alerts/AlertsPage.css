@@ -1,0 +1,9 @@
+.alerts-queue-body {
+  margin-top: 16px;
+}
+
+.search-scope-note {
+  font-size: 11.5px;
+  color: var(--text-low);
+  margin-bottom: 10px;
+}

@@ -1,0 +1,128 @@
+.security-posture {
+  background: var(--bg-panel);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  display: grid;
+  grid-template-columns: 148px 1fr;
+  gap: var(--space-6);
+  align-items: center;
+}
+
+.posture-ring {
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+.posture-ring-hole {
+  position: absolute;
+  inset: 14px;
+  background: var(--bg-panel);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.posture-ring-value {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-hi);
+}
+.posture-ring-value--high {
+  color: var(--risk-high);
+}
+.posture-ring-value--medium {
+  color: var(--risk-med);
+}
+.posture-ring-value--low {
+  color: var(--risk-low);
+}
+.posture-ring-caption {
+  font-size: 10.5px;
+  color: var(--text-low);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 3px;
+}
+
+.posture-label {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  margin-bottom: 4px;
+}
+.posture-label--high {
+  color: var(--risk-high);
+}
+.posture-label--medium {
+  color: var(--risk-med);
+}
+.posture-label--low {
+  color: var(--risk-low);
+}
+.posture-label--none {
+  color: var(--text-mid);
+}
+.posture-detail {
+  font-size: 13px;
+  color: var(--text-mid);
+  margin-bottom: var(--space-4);
+}
+
+.posture-breakdown {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.posture-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-mid);
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-pill);
+  padding: 4px 11px 4px 9px;
+}
+.posture-chip i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.posture-chip b {
+  color: var(--text-hi);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.posture-chip--high i {
+  background: var(--risk-high);
+}
+.posture-chip--medium i {
+  background: var(--risk-med);
+}
+.posture-chip--low i {
+  background: var(--risk-low);
+}
+
+@media (max-width: 640px) {
+  .security-posture {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .posture-summary {
+    text-align: center;
+  }
+  .posture-breakdown {
+    justify-content: center;
+  }
+}

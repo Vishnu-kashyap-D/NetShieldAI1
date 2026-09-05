@@ -1,0 +1,134 @@
+.ts-chart {
+  position: relative;
+  height: 180px;
+}
+.ts-chart-axis-max {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-low);
+}
+.ts-chart-inner {
+  width: 100%;
+  height: 100%;
+}
+.ts-chart-inner svg {
+  display: block;
+  overflow: visible;
+}
+
+.ts-gridline {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.ts-baseline {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.ts-elevated-marker {
+  fill: var(--risk-high);
+  filter: drop-shadow(0 0 3px var(--risk-high));
+}
+
+.ts-bar-group {
+  outline: none;
+}
+.ts-bar-group:focus-visible rect:first-child {
+  fill: rgba(41, 209, 200, 0.08);
+}
+
+.ts-seg-low {
+  fill: var(--risk-low);
+  opacity: 0.85;
+}
+.ts-seg-medium {
+  fill: var(--risk-med);
+  opacity: 0.85;
+}
+.ts-seg-high {
+  fill: var(--risk-high);
+  opacity: 0.9;
+}
+.ts-seg--hovered {
+  opacity: 1;
+  filter: brightness(1.15);
+}
+
+.ts-tooltip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 9px 11px;
+  font-size: 11.5px;
+  color: var(--text-mid);
+  min-width: 130px;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+  z-index: 5;
+}
+.ts-tooltip-time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-hi);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.ts-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+.ts-tooltip-row b {
+  color: var(--text-hi);
+  font-weight: 700;
+  margin-left: auto;
+}
+.ts-tooltip-total {
+  border-top: 1px solid var(--line-soft);
+  margin-top: 4px;
+  padding-top: 5px;
+  color: var(--text-hi);
+  font-weight: 600;
+}
+.ts-key {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.ts-key-low {
+  background: var(--risk-low);
+}
+.ts-key-medium {
+  background: var(--risk-med);
+}
+.ts-key-high {
+  background: var(--risk-high);
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-mid);
+}
+.chart-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}

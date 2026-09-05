@@ -1,0 +1,89 @@
+.alerts-table-wrap {
+  overflow-x: auto;
+}
+.alerts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.alerts-table thead th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-low);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.alerts-table tbody td {
+  padding: 12px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+.alerts-table tbody td.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.alerts-table .source-cell {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.alerts-table tbody tr {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.alerts-table tbody tr:hover,
+.alerts-table tbody tr:focus-visible {
+  background: var(--bg-panel-raised);
+  outline: none;
+}
+
+/* Below ~700px, the table becomes a stack of labeled cards instead of scrolling
+   sideways -- each row keeps the same data, just one field per line. */
+@media (max-width: 700px) {
+  .alerts-table thead {
+    display: none;
+  }
+  .alerts-table,
+  .alerts-table tbody,
+  .alerts-table tr,
+  .alerts-table td {
+    display: block;
+    width: 100%;
+  }
+  .alerts-table tbody tr {
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    padding: 6px 4px;
+  }
+  .alerts-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px dashed var(--line-soft);
+    white-space: normal;
+    text-align: right;
+  }
+  .alerts-table tbody td:last-child {
+    border-bottom: none;
+  }
+  .alerts-table tbody td::before {
+    content: attr(data-label);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-low);
+    font-family: var(--font-body);
+    font-weight: 700;
+    text-align: left;
+  }
+  .alerts-table .source-cell {
+    max-width: 60%;
+  }
+}

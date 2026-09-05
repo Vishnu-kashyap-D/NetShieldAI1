@@ -1,0 +1,23 @@
+/* The one place on Alert Detail that intentionally reads as "model intelligence" --
+   a subtle violet top edge, not a fully violet card. */
+.shap-card {
+  border-top: 2px solid var(--brand);
+}
+
+.shap-caveat {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--line-soft);
+  font-size: 11.5px;
+  color: var(--text-low);
+  line-height: 1.5;
+}
+
+.shap-empty {
+  padding: 28px 20px;
+}
+.shap-empty-reason {
+  font-size: 11.5px;
+  color: var(--text-low);
+  margin-top: 6px;
+}

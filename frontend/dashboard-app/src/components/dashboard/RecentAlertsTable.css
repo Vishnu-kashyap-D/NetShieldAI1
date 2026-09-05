@@ -1,0 +1,44 @@
+.recent-alerts-wrap {
+  overflow-x: auto;
+}
+.recent-alerts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.recent-alerts-table thead th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-low);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.recent-alerts-table tbody td {
+  padding: 12px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+.recent-alerts-table tbody td.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.recent-alerts-table tbody tr {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.recent-alerts-table tbody tr:hover,
+.recent-alerts-table tbody tr:focus-visible {
+  background: var(--bg-panel-raised);
+  outline: none;
+}
+.recent-alerts-relative {
+  display: block;
+  color: var(--text-low);
+  font-size: 10.5px;
+  font-family: var(--font-body);
+}
