@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine
 from app.detection_service import get_engine
-from app.routers import alerts, feedback, health, ingest, retrain, stats
+from app.routers import alerts, chat, feedback, health, ingest, retrain, stats
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("netshield.backend")
@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api")
 app.include_router(ingest.router, prefix="/api")
 app.include_router(alerts.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
 app.include_router(stats.router, prefix="/api")
 app.include_router(feedback.router, prefix="/api")
 app.include_router(retrain.router, prefix="/api")

@@ -1,0 +1,117 @@
+.shap-diverging-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-low);
+  margin-bottom: var(--space-4);
+}
+.shap-diverging-axis-pos {
+  color: var(--brand);
+}
+
+.shap-diverging-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.shap-diverging-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 70px;
+  align-items: center;
+  gap: var(--space-3);
+}
+.shap-diverging-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-mid);
+}
+.shap-diverging-label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shap-diverging-info {
+  flex-shrink: 0;
+  color: var(--text-low);
+  display: inline-flex;
+  cursor: help;
+  border-radius: 50%;
+}
+.shap-diverging-info svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+}
+.shap-diverging-info:hover,
+.shap-diverging-info:focus-visible {
+  color: var(--brand);
+}
+
+.shap-diverging-track {
+  position: relative;
+  height: 18px;
+  background: var(--bg-panel-raised);
+  border-radius: var(--r-sm);
+}
+.shap-diverging-center {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--line);
+}
+.shap-diverging-bar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+}
+.shap-diverging-bar--pos {
+  left: 50%;
+  background: linear-gradient(90deg, rgba(139, 124, 240, 0.55), var(--brand));
+}
+.shap-diverging-bar--neg {
+  right: 50%;
+  background: linear-gradient(270deg, rgba(150, 161, 182, 0.5), #6b7385);
+}
+.shap-diverging-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: var(--text-low);
+}
+
+.shap-diverging-value {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.shap-diverging-value--positive {
+  color: var(--brand);
+}
+.shap-diverging-value--negative {
+  color: var(--text-mid);
+}
+.shap-diverging-value--neutral,
+.shap-diverging-value--unknown {
+  color: var(--text-low);
+}
+
+@media (max-width: 520px) {
+  .shap-diverging-row {
+    grid-template-columns: 96px 1fr 60px;
+  }
+}

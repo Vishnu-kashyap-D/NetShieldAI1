@@ -1,0 +1,405 @@
+/*
+  Design tokens shared across the React app -- SOC-console redesign, Phase 1
+  (see the "NetShield SOC Redesign" spec). Values are refined UNDER THE SAME
+  variable names the rest of the app already consumes via var(...), so every
+  existing component picks up the new palette without being edited itself.
+
+  The one behavioral change, not just a value refresh: --teal is now the
+  primary security-operations accent (navigation, primary actions, links,
+  focus rings, live/operational indicators) and --brand is narrowed to a
+  specific model-intelligence identity (brand mark, classifier SHAP, chatbot)
+  instead of being used for everything. Backgrounds shift from the previous
+  warm violet-black toward a cooler slate-black to match.
+*/
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+
+:root {
+  /* Standard shell breakpoints -- documented here (media queries can't read
+     custom properties) so future components stay on the same three steps
+     instead of picking a new one-off number: 980px tablet, 700px narrow
+     (tables collapse to stacked cards), 480px mobile. */
+
+  --bg-deep: #0a0e15;
+  --bg-sidebar: #070a10;
+  --bg-panel: #10141c;
+  --bg-panel-raised: #161b25;
+  --bg-panel-raised-2: #1c2230;
+  --line: #2a3140;
+  --line-soft: #1b212c;
+  --text-hi: #eef1f7;
+  --text-mid: #96a1b6;
+  --text-low: #596274;
+
+  --brand: #8b7cf0;
+  --brand-dim: #6a5cd6;
+  --brand-bg: rgba(139, 124, 240, 0.16);
+  --teal: #29d1c8;
+  --teal-bg: rgba(41, 209, 200, 0.14);
+  --orange: #d6a94d;
+  --orange-bg: rgba(214, 169, 77, 0.15);
+  --info: #7c93c4;
+  --info-bg: rgba(124, 147, 196, 0.14);
+  /* Dark ink for text on a solid --teal fill -- teal is a light/bright hue,
+     so (unlike the darker --brand) white text on it would under-contrast. */
+  --on-teal: #04211d;
+
+  --risk-low: #33c17a;
+  --risk-med: #e0a83a;
+  --risk-high: #ef4a5c;
+  --risk-low-bg: rgba(51, 193, 122, 0.13);
+  --risk-med-bg: rgba(224, 168, 58, 0.14);
+  --risk-high-bg: rgba(239, 74, 92, 0.14);
+
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Consolas", monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.45);
+
+  --transition-fast: 0.12s ease;
+  --transition-base: 0.2s ease;
+
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot.pulse,
+  .skeleton,
+  .row-flash {
+    animation: none;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-hi);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--teal);
+  color: var(--on-teal);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
+
+select,
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line);
+  color: var(--text-hi);
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-family: var(--font-body);
+}
+
+select:focus,
+input:focus,
+button:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+/* ================= SHARED PRIMITIVES ================= */
+
+.btn {
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  color: var(--text-hi);
+  padding: 9px 15px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all var(--transition-fast);
+}
+.btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.btn.primary {
+  background: var(--teal);
+  color: var(--on-teal);
+  border-color: var(--teal);
+}
+.btn.primary:hover {
+  filter: brightness(1.08);
+  color: var(--on-teal);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.card-title {
+  font-weight: 700;
+  font-size: 15.5px;
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--text-low);
+  margin-top: 2px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.badge.risk-low {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+}
+.badge.risk-medium {
+  background: var(--risk-med-bg);
+  color: var(--risk-med);
+}
+.badge.risk-high {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+.badge.neutral {
+  background: var(--bg-panel-raised);
+  color: var(--text-mid);
+}
+.badge.ok {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+}
+.badge.warn {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+.badge.info {
+  background: var(--info-bg);
+  color: var(--info);
+}
+/* Retraining a model is a model-intelligence activity, not a security-operations
+   one -- this badge (used only by TrainingStatusBadge) stays violet, not teal. */
+.badge.status-running {
+  background: var(--brand-bg);
+  color: var(--brand);
+  gap: 6px;
+}
+.badge.status-running .dot {
+  background: var(--brand);
+  box-shadow: 0 0 6px var(--brand);
+}
+.badge.status-completed {
+  background: var(--risk-low-bg);
+  color: var(--risk-low);
+}
+.badge.status-failed {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot.pulse {
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.empty-state {
+  padding: 44px 20px;
+  text-align: center;
+  color: var(--text-low);
+}
+.empty-state .glyph {
+  font-size: 26px;
+  margin-bottom: 10px;
+  opacity: 0.6;
+}
+
+.error-state {
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--risk-high);
+  background: var(--risk-high-bg);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-panel-raised) 25%, var(--line-soft) 37%, var(--bg-panel-raised) 63%);
+  background-size: 400% 100%;
+  animation: skeletonShine 1.4s ease infinite;
+  border-radius: var(--r-sm);
+}
+@keyframes skeletonShine {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.data-source-notice {
+  background: var(--info-bg);
+  border: 1px solid rgba(124, 147, 196, 0.3);
+  color: var(--info);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+/* ================= TYPOGRAPHY SCALE (utility classes) =================
+   The defined hierarchy from the SOC redesign spec, Section 04. Existing
+   per-component sizes (page titles, card titles, metric values, etc.) are
+   left as they are for now -- those files belong to later phases -- but
+   these are here so anything new, or anything a later phase touches, has
+   one shared scale to reach for instead of picking another one-off size. */
+.label-eyebrow {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: var(--text-low);
+}
+.hero-metric {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shared severity-stripe treatment for a clickable table row -- an inset box-shadow
+   (not border-left) so it composes cleanly with border-collapse on a <tr>. Used by
+   both the Dashboard's recent-alerts table and the Alerts page's queue table, so
+   severity reads as the same shape in both places. */
+.severity-row {
+  box-shadow: inset 3px 0 0 0 transparent;
+}
+.severity-row--high {
+  box-shadow: inset 3px 0 0 0 var(--risk-high);
+}
+.severity-row--medium {
+  box-shadow: inset 3px 0 0 0 var(--risk-med);
+}
+.severity-row--low {
+  box-shadow: inset 3px 0 0 0 var(--risk-low);
+}
+
+/* A brief highlight for a row that just arrived on the latest poll -- teal (the
+   security-operations/live accent), never violet (that's model-intelligence). */
+.row-flash {
+  animation: rowFlash 2.2s ease;
+}
+@keyframes rowFlash {
+  from {
+    background: var(--teal-bg);
+  }
+  to {
+    background: transparent;
+  }
+}
+
+/* Shared two-column layout (a wide primary panel + a narrower supporting one) --
+   used by the Dashboard and Analytics pages for their paired chart/breakdown panels. */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: var(--space-4);
+}
+.grid-2 .card {
+  margin-bottom: 0;
+}
+@media (max-width: 980px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

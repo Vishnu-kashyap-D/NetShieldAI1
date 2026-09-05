@@ -1,0 +1,186 @@
+.sidebar {
+  width: 236px;
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5) var(--space-4);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 6px var(--space-5);
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: var(--space-4);
+}
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  /* Identity stays the model-intelligence violet -- this is the one place in
+     the shell that intentionally does NOT follow teal, per the redesign spec. */
+  background: linear-gradient(155deg, var(--brand), var(--brand-dim));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(139, 124, 240, 0.4);
+}
+.brand-name {
+  font-weight: 800;
+  font-size: 16.5px;
+  letter-spacing: -0.2px;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  color: var(--text-mid);
+  font-size: 13.5px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.nav-item svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+.nav-item:hover {
+  background: var(--bg-panel-raised);
+  color: var(--text-hi);
+}
+.nav-item.active {
+  /* Navigation is security-operations territory -> teal, not the model-intelligence violet. */
+  background: var(--teal-bg);
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-panel);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  padding: 10px 11px;
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-sm);
+}
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #fff;
+  background: linear-gradient(155deg, var(--brand), var(--teal));
+}
+.sidebar-user .who {
+  min-width: 0;
+  flex: 1;
+}
+.sidebar-user .who .name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-hi);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-user .who .role {
+  font-size: 10.5px;
+  color: var(--text-low);
+}
+
+.sidebar-status {
+  margin-top: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.sidebar-status .label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-low);
+  margin-bottom: 8px;
+}
+.sidebar-status .state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.sidebar-status .state--ok {
+  color: var(--risk-low);
+}
+.sidebar-status .state--warn {
+  color: var(--risk-high);
+}
+.dot--ok {
+  background: var(--risk-low);
+  box-shadow: 0 0 7px var(--risk-low);
+}
+.dot--warn {
+  background: var(--risk-high);
+  box-shadow: 0 0 7px var(--risk-high);
+}
+.sidebar-status .detail {
+  font-size: 11.5px;
+  color: var(--text-low);
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+.sidebar-status .ver {
+  font-size: 10.5px;
+  color: var(--text-low);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 980px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+    box-shadow: 20px 0 40px rgba(0, 0, 0, 0.35);
+  }
+  .sidebar.sidebar--open {
+    transform: translateX(0);
+  }
+}
