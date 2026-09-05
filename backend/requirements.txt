@@ -6,4 +6,6 @@ cryptography>=42
 pydantic-settings>=2.4
 python-multipart>=0.0.9
 requests>=2.31
-anthropic>=0.40
+google-genai>=1.0
+bcrypt>=4.0
+email-validator>=2.0

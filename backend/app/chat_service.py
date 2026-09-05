@@ -377,44 +377,41 @@ def _format_context_for_prompt(context: dict) -> str:
 
 
 def answer_with_llm(question: str, context: dict, history: list[dict] | None = None) -> ChatAnswer:
-    if not settings.anthropic_api_key:
-        raise LlmUnavailableError("No LLM API key is configured on the server (ANTHROPIC_API_KEY).")
+    """LLM fallback for the per-alert assistant. Runs on Gemini -- the same provider and key as
+    answer_project_question() below, consolidated onto one LLM provider/key for the whole app
+    rather than requiring a second (Anthropic) key nobody has configured.
+    """
+    if not settings.gemini_api_key:
+        raise LlmUnavailableError("No LLM API key is configured on the server (GEMINI_API_KEY).")
 
     try:
-        import anthropic
+        from google import genai
+        from google.genai import types as genai_types
     except ImportError as exc:
-        raise LlmUnavailableError("The 'anthropic' package is not installed on the server.") from exc
+        raise LlmUnavailableError("The 'google-genai' package is not installed on the server.") from exc
 
-    messages: list[dict] = []
+    contents: list[dict] = []
     for turn in history or []:
         role = turn.get("role")
         content = turn.get("content")
         if role in ("user", "assistant") and isinstance(content, str) and content.strip():
-            messages.append({"role": role, "content": content})
+            contents.append({"role": "model" if role == "assistant" else "user", "parts": [{"text": content}]})
 
     user_content = f"Alert context (the ONLY data you may reason from):\n{_format_context_for_prompt(context)}\n\nAnalyst question: {question}"
-    messages.append({"role": "user", "content": user_content})
+    contents.append({"role": "user", "parts": [{"text": user_content}]})
 
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     try:
-        response = client.messages.create(
-            model=settings.chat_llm_model,
-            max_tokens=1024,
-            system=_SYSTEM_PROMPT,
-            output_config={"effort": "medium"},
-            messages=messages,
+        client = genai.Client(api_key=settings.gemini_api_key)
+        response = client.models.generate_content(
+            model=settings.gemini_model,
+            contents=contents,
+            config=genai_types.GenerateContentConfig(system_instruction=_SYSTEM_PROMPT, max_output_tokens=1024),
         )
-    except anthropic.APIStatusError as exc:
+    except Exception as exc:  # covers google.genai.errors.APIError and anything else unexpected
         logger.exception("LLM call failed for alert chat.")
         raise LlmUnavailableError(f"The LLM explanation service returned an error: {exc}") from exc
-    except anthropic.APIConnectionError as exc:
-        logger.exception("LLM call failed for alert chat.")
-        raise LlmUnavailableError("Could not reach the LLM explanation service.") from exc
-    except Exception as exc:  # anything else (unexpected SDK/runtime error) -- degrade, don't crash the request
-        logger.exception("LLM call failed for alert chat.")
-        raise LlmUnavailableError("The LLM explanation service failed unexpectedly.") from exc
 
-    text = "".join(block.text for block in response.content if getattr(block, "type", None) == "text").strip()
+    text = (response.text or "").strip()
     if not text:
         raise LlmUnavailableError("The LLM explanation service returned an empty response.")
 
@@ -446,3 +443,132 @@ def answer_question(question: str, context: dict, history: list[dict] | None = N
             "anomaly score, risk score/level, top contributing features, or a feature's definition.",
             ChatSources(),
         )
+
+
+# ---------------------------------------------------------------------------
+# General project/threat chatbot -- the sidebar's "SHAP" page. Unlike the per-alert assistant
+# above, this one is NOT grounded in any specific alert's data; it answers from a fixed project
+# fact sheet (below) plus the model's own general cybersecurity knowledge, and is instructed to
+# refuse anything outside those two topics. Runs on Gemini -- the same key/model as the
+# per-alert assistant's own LLM fallback above (see answer_with_llm), not a separate provider.
+# ---------------------------------------------------------------------------
+
+# Static, hand-verified facts about this exact project -- not regenerated per request, so the
+# model is never left to guess at numbers that are actually known. Keep this in sync with
+# reports/training_metrics.json and README.md if either changes; nothing here is invented.
+_PROJECT_FACT_SHEET = """\
+PROJECT: NetShield AI -- a hybrid network intrusion detection system built on the CICIDS2017 \
+benchmark dataset (~2.8M flow records across 8 capture-day CSVs).
+
+PIPELINE (in order):
+1. Data cleaning: drop exact-duplicate rows (~11% of raw data), exclude "Destination Port" \
+(a well-documented CICIDS2017 leakage feature), median-impute missing/infinite values, \
+standard-scale numeric features (76 features used).
+2. Sequence windowing: window size 10, stride 5; a window never spans two different capture-day \
+files. Split 70/15/15 train/validation/test, stratified at the window level, seed 42.
+3. Autoencoder (LSTM-based), trained on BENIGN windows only, flags a window as anomalous when its \
+reconstruction error exceeds a threshold calibrated on validation data (balanced-accuracy strategy).
+4. BiLSTM classifier, trained on attack windows only, classifies an anomaly-flagged window into \
+one of six categories: DoS/DDoS, Brute Force, Port Scanning, Malware Traffic, Botnet Activity, \
+Data Exfiltration.
+5. Hybrid Risk Fusion: risk = max(normalized anomaly score, classifier confidence), mapped to a \
+Low/Medium/High risk level via thresholds calibrated on validation data (not hardcoded).
+6. SHAP (GradientExplainer) generates per-feature explanations for Medium/High risk windows.
+7. A FastAPI + MySQL backend stores alerts and exposes them over a REST API; a React dashboard \
+(and a separate static HTML prototype) present them to an analyst, including a feedback loop that \
+retrains the model from analyst-validated corrections.
+
+KNOWN, REAL EVALUATION RESULTS (held-out test set, do not restate different numbers):
+- BiLSTM classifier: 96.1% accuracy, 98.7% weighted precision, 96.1% weighted recall, 97.2% \
+weighted F1, but only 54.4% MACRO F1 -- because DoS/DDoS and Port Scanning dominate the test set \
+(9,652 and 2,725 samples) and score near-perfectly (F1 0.98/0.995), while Malware Traffic (25 \
+samples), Botnet Activity (59 samples), and Data Exfiltration (1 sample) score far lower (F1 \
+0.345/0.213/0.0) purely from having too little labeled data, not a modeling flaw.
+- Autoencoder anomaly gate: ~73.0% balanced accuracy at deciding what even reaches the classifier.
+- Hybrid system: false positive rate 9.6%, false negative rate 43.7%.
+
+KNOWN LIMITATIONS (state these plainly if asked, never hide them):
+- Sequential-gate recall ceiling: the BiLSTM only ever sees what the Autoencoder gate already \
+flagged, so attacks the gate misses never get classified, explained, or alerted on.
+- Validated on CICIDS2017 only; no cross-dataset check (e.g. against UNSW-NB15) has been run yet.
+- Training runs on CPU, no GPU acceleration.
+
+TECH STACK: Python 3.10, TensorFlow/Keras, scikit-learn, SHAP, pandas/NumPy (ML pipeline); \
+FastAPI, SQLAlchemy, MySQL, PyMySQL (backend); React 19 + TypeScript + Vite (this dashboard).
+"""
+
+_PROJECT_SYSTEM_PROMPT = f"""You are the NetShield AI project assistant, available from the \
+dashboard's "SHAP" page. Your ONLY two allowed topics are:
+(1) This specific project -- its architecture, pipeline, dataset, evaluation results, \
+limitations, and tech stack, using ONLY the facts in the project fact sheet below. Never invent \
+a metric, dataset size, or architectural detail that isn't in that fact sheet.
+(2) General cybersecurity and network-threat education -- e.g. explaining what a DoS/DDoS, \
+brute-force, port-scanning, botnet, malware, or data-exfiltration attack is, how intrusion \
+detection or SHAP explainability generally work, or similar security concepts. For this topic \
+you may use your own general knowledge, not just the fact sheet.
+
+For ANY other topic (general chit-chat, coding help unrelated to this project, other companies' \
+products, personal advice, current events, etc.), politely decline in one sentence and redirect \
+the user back to asking about NetShield AI or network security topics. Do not answer the \
+off-topic question even partially first.
+
+Keep answers concise and analyst-facing -- a few sentences or a short bulleted list, not an essay. \
+Never claim the project has capabilities it doesn't (e.g. do not claim real-time production \
+deployment, GPU training, or cross-dataset validation -- see Known Limitations).
+
+PROJECT FACT SHEET:
+{_PROJECT_FACT_SHEET}
+"""
+
+
+def answer_project_question(question: str, history: list[dict] | None = None) -> ChatAnswer:
+    """General project/threat Q&A for the sidebar's "SHAP" page -- not grounded in any one alert.
+
+    Always an LLM call (Gemini): unlike the per-alert assistant, there's no per-alert structured
+    data to answer from deterministically here, so there's nothing to match against before
+    falling back to the model. Degrades to an honest "unavailable" answer, never raises to the
+    caller -- same contract as answer_question() above.
+    """
+    if not settings.gemini_api_key:
+        return ChatAnswer(
+            "This assistant isn't available right now: no Gemini API key is configured on the "
+            "server (GEMINI_API_KEY). Ask your project admin to add one to backend/.env.",
+            ChatSources(),
+        )
+
+    try:
+        from google import genai
+        from google.genai import types as genai_types
+    except ImportError:
+        return ChatAnswer(
+            "This assistant isn't available right now: the 'google-genai' package is not "
+            "installed on the server.",
+            ChatSources(),
+        )
+
+    contents: list[dict] = []
+    for turn in history or []:
+        role = turn.get("role")
+        content = turn.get("content")
+        if role in ("user", "assistant") and isinstance(content, str) and content.strip():
+            contents.append({"role": "model" if role == "assistant" else "user", "parts": [{"text": content}]})
+    contents.append({"role": "user", "parts": [{"text": question}]})
+
+    try:
+        client = genai.Client(api_key=settings.gemini_api_key)
+        response = client.models.generate_content(
+            model=settings.gemini_model,
+            contents=contents,
+            config=genai_types.GenerateContentConfig(system_instruction=_PROJECT_SYSTEM_PROMPT, max_output_tokens=1024),
+        )
+    except Exception as exc:  # covers google.genai.errors.APIError and anything else unexpected
+        logger.exception("Gemini call failed for project chat.")
+        return ChatAnswer(
+            f"This assistant hit an error and couldn't answer that ({exc}). Try again in a moment.",
+            ChatSources(),
+        )
+
+    text = (response.text or "").strip()
+    if not text:
+        return ChatAnswer("The assistant returned an empty response. Try rephrasing your question.", ChatSources())
+    return ChatAnswer(text, ChatSources())

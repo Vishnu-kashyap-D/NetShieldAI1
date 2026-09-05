@@ -7,11 +7,13 @@ import type {
   FeedbackOut,
   HealthOut,
   IngestSummaryOut,
+  LoginIn,
   RetrainTriggerIn,
   RiskLevel,
   StatsSummaryOut,
   TimeseriesPointOut,
   TrainingRunOut,
+  UserOut,
 } from "../types/api";
 
 /** Query params for listAlerts -- mirrors GET /api/alerts (backend/app/routers/alerts.py). */
@@ -109,4 +111,30 @@ export interface DataProvider {
    * @throws NotFoundError if no alert with this id exists.
    */
   askAboutAlert(alertId: number, question: string, history?: ChatMessage[]): Promise<ChatOut>;
+
+  /**
+   * POST /api/chat -- the sidebar's "SHAP" page. Unlike askAboutAlert, this is NOT grounded in
+   * any one alert; it only answers questions about this project or general network-threat
+   * topics (backend/app/chat_service.py::answer_project_question), refusing anything else.
+   */
+  askProjectQuestion(question: string, history?: ChatMessage[]): Promise<ChatOut>;
+
+  /**
+   * POST /api/auth/login. Real mode: verifies credentials against the backend and sets the
+   * session cookie; throws on a wrong email/password. Mock mode: cosmetic (matches the old
+   * "any password signs you in" demo behavior) -- accepts any input and echoes it back as the
+   * signed-in identity, never contacting a server.
+   */
+  login(payload: LoginIn): Promise<UserOut>;
+
+  /** POST /api/auth/logout in real mode (clears the session cookie server-side); a no-op in mock mode. */
+  logout(): Promise<void>;
+
+  /**
+   * GET /api/auth/me in real mode -- used on app load to check whether an existing session
+   * cookie is still valid (returns null, not a throw, if there's no session or it expired).
+   * Mock mode always returns null; the mock session's own persistence is handled entirely by
+   * SessionProvider's sessionStorage logic, not this method.
+   */
+  getCurrentUser(): Promise<UserOut | null>;
 }

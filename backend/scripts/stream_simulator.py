@@ -44,12 +44,32 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--alerts-only", dest="include_all_windows", action="store_false", help="Store only Medium/High windows.")
     parser.add_argument("--shap", action="store_true", help="Attach SHAP explanations (slower per chunk).")
+    parser.add_argument(
+        "--email", default="hunter@netshield.ai",
+        help="Account to log in as (POST /api/ingest/* now requires Threat Hunter or Administrator).",
+    )
+    parser.add_argument("--password", default="NetShield@123", help="Password for --email (default: the seeded demo accounts' password).")
     return parser.parse_args()
 
 
-def _check_backend_ready(api_url: str) -> None:
+def _login(session: requests.Session, api_url: str, email: str, password: str) -> None:
     try:
-        response = requests.get(f"{api_url}/api/health", timeout=5)
+        response = session.post(f"{api_url}/api/auth/login", json={"email": email, "password": password}, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        print(
+            f"Could not log in as {email} ({exc}). This script needs a Threat Hunter or Administrator "
+            "account -- pass --email/--password for a different one if the default seeded accounts "
+            "were changed or removed.",
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from exc
+    print(f"Logged in as {response.json()['name']} ({response.json()['role']}).")
+
+
+def _check_backend_ready(session: requests.Session, api_url: str) -> None:
+    try:
+        response = session.get(f"{api_url}/api/health", timeout=5)
         response.raise_for_status()
         health = response.json()
     except requests.RequestException as exc:
@@ -61,12 +81,14 @@ def _check_backend_ready(api_url: str) -> None:
         raise SystemExit(1)
 
 
-def _send_chunk(api_url: str, source_name: str, chunk: pd.DataFrame, include_all_windows: bool, shap: bool) -> dict:
+def _send_chunk(
+    session: requests.Session, api_url: str, source_name: str, chunk: pd.DataFrame, include_all_windows: bool, shap: bool
+) -> dict:
     buffer = io.StringIO()
     chunk.to_csv(buffer, index=False)
     files = {"file": (source_name, buffer.getvalue(), "text/csv")}
     params = {"include_all_windows": str(include_all_windows).lower(), "shap": str(shap).lower()}
-    response = requests.post(f"{api_url}/api/ingest/csv", files=files, params=params, timeout=120)
+    response = session.post(f"{api_url}/api/ingest/csv", files=files, params=params, timeout=120)
     response.raise_for_status()
     return response.json()
 
@@ -77,7 +99,9 @@ def main() -> None:
     if not input_path.exists():
         raise SystemExit(f"Input CSV not found: {input_path}")
 
-    _check_backend_ready(args.api_url)
+    session = requests.Session()
+    _check_backend_ready(session, args.api_url)
+    _login(session, args.api_url, args.email, args.password)
 
     df = pd.read_csv(input_path, low_memory=False)
     chunk_rows = max(args.chunk_rows, 10)  # below window_size, a chunk could never produce a window
@@ -95,7 +119,7 @@ def main() -> None:
                 if len(chunk) < 10:
                     break  # trailing remainder too small to form even one window
 
-                summary = _send_chunk(args.api_url, input_path.name, chunk, args.include_all_windows, args.shap)
+                summary = _send_chunk(session, args.api_url, input_path.name, chunk, args.include_all_windows, args.shap)
                 risk = summary["risk_level_counts"]
                 labels = {k: v for k, v in summary["predicted_label_counts"].items() if k != "Normal"}
                 label_note = f" -> {labels}" if labels else ""

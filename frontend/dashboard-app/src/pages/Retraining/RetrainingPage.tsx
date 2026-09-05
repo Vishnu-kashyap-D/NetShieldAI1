@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { TrainingRunOut } from "../../types/api";
 import { useDataProvider } from "../../data/DataModeContext";
 import { useSession } from "../../auth/session";
+import { CAN_TRIGGER_RETRAIN, roleCan } from "../../auth/permissions";
 import { usePolledAsync } from "../../hooks/usePolledAsync";
 import { ApiUnavailableError, RetrainAlreadyRunningError } from "../../data/errors";
 import { PageHeader } from "../../components/common/PageHeader";
@@ -123,6 +124,7 @@ export function RetrainingPage() {
 
   const dataSourceNotice = provider.getDataSourceNotice();
   const isMock = provider.mode === "mock";
+  const canRetrain = roleCan(analyst?.role, CAN_TRIGGER_RETRAIN);
 
   return (
     <section>
@@ -143,6 +145,11 @@ export function RetrainingPage() {
         {aRunIsActive ? (
           <div className="retrain-active-note">
             A training run (#{latestRun!.id}) is already in progress — see its status below.
+          </div>
+        ) : !canRetrain ? (
+          <div className="retrain-active-note" role="note">
+            Your role ({analyst?.role ?? "unknown"}) can't start a retraining run — this action is restricted to
+            Administrators. You can still view run history and status below.
           </div>
         ) : !confirmOpen ? (
           <button className="btn primary" onClick={() => setConfirmOpen(true)}>

@@ -59,6 +59,22 @@ def _rebuild_test_split(preprocessing: dict):
     X_raw, raw_labels, _ = dataframe_to_features(df, feature_names=feature_names)
 
     raw_label_encoder = preprocessing["raw_label_encoder"]
+    # A feedback CSV can grow after training finished (an analyst submits more feedback
+    # through the live app), and an analyst-entered label isn't guaranteed to match the raw
+    # CICIDS label vocabulary the encoder was fit on. Drop only those rows here -- this is
+    # for regenerating report figures, not retraining, so exact reproduction of a handful of
+    # post-training feedback rows isn't required; failing outright on one bad label would be.
+    known_labels = set(raw_label_encoder.classes_)
+    recognized_mask = np.array([label in known_labels for label in raw_labels])
+    if not recognized_mask.all():
+        dropped = len(raw_labels) - int(recognized_mask.sum())
+        print(f"Warning: skipping {dropped} row(s) with labels unseen by the trained encoder "
+              f"(likely feedback submitted after training): "
+              f"{set(raw_labels[~recognized_mask])}")
+        df = df.loc[recognized_mask].reset_index(drop=True)
+        X_raw = X_raw.loc[recognized_mask].reset_index(drop=True)
+        raw_labels = raw_labels[recognized_mask]
+
     y_raw = raw_label_encoder.transform(raw_labels)
     benign_id = int(preprocessing["benign_id"])
 

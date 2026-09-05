@@ -56,28 +56,82 @@ uvicorn app.main:app --reload --port 8000
 
 Interactive API docs: http://localhost:8000/docs
 
+On first startup against an empty `users` table, four demo accounts are seeded automatically
+(see [Authentication](#authentication) below) so there's something to log in with immediately.
+
+## Authentication
+
+Every route except `GET /api/health` requires a valid session. A session is an opaque token
+(`app/auth.py::create_session`) stored in the `sessions` table and set as an httpOnly cookie —
+not a JWT, so logging out is a real row delete rather than waiting out a token's expiry.
+
+Four roles exist (`app/auth.py::Role`), assigned to an account at creation and never
+self-selected at login:
+
+| Role | Can do |
+|---|---|
+| Viewer | Read alerts/stats/analytics, use both chatbots |
+| Security Analyst | Viewer + submit feedback (`POST /api/feedback`) |
+| Threat Hunter | Security Analyst + ingest traffic (`POST /api/ingest/*`) |
+| Administrator | Threat Hunter + trigger retraining (`POST /api/retrain`) + manage users (`POST/GET /api/auth/users`) |
+
+**Seeded demo accounts** (created once, only if the `users` table is completely empty —
+`app/seed.py`), all sharing the password `NetShield@123`:
+
+| Email | Role |
+|---|---|
+| `admin@netshield.ai` | Administrator |
+| `analyst@netshield.ai` | Security Analyst |
+| `hunter@netshield.ai` | Threat Hunter |
+| `viewer@netshield.ai` | Viewer |
+
+There's no public self-registration endpoint — an Administrator creates further accounts via
+`POST /api/auth/users`. The frontend's mock/demo data mode (see `frontend/dashboard-app/`) does
+**not** use any of this — it's a cosmetic, client-side-only session for presenting the UI without
+a backend; only "Live API" mode talks to real auth.
+
 ## API surface
 
-| Endpoint | Purpose |
-|---|---|
-| `GET /api/health` | Model-loaded status |
-| `POST /api/ingest/csv` | Upload a traffic CSV, score it, store alerts |
-| `POST /api/ingest/demo` | Score the repo's curated `demo/panel_demo_traffic.csv` (no upload needed — handy for testing/demos) |
-| `GET /api/alerts` | List alerts, filterable by `risk_level`, `category`, `source_file`, `batch_id`, paginated |
-| `GET /api/alerts/{id}` | Full alert detail incl. raw feature vector and SHAP explanations |
-| `GET /api/stats/summary` | Counts by risk level / category, for dashboard tiles |
-| `GET /api/stats/timeseries` | Per-minute alert counts for the last N minutes, for a chart |
-| `POST /api/feedback` | Analyst submits a validated label for an alert; appends to `data/feedback/validated_traffic.csv` (same file `cyber_ai.train --feedback-csv` reads) |
-| `GET /api/feedback` | List submitted feedback |
-| `POST /api/retrain` | Kick off `cyber_ai.train` with accumulated feedback, in the background |
-| `GET /api/retrain` / `GET /api/retrain/{id}` | Check retraining run status/metrics |
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `GET /api/health` | None | Model-loaded status |
+| `POST /api/auth/login` | None (this *is* login) | Verify email/password, set the session cookie |
+| `POST /api/auth/logout` | Any role | Invalidate this browser's session |
+| `GET /api/auth/me` | Any role | Current user's identity — used on page load to check for an existing valid session |
+| `GET /api/auth/roles` | Any role | The fixed list of assignable roles |
+| `POST /api/auth/users` | Administrator | Create an account |
+| `GET /api/auth/users` | Administrator | List all accounts |
+| `POST /api/ingest/csv` | Threat Hunter, Administrator | Upload a traffic CSV, score it, store alerts |
+| `POST /api/ingest/demo` | Threat Hunter, Administrator | Score the repo's curated `demo/panel_demo_traffic.csv` (no upload needed — handy for testing/demos) |
+| `GET /api/alerts` | Any role | List alerts, filterable by `risk_level`, `category`, `source_file`, `batch_id`, paginated |
+| `GET /api/alerts/{id}` | Any role | Full alert detail incl. raw feature vector and SHAP explanations |
+| `POST /api/alerts/{id}/chat` | Any role | Per-alert explainability chatbot, grounded in that alert's own data |
+| `POST /api/chat` | Any role | General project/network-threat chatbot (not tied to an alert) |
+| `GET /api/stats/summary` | Any role | Counts by risk level / category, for dashboard tiles |
+| `GET /api/stats/timeseries` | Any role | Per-minute alert counts for the last N minutes, for a chart |
+| `POST /api/feedback` | Security Analyst, Threat Hunter, Administrator | Analyst submits a validated label for an alert; appends to `data/feedback/validated_traffic.csv` (same file `cyber_ai.train --feedback-csv` reads) |
+| `GET /api/feedback` | Any role | List submitted feedback |
+| `POST /api/retrain` | Administrator | Kick off `cyber_ai.train` with accumulated feedback, in the background |
+| `GET /api/retrain` / `GET /api/retrain/{id}` | Any role | Check retraining run status/metrics |
+
+## Chatbots
+
+Both `POST /api/alerts/{id}/chat` and `POST /api/chat` run on one Gemini key/model
+(`GEMINI_API_KEY`/`GEMINI_MODEL` in `.env`) — see `app/chat_service.py`. The per-alert assistant
+tries a deterministic matcher first (confidence, anomaly score, top SHAP features, glossary
+lookups — works without any key at all) and only calls the LLM for genuinely open-ended
+questions; the general assistant is LLM-only, grounded in a fixed, hand-verified project fact
+sheet, and refuses anything outside "this project" or "network security threats." Both degrade
+to an honest "unavailable" message rather than crashing if `GEMINI_API_KEY` is unset.
 
 ## Stream simulator
 
 There's no live traffic feed yet, so `backend/scripts/stream_simulator.py` stands in for
 one: it replays a CSV in small paced chunks against `POST /api/ingest/csv` instead of
-scoring it all in one instant, so `/api/stats/timeseries` shows an actual trend and a
-future dashboard would see alerts arrive over time rather than all at once.
+scoring it all in one instant, so `/api/stats/timeseries` shows an actual trend and the
+dashboard sees alerts arrive over time rather than all at once. Since `POST /api/ingest/*`
+now requires a Threat Hunter or Administrator session, the script logs in first (defaults to
+the seeded `hunter@netshield.ai`; override with `--email`/`--password` for a different account).
 
 ```bash
 # make sure the server from step 5 above is already running, then in another terminal:
@@ -116,5 +170,4 @@ sliding buffer server-side instead.
   several minutes); poll `GET /api/retrain/{id}` for status. On success it automatically
   reloads the in-process model so the very next `/api/ingest/*` call uses the retrained
   weights — no server restart needed.
-- There's no stream simulator yet — `/ingest/demo` (or repeatedly calling `/ingest/csv`
-  with slices of a CSV) is the current stand-in for "live" traffic until that piece exists.
+- Every route below `/api/health` requires a session -- see [Authentication](#authentication).

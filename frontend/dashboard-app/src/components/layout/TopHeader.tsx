@@ -9,8 +9,8 @@ export function TopHeader({ onToggleSidebar }: { onToggleSidebar: () => void }) 
   const { analyst, signOut } = useSession();
   const navigate = useNavigate();
 
-  function handleSignOut() {
-    signOut();
+  async function handleSignOut() {
+    await signOut();
     navigate("/login");
   }
 

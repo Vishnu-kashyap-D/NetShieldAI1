@@ -15,9 +15,13 @@ npm install
 npm run dev
 ```
 
-Opens at `http://localhost:5173`. Sign in with any name/password, or use
-"Continue as demo analyst" — this is a cosmetic, session-only login (see
-`src/auth/session.tsx`); there's no real credential verification yet.
+Opens at `http://localhost:5173`. The sign-in form depends on which data mode is active
+(see below): in **Demo mode**, any name/password (or "Continue as demo analyst") signs you
+in — cosmetic, session-only, no server involved. In **Live API mode**, it's a real login
+against the backend's authentication (`src/auth/session.tsx`) — see the backend's README for
+the seeded demo accounts (`admin@netshield.ai` / `NetShield@123`, etc.) and the four roles
+(Viewer, Security Analyst, Threat Hunter, Administrator), each gated to real permissions on
+both the frontend (hidden/disabled actions) and the backend (the actual enforcement).
 
 Other scripts: `npm run build` (type-check + production bundle), `npm run
 lint` (oxlint), `npm run preview` (serve the production build locally).
@@ -82,10 +86,10 @@ flow is demonstrable without waiting on the scenario at all.
 
 ```
 src/
-  auth/           cosmetic demo session (login gate)
+  auth/           session (real in Live API mode, cosmetic in Demo mode) + role permissions
   data/           DataProvider interface, mock + real implementations, mock data generator
   components/     layout/, common/, dashboard/, alerts/, alertDetail/, retraining/
-  pages/          Login, Dashboard, Alerts, AlertDetail, Feedback, Retraining, Placeholder
+  pages/          Login, Dashboard, Alerts, AlertDetail, Analytics, Shap, Feedback, Retraining
   hooks/          usePolledAsync (loading/error/success + polling)
   constants/      shared taxonomy (categories, risk levels)
   styles/         theme.css (design tokens shared across the app)

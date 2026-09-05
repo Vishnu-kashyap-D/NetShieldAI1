@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AlertDetailOut, AttackCategory, FeedbackOut } from "../../types/api";
 import { useDataProvider } from "../../data/DataModeContext";
 import { useSession } from "../../auth/session";
+import { CAN_SUBMIT_FEEDBACK, roleCan } from "../../auth/permissions";
 import { usePolledAsync } from "../../hooks/usePolledAsync";
 import { CATEGORY_ORDER } from "../../constants/taxonomy";
 import { SectionCard } from "../../components/common/SectionCard";
@@ -42,6 +43,7 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
   // not a fabricated "feedback by alert" API capability.
   const feedbackList = usePolledAsync(() => provider.listFeedback(), [provider]);
   const historyForAlert = (feedbackList.data ?? []).filter((f) => f.alert_id === alert.id);
+  const canSubmitFeedback = roleCan(analyst?.role, CAN_SUBMIT_FEEDBACK);
 
   function resetForm() {
     setVerdict(null);
@@ -130,6 +132,11 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
           <button className="btn" onClick={resetForm}>
             Submit another correction
           </button>
+        </div>
+      ) : !canSubmitFeedback ? (
+        <div className="feedback-caveat" role="note">
+          Your role ({analyst?.role ?? "unknown"}) can't submit feedback — this action requires Security Analyst,
+          Threat Hunter, or Administrator. You can still review feedback history below.
         </div>
       ) : (
         <div className="feedback-form">

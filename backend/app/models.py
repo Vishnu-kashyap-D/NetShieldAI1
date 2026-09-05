@@ -44,6 +44,39 @@ class Alert(Base):
     feedback: Mapped[list["Feedback"]] = relationship(back_populates="alert", cascade="all, delete-orphan")
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(128))
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(60))  # bcrypt hashes are always 60 chars
+    # One of app.auth.Role's values -- assigned at account creation, never chosen by the user
+    # at login. Real RBAC means access level is a server-side fact about the account, not
+    # something a client can self-select (that's what the old cosmetic login's role dropdown did).
+    role: Mapped[str] = mapped_column(String(32), index=True)
+
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+
+    sessions: Mapped[list["UserSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+
+# Named UserSession, not Session -- every router already imports sqlalchemy.orm.Session as the
+# DB-session type, and shadowing that name with this model would be a real bug waiting to happen.
+class UserSession(Base):
+    __tablename__ = "sessions"
+
+    # Opaque random token (see app.auth.create_session), not an auto-increment id -- this IS
+    # the session cookie's value, so it must be unguessable, not just unique.
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+    expires_at: Mapped[dt.datetime] = mapped_column(DateTime, index=True)
+
+    user: Mapped["User"] = relationship(back_populates="sessions")
+
+
 class Feedback(Base):
     __tablename__ = "feedback"
 

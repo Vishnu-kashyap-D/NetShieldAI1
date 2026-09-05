@@ -2,13 +2,14 @@ import { NavLink } from "react-router-dom";
 import { useDataProvider } from "../../data/DataModeContext";
 import { usePolledAsync } from "../../hooks/usePolledAsync";
 import { useSession } from "../../auth/session";
-import { BrandMark, IconGrid, IconShield, IconChart, IconCheck, IconRefresh } from "../common/icons";
+import { BrandMark, IconGrid, IconShield, IconChart, IconCheck, IconRefresh, IconModelShield } from "../common/icons";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", end: true, icon: <IconGrid /> },
   { to: "/alerts", label: "Alerts", icon: <IconShield /> },
   { to: "/analytics", label: "Analytics", icon: <IconChart /> },
+  { to: "/shap", label: "SHAP", icon: <IconModelShield /> },
   { to: "/feedback", label: "Feedback", icon: <IconCheck /> },
   { to: "/retraining", label: "Retraining", icon: <IconRefresh /> },
 ];

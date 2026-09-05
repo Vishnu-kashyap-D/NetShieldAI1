@@ -7,21 +7,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from cyber_ai.feedback import feedback_label
+
+from app.auth import CAN_SUBMIT_FEEDBACK, get_current_user, require_role
 from app.config import settings
 from app.database import get_db
 from app.detection_service import get_engine
-from app.models import Alert, Feedback
+from app.models import Alert, Feedback, User
 from app.schemas import FeedbackIn, FeedbackOut
 
-router = APIRouter(prefix="/feedback", tags=["feedback"])
-
-# Mirrors cyber_ai.feedback._feedback_label: an analyst confirming "this alert was a
-# false positive" should feed back as BENIGN, not as a literal "Normal" class label.
-_NORMAL_ALIASES = {"normal", "normal / ignored", "benign"}
-
-
-def _feedback_label(value: str) -> str:
-    return "BENIGN" if value.strip().lower() in _NORMAL_ALIASES else value.strip()
+# GET requires only a valid session (any role can review feedback history); POST additionally
+# requires CAN_SUBMIT_FEEDBACK, enforced per-route below since it's stricter than the router default.
+router = APIRouter(prefix="/feedback", tags=["feedback"], dependencies=[Depends(get_current_user)])
 
 
 def _append_to_feedback_store(store_path: Path, feature_names: list[str], features: dict, label: str) -> None:
@@ -37,12 +34,16 @@ def _append_to_feedback_store(store_path: Path, feature_names: list[str], featur
 
 
 @router.post("", response_model=FeedbackOut)
-def submit_feedback(payload: FeedbackIn, db: Session = Depends(get_db)) -> FeedbackOut:
+def submit_feedback(
+    payload: FeedbackIn,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role(*CAN_SUBMIT_FEEDBACK)),
+) -> FeedbackOut:
     alert = db.get(Alert, payload.alert_id)
     if alert is None:
         raise HTTPException(status_code=404, detail="Alert not found")
 
-    label = _feedback_label(payload.validated_label)
+    label = feedback_label(payload.validated_label)
     engine = get_engine()
     _append_to_feedback_store(settings.feedback_store, engine.feature_names, alert.features, label)
 

@@ -10,11 +10,14 @@ import { AlertDetailPage } from "./pages/AlertDetail/AlertDetailPage";
 import { FeedbackPage } from "./pages/Feedback/FeedbackPage";
 import { RetrainingPage } from "./pages/Retraining/RetrainingPage";
 import { AnalyticsPage } from "./pages/Analytics/AnalyticsPage";
+import { ShapPage } from "./pages/Shap/ShapPage";
 
 function App() {
   return (
-    <SessionProvider>
-      <DataModeProvider>
+    // DataModeProvider must be outermost: SessionProvider calls useDataProvider() to decide
+    // between a real, server-verified session and mock mode's cosmetic one.
+    <DataModeProvider>
+      <SessionProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -30,6 +33,7 @@ function App() {
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="alerts/:id" element={<AlertDetailPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="shap" element={<ShapPage />} />
               <Route path="feedback" element={<FeedbackPage />} />
               <Route path="retraining" element={<RetrainingPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -37,8 +41,8 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </DataModeProvider>
-    </SessionProvider>
+      </SessionProvider>
+    </DataModeProvider>
   );
 }
 

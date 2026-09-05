@@ -22,7 +22,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _feedback_label(value: object) -> str:
+def feedback_label(value: object) -> str:
+    """Maps an analyst-facing validated label onto the raw label vocabulary the model trains on.
+
+    "Normal" (the decision label shown in the UI/alerts) and its "Normal / Ignored" variant both
+    mean "this was correctly-identified benign traffic" -- the model itself was never trained on
+    a literal "Normal" class, only BENIGN, so both must resolve to BENIGN before being written to
+    the feedback store. Public (not `_feedback_label`) because backend/app/routers/feedback.py
+    imports this directly instead of keeping its own separate copy of this mapping.
+    """
     label = normalize_label(value)
     if label in {NORMAL_DECISION_LABEL, "Normal / Ignored"}:
         return BENIGN_LABEL
@@ -46,7 +54,7 @@ def main() -> None:
         raise ValueError("No validated labels were found in the alert CSV.")
 
     feedback = validated.reindex(columns=feature_names)
-    feedback[LABEL_COLUMN] = validated[args.validated_label_column].map(_feedback_label)
+    feedback[LABEL_COLUMN] = validated[args.validated_label_column].map(feedback_label)
 
     store_path = Path(args.feedback_store)
     store_path.parent.mkdir(parents=True, exist_ok=True)

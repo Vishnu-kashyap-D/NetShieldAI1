@@ -11,13 +11,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth import CAN_TRIGGER_RETRAIN, get_current_user, require_role
 from app.config import settings
 from app.database import SessionLocal, get_db
 from app.detection_service import reload_engine
-from app.models import TrainingRun
+from app.models import TrainingRun, User
 from app.schemas import RetrainTriggerIn, TrainingRunOut
 
-router = APIRouter(prefix="/retrain", tags=["retrain"])
+# GET requires only a valid session (any role can see training history); POST additionally
+# requires CAN_TRIGGER_RETRAIN, enforced per-route below since it's stricter than the router default.
+router = APIRouter(prefix="/retrain", tags=["retrain"], dependencies=[Depends(get_current_user)])
 
 
 def _count_feedback_rows(path: Path) -> int | None:
@@ -76,14 +79,21 @@ def _run_training(run_id: int) -> None:
 
 
 @router.post("", response_model=TrainingRunOut)
-def trigger_retrain(payload: RetrainTriggerIn, db: Session = Depends(get_db)) -> TrainingRunOut:
+def trigger_retrain(
+    payload: RetrainTriggerIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(*CAN_TRIGGER_RETRAIN)),
+) -> TrainingRunOut:
     already_running = db.execute(select(TrainingRun).where(TrainingRun.status == "running")).scalars().first()
     if already_running is not None:
         raise HTTPException(status_code=409, detail=f"Training run {already_running.id} is already running.")
 
+    # `triggered_by` is the authenticated user's own name, never the client-supplied
+    # `payload.triggered_by` -- a client shouldn't be able to attribute a training run to
+    # someone else. RetrainTriggerIn.triggered_by is kept only so old callers don't 422.
     run = TrainingRun(
         status="running",
-        triggered_by=payload.triggered_by,
+        triggered_by=user.name,
         feedback_rows_used=_count_feedback_rows(settings.feedback_store),
     )
     db.add(run)
