@@ -10,15 +10,18 @@ import type {
   FeedbackOut,
   HealthOut,
   IngestSummaryOut,
+  LoginIn,
   RetrainTriggerIn,
   RiskLevel,
   StatsSummaryOut,
   TimeseriesPointOut,
   TrainingRunOut,
+  UserOut,
 } from "../types/api";
 import { NotFoundError, RetrainAlreadyRunningError } from "./errors";
 import { buildFeatureVector } from "./mock/featureTemplates";
 import { mockChatAnswer } from "./mock/chatEngine";
+import { mockProjectChatAnswer } from "./mock/projectChatEngine";
 import { buildShapJson, generateMockAlerts, toAlertDetail, type GeneratedAlert } from "./mock/mockDataset";
 import { createRng, randInt } from "./mock/random";
 import type { SimulatedWorkflowEvent } from "./mock/scenario";
@@ -308,6 +311,30 @@ export class MockDataProvider implements DataProvider {
     const entry = this.alerts.find((e) => e.alert.id === alertId);
     if (!entry) throw new NotFoundError(`Alert ${alertId} not found`);
     return mockChatAnswer(question, toAlertDetail(entry));
+  }
+
+  // Same statelessness note as askAboutAlert above -- mock mode never calls Gemini either.
+  async askProjectQuestion(question: string, _history?: ChatMessage[]): Promise<ChatOut> {
+    return mockProjectChatAnswer(question);
+  }
+
+  // Cosmetic, by design (see frontend/dashboard-app/src/auth/session.tsx) -- mock mode never
+  // contacts a server, so it can't verify a real password. It accepts any input and echoes it
+  // back as the signed-in identity; the actual demo-session persistence (surviving a refresh,
+  // "Continue as demo analyst") is handled by SessionProvider itself, not by this method.
+  async login(payload: LoginIn): Promise<UserOut> {
+    const name = payload.email.split("@")[0] || "Demo Analyst";
+    return { id: 0, name, email: payload.email, role: "Security Analyst" };
+  }
+
+  async logout(): Promise<void> {
+    // Nothing to invalidate server-side in mock mode.
+  }
+
+  async getCurrentUser(): Promise<UserOut | null> {
+    // Mock mode's session persistence is sessionStorage-based inside SessionProvider itself,
+    // not a server session this method could check -- always null here is correct, not a stub.
+    return null;
   }
 
   /**

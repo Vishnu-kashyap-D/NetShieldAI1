@@ -5,13 +5,16 @@ import io
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
+from app.auth import CAN_INGEST_TRAFFIC, require_role
 from app.config import settings
 from app.database import get_db
 from app.detection_service import get_engine, load_csv_as_traffic_frame, new_batch_id
 from app.models import Alert
 from app.schemas import IngestSummaryOut
 
-router = APIRouter(prefix="/ingest", tags=["ingest"])
+# Both routes here run real traffic through the trained models and write alerts -- a Viewer
+# or Security Analyst shouldn't be able to trigger that, only Threat Hunter/Administrator.
+router = APIRouter(prefix="/ingest", tags=["ingest"], dependencies=[Depends(require_role(*CAN_INGEST_TRAFFIC))])
 
 
 def _score_and_store(

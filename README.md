@@ -2,6 +2,12 @@
 
 ![Pipeline flowchart](docs/pipeline_flowchart.svg)
 
+![Full system architecture](docs/full_architecture.png)
+
+The diagram above is the ML pipeline only (steps 1-11 below). [`docs/full_architecture.png`](docs/full_architecture.png)
+shows the application layer built on top of it — backend, database, authentication, dashboard, and chatbots — which
+the pipeline-only diagram predates.
+
 This project implements a hybrid Autoencoder + BiLSTM threat detection pipeline over the CICIDS2017 `MachineLearningCVE` CSV files:
 
 1. Data collection and cleaning from CICIDS2017 CSV flow logs (including duplicate-row removal).
@@ -161,11 +167,14 @@ Writes `reports/figures/confusion_matrix.png`, `reports/figures/roc_curves.png`,
 
 ## Backend
 
-`backend/` is a FastAPI service that wraps this pipeline for live use: upload/replay traffic CSVs, persist scored alerts to MySQL, expose them (plus stats, feedback, and retraining) over a REST API, and hot-reload the model in place after a retrain — no server restart needed. See [backend/README.md](backend/README.md) for setup (MySQL config, `.env`, `uvicorn app.main:app`) and the full API surface (`/api/health`, `/api/ingest/*`, `/api/alerts`, `/api/stats/*`, `/api/feedback`, `/api/retrain`).
+`backend/` is a FastAPI service that wraps this pipeline for live use: upload/replay traffic CSVs, persist scored alerts to MySQL, expose them (plus stats, feedback, and retraining) over a REST API, and hot-reload the model in place after a retrain — no server restart needed. It also enforces real authentication and role-based access control (four roles: Viewer, Security Analyst, Threat Hunter, Administrator — see [backend/README.md](backend/README.md#authentication) for the seeded demo accounts) and hosts two Gemini-backed chatbots (a per-alert explainability assistant and a general project/threat-education assistant). See [backend/README.md](backend/README.md) for setup (MySQL config, `.env`, `uvicorn app.main:app`) and the full API surface (`/api/health`, `/api/auth/*`, `/api/ingest/*`, `/api/alerts`, `/api/alerts/{id}/chat`, `/api/chat`, `/api/stats/*`, `/api/feedback`, `/api/retrain`).
 
 ## Frontend Dashboard
 
-`frontend/netshield-dashboard.html` is a single self-contained HTML/JS dashboard (no build step) for reviewing alerts, risk levels, and SHAP explanations, and for submitting analyst feedback. It can run against the live backend API or in a standalone demo mode with no backend running — open the file directly in a browser.
+Two dashboards exist:
+
+- **`frontend/dashboard-app/`** (current) — a React + TypeScript SPA (Vite) with 8 pages (Dashboard, Alerts, Alert Detail, Analytics, a "SHAP" project/threat chatbot, Feedback, Retraining), real login backed by the backend's authentication, and a Mock/Demo data mode (cosmetic, no backend needed) alongside Live API mode. See `frontend/dashboard-app/README.md`.
+- **`frontend/netshield-dashboard.html`** (earlier prototype, kept for reference) — a single self-contained HTML/JS file, no build step, no real authentication. Still functional; superseded by the React app above for active development.
 
 ## Data Cleaning Details
 

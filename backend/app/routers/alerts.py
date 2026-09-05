@@ -4,11 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user
 from app.database import get_db
 from app.models import Alert
 from app.schemas import AlertDetailOut, AlertListOut, AlertOut
 
-router = APIRouter(prefix="/alerts", tags=["alerts"])
+# Every route here requires a valid session, no specific role -- any authenticated user
+# (including Viewer) can read alerts.
+router = APIRouter(prefix="/alerts", tags=["alerts"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("", response_model=AlertListOut)

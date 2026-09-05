@@ -307,6 +307,13 @@
   .feat-grid div{display:flex; justify-content:space-between; color:var(--text-mid); border-bottom:1px dashed var(--line-soft); padding:3px 0;}
   .feat-grid div b{color:var(--text-hi); font-weight:600;}
   .shap-note{border:1px dashed var(--line); border-radius:10px; padding:12px 14px; font-size:12px; color:var(--text-low); display:flex; gap:10px; align-items:flex-start;}
+  .shap-group-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--text-low); margin:12px 0 6px; font-weight:700;}
+  .shap-group-label:first-child{margin-top:0;}
+  .shap-bar-row{display:flex; align-items:center; gap:8px; font-size:11.5px; padding:4px 0; border-bottom:1px dashed var(--line-soft);}
+  .shap-bar-row .name{flex:0 0 42%; color:var(--text-mid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:var(--font-mono);}
+  .shap-bar-row .bar-track{flex:1; height:6px; background:var(--line-soft); border-radius:4px; overflow:hidden;}
+  .shap-bar-row .bar-fill{height:100%; background:var(--brand); border-radius:4px;}
+  .shap-bar-row .val{flex:0 0 44px; text-align:right; font-family:var(--font-mono); color:var(--text-hi); font-size:11px;}
   .feedback-box{margin-top:20px; display:flex; flex-direction:column; gap:8px;}
   .btn-row{display:flex; gap:8px;}
   .btn-row .btn{flex:1;}
@@ -695,7 +702,7 @@
       <div class="card">
         <div class="card-title" style="margin-bottom:4px;">Phase roadmap</div>
         <div class="card-sub" style="margin-bottom:8px;">What's live now vs. planned</div>
-        <div class="settings-row"><div><div class="lbl">SHAP explainability</div><div class="desc">Per-feature attribution in the alert detail view</div></div><div class="settings-val">Phase 2</div></div>
+        <div class="settings-row"><div><div class="lbl">SHAP explainability</div><div class="desc">Computed by the backend on ingest (shap=true); rendered live in the alert drawer when present</div></div><div class="settings-val">Live</div></div>
         <div class="settings-row"><div><div class="lbl">Formal benchmarking</div><div class="desc">Repeatable confusion-matrix suite across models</div></div><div class="settings-val">Phase 2</div></div>
         <div class="settings-row"><div><div class="lbl">Authentication</div><div class="desc">Session login exists in the UI; server-verified credentials and role enforcement are still pending</div></div><div class="settings-val">Partial</div></div>
       </div>
@@ -749,7 +756,7 @@
 
     <footer class="page-footer">
       <span>Connected to <code id="apiBaseLabelFooter">demo stream</code></span>
-      <span>Phase 1 build — SHAP explanations and full auth land in Phase 2</span>
+      <span>Phase 1 build — SHAP explanations are live on ingested alerts; full auth lands in Phase 2</span>
     </footer>
   </div>
 </div>
@@ -777,10 +784,7 @@
   <div class="feat-grid" id="drFeatures"></div>
 
   <div class="section-label">Explainability</div>
-  <div class="shap-note">
-    <span>◐</span>
-    <span>SHAP per-feature attributions aren't wired up yet — planned for Phase 2 once the explainer is trained alongside the classifiers.</span>
-  </div>
+  <div id="shapSection"></div>
 
   <div class="feedback-box">
     <div class="section-label" style="margin-top:6px;">Analyst feedback</div>
@@ -1327,6 +1331,48 @@
   const drawer = document.getElementById("drawer");
   let currentAlert = null;
 
+  function parseShapField(raw){
+    if(!raw) return null;
+    if(Array.isArray(raw)) return raw;
+    try{ const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : null; }
+    catch(e){ return null; }
+  }
+
+  function shapBarsHtml(items){
+    const max = Math.max(...items.map(i => Math.abs(i.mean_abs_shap || 0)), 1e-9);
+    return items.map(i => {
+      const pct = Math.max(4, Math.min(100, (Math.abs(i.mean_abs_shap || 0) / max) * 100));
+      return `<div class="shap-bar-row">
+        <span class="name">${i.feature}</span>
+        <span class="bar-track"><span class="bar-fill" style="width:${pct}%"></span></span>
+        <span class="val">${(i.mean_abs_shap || 0).toFixed(3)}</span>
+      </div>`;
+    }).join("");
+  }
+
+  // Renders real per-feature SHAP attribution when the backend supplied it (ingested with
+  // shap=true). Demo-stream alerts and live alerts ingested without --shap have neither
+  // field, so this always falls back to an honest note rather than a fake explanation.
+  function renderShapSection(a){
+    const el = document.getElementById("shapSection");
+    const clf = parseShapField(a.top_classifier_features);
+    const ae = parseShapField(a.top_anomaly_features);
+    if((!clf || !clf.length) && (!ae || !ae.length)){
+      el.innerHTML = `
+        <div class="shap-note">
+          <span>◐</span>
+          <span>${USE_LIVE_API
+            ? "This alert has no SHAP data — the backend only computes it when ingested with shap=true (see backend/scripts/stream_simulator.py --shap). Re-ingest with that flag to see real per-feature attribution here."
+            : "Demo-stream alerts are generated client-side with no real model behind them, so there's nothing to explain. Switch to Live API and ingest with --shap enabled to see genuine SHAP attribution here."}</span>
+        </div>`;
+      return;
+    }
+    let html = "";
+    if(clf && clf.length) html += `<div class="shap-group-label">Classifier — top features</div>${shapBarsHtml(clf)}`;
+    if(ae && ae.length) html += `<div class="shap-group-label">Anomaly detector — top features</div>${shapBarsHtml(ae)}`;
+    el.innerHTML = html;
+  }
+
   function openDrawer(a){
     currentAlert = a;
     document.getElementById("drTitle").textContent = `Alert #${a.id} · ${a.category}`;
@@ -1339,6 +1385,7 @@
     document.getElementById("drAe").textContent = a.ae_score.toFixed(3);
     const fg = document.getElementById("drFeatures"); fg.innerHTML = "";
     a.features.forEach(f=>{ const d=document.createElement("div"); d.innerHTML = `<span>${f.name}</span><b>${f.value}</b>`; fg.appendChild(d); });
+    renderShapSection(a);
     document.getElementById("fbNote").value = "";
     scrim.classList.add("open"); drawer.classList.add("open");
   }
@@ -1358,7 +1405,7 @@
     el.innerHTML = feedbackLog.slice().reverse().map(f=>`
       <div class="feedback-log-row">
         <span class="lbl">Alert #${f.alert_id}</span>
-        <span class="badge ${f.label==="BENIGN"?"low":"high"}">${f.label}</span>
+        <span class="badge ${f.validated_label==="BENIGN"?"low":"high"}">${f.validated_label}</span>
         <span style="color:var(--text-mid);">${f.note ? f.note : "No note provided"}</span>
       </div>
     `).join("");
@@ -1498,17 +1545,18 @@
   });
 
   // seed with a short burst so the console doesn't open empty
+  const DEMO_TICK_MS = 6000;
   layoutPipeline();
   for(let i=0;i<14;i++){
     const a = generateAlert();
-    a.ts = new Date(Date.now() - (14-i)*2200);
+    a.ts = new Date(Date.now() - (14-i)*DEMO_TICK_MS);
     alerts.push(a);
     addToBucket(a.risk_level, a.ts.getTime());
   }
   computeStats(); renderCategories(); renderRecentAlerts(); renderAlertsPage(); drawChart();
   document.getElementById("mPacketsSec").textContent = "≈27";
 
-  setInterval(tickDemo, 2200);
+  setInterval(tickDemo, DEMO_TICK_MS);
   setInterval(()=>{ if(!demoPaused){ document.getElementById("mPacketsSec").textContent = windowsThisMinute; windowsThisMinute = 0; } }, 60000);
 
 })();

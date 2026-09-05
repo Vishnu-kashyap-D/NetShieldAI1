@@ -76,6 +76,32 @@ export interface ChatOut {
 /** The raw 76-value standardized feature vector stored on an alert (feature name -> value). */
 export type FeatureVector = Record<string, number | null>;
 
+/** The four roles backend/app/auth.py::Role defines. Assigned server-side at account creation --
+ * never chosen by the client at login. Must match those string values exactly. */
+export type UserRole = "Viewer" | "Security Analyst" | "Threat Hunter" | "Administrator";
+
+/** GET /api/auth/me, and the response of POST /api/auth/login and POST /api/auth/users. */
+export interface UserOut {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+/** POST /api/auth/login request body. */
+export interface LoginIn {
+  email: string;
+  password: string;
+}
+
+/** POST /api/auth/users request body (Administrator-only). */
+export interface RegisterIn {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
 /** GET /api/health */
 export interface HealthOut {
   status: string;

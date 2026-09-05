@@ -9,10 +9,12 @@ import type {
   FeedbackOut,
   HealthOut,
   IngestSummaryOut,
+  LoginIn,
   RetrainTriggerIn,
   StatsSummaryOut,
   TimeseriesPointOut,
   TrainingRunOut,
+  UserOut,
 } from "../types/api";
 import { getApiBaseUrl } from "./config";
 import { ApiRequestError, ApiUnavailableError, NotFoundError, RetrainAlreadyRunningError } from "./errors";
@@ -57,7 +59,11 @@ export class RealApiProvider implements DataProvider {
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     let response: Response;
     try {
-      response = await fetch(`${this.baseUrl}${path}`, init);
+      // credentials: "include" is required for the session cookie to be sent/received at all --
+      // the dashboard (localhost:5173) and backend (localhost:8000) are different origins, and
+      // fetch omits cookies cross-origin by default. Without this, every authenticated route
+      // would 401 even immediately after a successful login.
+      response = await fetch(`${this.baseUrl}${path}`, { credentials: "include", ...init });
     } catch (cause) {
       throw new ApiUnavailableError(
         `Could not reach the NetShield backend at ${this.baseUrl}. Is it running?`,
@@ -179,5 +185,37 @@ export class RealApiProvider implements DataProvider {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+  }
+
+  askProjectQuestion(question: string, history?: ChatMessage[]): Promise<ChatOut> {
+    const body: ChatIn = { question, history };
+    return this.request<ChatOut>(`/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  login(payload: LoginIn): Promise<UserOut> {
+    return this.request<UserOut>("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async logout(): Promise<void> {
+    await this.request<{ status: string }>("/api/auth/logout", { method: "POST" });
+  }
+
+  async getCurrentUser(): Promise<UserOut | null> {
+    try {
+      return await this.request<UserOut>("/api/auth/me");
+    } catch (error) {
+      // No/expired session is the expected case on a fresh page load, not a real error --
+      // every other error still propagates (e.g. the backend being unreachable at all).
+      if (error instanceof ApiRequestError && error.status === 401) return null;
+      throw error;
+    }
   }
 }

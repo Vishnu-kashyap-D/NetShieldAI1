@@ -2,7 +2,28 @@ from __future__ import annotations
 
 import datetime as dt
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: str
+    role: str
+
+
+class LoginIn(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class RegisterIn(BaseModel):
+    name: str = Field(min_length=1, max_length=128)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    role: str
 
 
 class AlertOut(BaseModel):
