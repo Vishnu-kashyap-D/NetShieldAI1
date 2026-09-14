@@ -257,6 +257,10 @@ button:focus-visible {
   background: var(--risk-low-bg);
   color: var(--risk-low);
 }
+.badge.status-rejected {
+  background: var(--risk-med-bg);
+  color: var(--risk-med);
+}
 .badge.status-failed {
   background: var(--risk-high-bg);
   color: var(--risk-high);
@@ -299,6 +303,15 @@ button:focus-visible {
   background: var(--risk-high-bg);
   border-radius: var(--r-sm);
   font-size: 12.5px;
+}
+
+.stale-data-banner {
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  color: var(--risk-med);
+  background: var(--risk-med-bg);
+  border-radius: var(--r-sm);
+  font-size: 12px;
 }
 
 .skeleton {

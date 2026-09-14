@@ -66,6 +66,7 @@ class IngestSummaryOut(BaseModel):
     windows_scored: int
     anomalous_windows: int
     alerts_written: int
+    duplicates_skipped: int
     risk_level_counts: dict[str, int]
     predicted_label_counts: dict[str, int]
 
@@ -83,6 +84,32 @@ class TimeseriesPointOut(BaseModel):
     high: int
     medium: int
     low: int
+
+
+class PerClassMetricOut(BaseModel):
+    category: str
+    precision: float
+    recall: float
+    f1: float
+    support: int
+
+
+class ModelMetricsOut(BaseModel):
+    """Real evaluation numbers from the last training run (reports/training_metrics.json),
+    surfaced in the dashboard so the model's actual accuracy/macro-F1/per-class breakdown is
+    visible up front rather than something a panelist has to ask about or compute by hand."""
+
+    trained_at: str | None
+    bilstm_accuracy: float
+    bilstm_macro_f1: float
+    bilstm_weighted_f1: float
+    bilstm_per_class: list[PerClassMetricOut]
+    autoencoder_accuracy: float
+    autoencoder_balanced_accuracy: float
+    autoencoder_true_positive_rate: float
+    autoencoder_true_negative_rate: float
+    hybrid_false_positive_rate: float
+    hybrid_false_negative_rate: float
 
 
 class FeedbackIn(BaseModel):

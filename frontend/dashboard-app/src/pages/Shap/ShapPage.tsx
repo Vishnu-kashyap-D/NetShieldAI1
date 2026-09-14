@@ -80,8 +80,8 @@ export function ShapPage() {
   return (
     <section>
       <PageHeader
-        title="SHAP"
-        subtitle="Ask about how NetShield AI works, its evaluation results, or general network-security threats"
+        title="Assistant"
+        subtitle="Ask about how NetShield AI works, its evaluation results, or general network-security threats -- for a specific alert's own SHAP explanation, open that alert instead"
       />
 
       <SectionCard

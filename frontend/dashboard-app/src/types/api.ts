@@ -23,8 +23,12 @@ export type AttackCategory =
   | "Malware Traffic"
   | "Data Exfiltration";
 
-/** Status values of a `training_runs` row. */
-export type RetrainStatus = "running" | "completed" | "failed";
+/**
+ * Status values of a `training_runs` row. "rejected" means training itself succeeded but the
+ * resulting model's metrics were worse than what's currently deployed, so the quality gate
+ * (backend/app/routers/retrain.py) kept the previous weights live instead of replacing them.
+ */
+export type RetrainStatus = "running" | "completed" | "rejected" | "failed";
 
 /** Which way a signed SHAP value points -- see cyber_ai/explain.py::SHAP_DIRECTION_MEANING. */
 export type ShapDirection = "positive" | "negative" | "neutral" | "unknown";
@@ -155,6 +159,7 @@ export interface IngestSummaryOut {
   windows_scored: number;
   anomalous_windows: number;
   alerts_written: number;
+  duplicates_skipped: number;
   risk_level_counts: Record<string, number>;
   predicted_label_counts: Record<string, number>;
 }
@@ -175,6 +180,30 @@ export interface TimeseriesPointOut {
   high: number;
   medium: number;
   low: number;
+}
+
+export interface PerClassMetricOut {
+  category: string;
+  precision: number;
+  recall: number;
+  f1: number;
+  support: number;
+}
+
+/** GET /api/stats/model-metrics -- real numbers from the last training run. */
+export interface ModelMetricsOut {
+  /** ISO 8601 timestamp string, or null if unavailable. */
+  trained_at: string | null;
+  bilstm_accuracy: number;
+  bilstm_macro_f1: number;
+  bilstm_weighted_f1: number;
+  bilstm_per_class: PerClassMetricOut[];
+  autoencoder_accuracy: number;
+  autoencoder_balanced_accuracy: number;
+  autoencoder_true_positive_rate: number;
+  autoencoder_true_negative_rate: number;
+  hybrid_false_positive_rate: number;
+  hybrid_false_negative_rate: number;
 }
 
 /** POST /api/feedback request body. */

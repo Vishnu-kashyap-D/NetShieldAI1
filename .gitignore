@@ -1,5 +1,8 @@
 artifacts_smoke/
 artifacts_category_smoke/
+# Transient pre-retrain safety copy (backend/app/routers/retrain.py's quality gate) -- never
+# meant to be committed, just a same-machine rollback target for a rejected retrain.
+artifacts_backup_before_retrain/
 reports_smoke/
 reports_category_smoke/
 MachineLearningCVE/

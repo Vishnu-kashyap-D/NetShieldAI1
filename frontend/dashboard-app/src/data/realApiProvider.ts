@@ -10,6 +10,7 @@ import type {
   HealthOut,
   IngestSummaryOut,
   LoginIn,
+  ModelMetricsOut,
   RetrainTriggerIn,
   StatsSummaryOut,
   TimeseriesPointOut,
@@ -123,6 +124,10 @@ export class RealApiProvider implements DataProvider {
 
   getTimeseries(params?: TimeseriesParams): Promise<TimeseriesPointOut[]> {
     return this.request<TimeseriesPointOut[]>(`/api/stats/timeseries${toQuery(params)}`);
+  }
+
+  getModelMetrics(): Promise<ModelMetricsOut> {
+    return this.request<ModelMetricsOut>("/api/stats/model-metrics");
   }
 
   ingestDemo(params?: IngestParams): Promise<IngestSummaryOut> {

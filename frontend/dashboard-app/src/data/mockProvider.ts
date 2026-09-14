@@ -11,6 +11,7 @@ import type {
   HealthOut,
   IngestSummaryOut,
   LoginIn,
+  ModelMetricsOut,
   RetrainTriggerIn,
   RiskLevel,
   StatsSummaryOut,
@@ -169,6 +170,33 @@ export class MockDataProvider implements DataProvider {
       .map(([bucketMsKey, counts]) => ({ bucket: new Date(bucketMsKey).toISOString(), ...counts }));
   }
 
+  // These are the real numbers from the last actual training run (reports/training_metrics.json)
+  // -- unlike the synthetic alert feed, this isn't fabricated demo data, it's a fixed historical
+  // fact about the one deployed model, so mock mode shows the same real evaluation results real
+  // mode would (from the live backend) rather than inventing different placeholder numbers.
+  async getModelMetrics(): Promise<ModelMetricsOut> {
+    return {
+      trained_at: "2026-09-05T19:05:00",
+      bilstm_accuracy: 0.9606508644293202,
+      bilstm_macro_f1: 0.5437087568652981,
+      bilstm_weighted_f1: 0.9718677192492143,
+      bilstm_per_class: [
+        { category: "DoS / DDoS", precision: 0.9998921484037964, recall: 0.9605263157894737, f1: 0.9798139928133587, support: 9652 },
+        { category: "Port Scanning", precision: 0.9988901220865705, recall: 0.9908256880733946, f1: 0.9948415622697127, support: 2725 },
+        { category: "Brute Force", precision: 0.7088235294117647, recall: 0.7507788161993769, f1: 0.7291981845688351, support: 321 },
+        { category: "Malware Traffic", precision: 0.21052631578947367, recall: 0.96, f1: 0.34532374100719426, support: 25 },
+        { category: "Botnet Activity", precision: 0.12429378531073447, recall: 0.7457627118644068, f1: 0.21307506053268765, support: 59 },
+        { category: "Data Exfiltration", precision: 0, recall: 0, f1: 0, support: 1 },
+      ],
+      autoencoder_accuracy: 0.6816052852142188,
+      autoencoder_balanced_accuracy: 0.7286871955353883,
+      autoencoder_true_positive_rate: 0.5336410577374433,
+      autoencoder_true_negative_rate: 0.9237333333333333,
+      hybrid_false_positive_rate: 0.09493333333333333,
+      hybrid_false_negative_rate: 0.4436360791676445,
+    };
+  }
+
   private appendSyntheticBatch(sourceFile: string, count: number): IngestSummaryOut {
     const batchId = `mock-ingest-${Date.now().toString(16)}`;
     const categories: AttackCategory[] = ["Normal", "Normal", "Normal", "DoS / DDoS", "Port Scanning", "Botnet Activity"];
@@ -231,6 +259,7 @@ export class MockDataProvider implements DataProvider {
       windows_scored: count,
       anomalous_windows: anomalousWindows,
       alerts_written: count,
+      duplicates_skipped: 0,
       risk_level_counts: riskCounts,
       predicted_label_counts: labelCounts,
     };

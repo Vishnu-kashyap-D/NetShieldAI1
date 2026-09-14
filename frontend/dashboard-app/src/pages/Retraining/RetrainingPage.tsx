@@ -224,13 +224,19 @@ export function RetrainingPage() {
               </div>
             </div>
 
-            {latestRun.status === "failed" && latestRun.error && (
+            {(latestRun.status === "failed" || latestRun.status === "rejected") && latestRun.error && (
               <div className="error-state retrain-run-error" role="alert">
+                {latestRun.status === "rejected" && (
+                  <div className="retrain-rejected-lead">
+                    Training completed, but the new model wasn't deployed -- the previous
+                    (currently live) weights were kept.
+                  </div>
+                )}
                 {latestRun.error}
               </div>
             )}
 
-            {latestRun.status === "completed" && latestRun.metrics && (
+            {(latestRun.status === "completed" || latestRun.status === "rejected") && latestRun.metrics && (
               <div className="retrain-metrics-block">
                 <div className="retrain-metrics-title">
                   Training metrics

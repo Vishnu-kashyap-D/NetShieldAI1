@@ -3,10 +3,11 @@ import type { RetrainStatus } from "../../types/api";
 const CLASS_BY_STATUS: Record<RetrainStatus, string> = {
   running: "status-running",
   completed: "status-completed",
+  rejected: "status-rejected",
   failed: "status-failed",
 };
 
-/** Consistent visual treatment for a TrainingRunOut.status value -- no invented states beyond running/completed/failed. */
+/** Consistent visual treatment for a TrainingRunOut.status value -- no invented states beyond running/completed/rejected/failed. */
 export function TrainingStatusBadge({ status }: { status: RetrainStatus }) {
   return (
     <span className={`badge ${CLASS_BY_STATUS[status]}`}>

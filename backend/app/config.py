@@ -41,8 +41,13 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
+    # Guards POST /api/ingest/csv against an accidental multi-GB upload being buffered whole
+    # into memory (the endpoint reads the full body before parsing). 200MB comfortably covers
+    # a real CICIDS2017-sized CSV with room to spare.
+    max_upload_bytes: int = 200 * 1024 * 1024
+
     # Both chatbots (backend/app/chat_service.py -- the per-alert assistant's LLM fallback AND the
-    # sidebar's general "SHAP" project/threat assistant) run on this one Gemini key/model, so the
+    # sidebar's general "Assistant" project/threat chatbot) run on this one Gemini key/model, so the
     # whole app needs only one LLM key configured, not two. When unset: the per-alert assistant's
     # deterministic questions still work fully; open-ended questions on either assistant get an
     # honest "unavailable" answer instead of a crash (see chat_service.py).

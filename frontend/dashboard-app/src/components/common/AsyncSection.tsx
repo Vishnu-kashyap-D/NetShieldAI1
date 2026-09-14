@@ -64,5 +64,19 @@ export function AsyncSection<T>({
     );
   }
 
-  return <>{children(data)}</>;
+  // We have data to show (from an earlier successful load), but the most recent
+  // background refresh failed -- surface that instead of silently freezing the
+  // display with no indication anything is wrong (e.g. the backend went down or
+  // the session expired mid-use).
+  return (
+    <>
+      {error && (
+        <div className="stale-data-banner" role="alert">
+          Showing data as of the last successful update -- the most recent refresh failed
+          {error.message ? `: ${error.message}` : "."}
+        </div>
+      )}
+      {children(data)}
+    </>
+  );
 }

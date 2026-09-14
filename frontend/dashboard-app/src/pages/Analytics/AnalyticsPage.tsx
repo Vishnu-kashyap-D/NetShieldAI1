@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { AlertListOut, StatsSummaryOut } from "../../types/api";
+import type { AlertListOut, ModelMetricsOut, StatsSummaryOut } from "../../types/api";
 import { useDataProvider } from "../../data/DataModeContext";
 import { usePolledAsync } from "../../hooks/usePolledAsync";
 import { PageHeader } from "../../components/common/PageHeader";
@@ -11,7 +11,7 @@ import { CategoryDistribution } from "../../components/dashboard/CategoryDistrib
 import { RiskLevelBreakdown } from "../../components/dashboard/RiskLevelBreakdown";
 import { MetricCard } from "../../components/alertDetail/MetricCard";
 import { TrainingStatusBadge } from "../../components/retraining/TrainingStatusBadge";
-import { formatPercent } from "../../utils/format";
+import { formatFullDateTime, formatPercent } from "../../utils/format";
 import "./AnalyticsPage.css";
 
 const POLL_MS = 20_000;
@@ -48,6 +48,7 @@ export function AnalyticsPage() {
   const stats = usePolledAsync(() => provider.getStatsSummary(), [provider], POLL_MS);
   const trend = usePolledAsync(() => provider.getTimeseries(TREND_PARAMS), [provider], POLL_MS);
   const sample = usePolledAsync(() => provider.listAlerts({ limit: SAMPLE_LIMIT, offset: 0 }), [provider], POLL_MS);
+  const modelMetrics = usePolledAsync(() => provider.getModelMetrics(), [provider], POLL_MS);
   const feedback = usePolledAsync(() => provider.listFeedback(), [provider], POLL_MS);
   const retrainRuns = usePolledAsync(() => provider.listRetrainRuns(), [provider], POLL_MS);
 
@@ -154,6 +155,15 @@ export function AnalyticsPage() {
         )}
       </SectionCard>
 
+      <SectionCard
+        title="Model evaluation (training)"
+        subtitle="Real numbers from the last training run -- not derived from live alerts"
+      >
+        <AsyncSection {...modelMetrics} emptyLabel="No training metrics available." loadingLabel="Loading evaluation…">
+          {(metrics) => <ModelEvaluationGrid metrics={metrics} />}
+        </AsyncSection>
+      </SectionCard>
+
       <SectionCard title="Feedback &amp; retraining" subtitle="Analyst validation activity and the model's training history">
         <div className="analytics-fr-row">
           <div className="analytics-fr-metric">
@@ -229,5 +239,79 @@ function DetectionMetricsGrid({ summary, sample }: { summary: StatsSummaryOut; s
         }
       />
     </div>
+  );
+}
+
+/**
+ * The headline BiLSTM accuracy (96%) is carried almost entirely by two large, easy
+ * categories -- shown alongside macro-F1 so that imbalance is visible up front rather
+ * than something a reviewer has to compute by hand. Low-support rows (under 50 test
+ * windows) are flagged inline since a single precision/recall/F1 number from very few
+ * samples isn't statistically meaningful on its own.
+ */
+function ModelEvaluationGrid({ metrics }: { metrics: ModelMetricsOut }) {
+  const LOW_SUPPORT_THRESHOLD = 50;
+  const sortedClasses = [...metrics.bilstm_per_class].sort((a, b) => b.support - a.support);
+
+  return (
+    <>
+      <div className="metric-grid">
+        <MetricCard
+          label="BiLSTM accuracy"
+          value={formatPercent(metrics.bilstm_accuracy)}
+          help="Overall classification accuracy on the held-out test split."
+        />
+        <MetricCard
+          label="BiLSTM macro-F1"
+          value={metrics.bilstm_macro_f1.toFixed(3)}
+          help="Unweighted average F1 across all 6 categories -- the honest number when class sizes are this imbalanced (weighted-F1 is 0.972)."
+        />
+        <MetricCard
+          label="Autoencoder balanced accuracy"
+          value={formatPercent(metrics.autoencoder_balanced_accuracy)}
+          help={`True positive rate ${formatPercent(metrics.autoencoder_true_positive_rate)}, true negative rate ${formatPercent(metrics.autoencoder_true_negative_rate)}.`}
+        />
+        <MetricCard
+          label="Hybrid false-negative rate"
+          value={formatPercent(metrics.hybrid_false_negative_rate)}
+          help="A direct consequence of the sequential gate: attack windows the Autoencoder doesn't flag never reach the classifier at all."
+        />
+      </div>
+
+      <div className="model-eval-table-wrap">
+        <table className="model-eval-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Precision</th>
+              <th>Recall</th>
+              <th>F1</th>
+              <th>Test support</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedClasses.map((row) => (
+              <tr key={row.category} className={row.support < LOW_SUPPORT_THRESHOLD ? "low-support" : undefined}>
+                <td data-label="Category">{row.category}</td>
+                <td data-label="Precision">{row.precision.toFixed(3)}</td>
+                <td data-label="Recall">{row.recall.toFixed(3)}</td>
+                <td data-label="F1">{row.f1.toFixed(3)}</td>
+                <td data-label="Test support">
+                  {row.support.toLocaleString()}
+                  {row.support < LOW_SUPPORT_THRESHOLD && (
+                    <span className="low-support-tag" title="Too few test samples for this number to be statistically reliable.">
+                      low sample
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {metrics.trained_at && (
+        <div className="model-eval-note">Trained {formatFullDateTime(metrics.trained_at)}.</div>
+      )}
+    </>
   );
 }

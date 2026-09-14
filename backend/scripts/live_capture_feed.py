@@ -279,6 +279,7 @@ def main() -> None:
     summary = _send_chunk(session, args.api_url, source_name, df, args.include_all_windows, args.shap)
     print("Ingest summary:")
     print(f"  windows_scored: {summary['windows_scored']}")
+    print(f"  alerts_written: {summary['alerts_written']} (duplicates_skipped: {summary['duplicates_skipped']})")
     print(f"  risk_level_counts: {summary['risk_level_counts']}")
     print(f"  predicted_label_counts: {summary['predicted_label_counts']}")
 

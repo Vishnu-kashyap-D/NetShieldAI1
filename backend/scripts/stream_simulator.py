@@ -123,11 +123,12 @@ def main() -> None:
                 risk = summary["risk_level_counts"]
                 labels = {k: v for k, v in summary["predicted_label_counts"].items() if k != "Normal"}
                 label_note = f" -> {labels}" if labels else ""
+                dup_note = f", {summary['duplicates_skipped']} duplicate(s) skipped" if summary.get("duplicates_skipped") else ""
                 print(
                     f"[pass {pass_number}] rows {start}-{start + len(chunk) - 1}: "
                     f"{summary['windows_scored']} windows, "
                     f"Low={risk.get('Low', 0)} Medium={risk.get('Medium', 0)} High={risk.get('High', 0)}"
-                    f"{label_note}"
+                    f"{label_note}{dup_note}"
                 )
                 time.sleep(args.interval)
 

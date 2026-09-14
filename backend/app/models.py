@@ -97,7 +97,7 @@ class TrainingRun(Base):
     __tablename__ = "training_runs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    status: Mapped[str] = mapped_column(String(16), default="running", index=True)  # running|completed|failed
+    status: Mapped[str] = mapped_column(String(16), default="running", index=True)  # running|completed|rejected|failed
     triggered_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     feedback_rows_used: Mapped[int | None] = mapped_column(Integer, nullable=True)

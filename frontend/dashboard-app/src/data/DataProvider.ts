@@ -8,6 +8,7 @@ import type {
   HealthOut,
   IngestSummaryOut,
   LoginIn,
+  ModelMetricsOut,
   RetrainTriggerIn,
   RiskLevel,
   StatsSummaryOut,
@@ -76,6 +77,12 @@ export interface DataProvider {
   /** GET /api/stats/timeseries */
   getTimeseries(params?: TimeseriesParams): Promise<TimeseriesPointOut[]>;
 
+  /**
+   * GET /api/stats/model-metrics -- the real accuracy/macro-F1/per-class breakdown from the
+   * last training run (reports/training_metrics.json), for the Analytics page's model card.
+   */
+  getModelMetrics(): Promise<ModelMetricsOut>;
+
   /** POST /api/ingest/demo */
   ingestDemo(params?: IngestParams): Promise<IngestSummaryOut>;
 
@@ -113,8 +120,8 @@ export interface DataProvider {
   askAboutAlert(alertId: number, question: string, history?: ChatMessage[]): Promise<ChatOut>;
 
   /**
-   * POST /api/chat -- the sidebar's "SHAP" page. Unlike askAboutAlert, this is NOT grounded in
-   * any one alert; it only answers questions about this project or general network-threat
+   * POST /api/chat -- the sidebar's "Assistant" page. Unlike askAboutAlert, this is NOT grounded
+   * in any one alert; it only answers questions about this project or general network-threat
    * topics (backend/app/chat_service.py::answer_project_question), refusing anything else.
    */
   askProjectQuestion(question: string, history?: ChatMessage[]): Promise<ChatOut>;

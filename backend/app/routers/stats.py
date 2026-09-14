@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
+from app.config import settings
 from app.database import get_db
 from app.models import Alert
-from app.schemas import StatsSummaryOut, TimeseriesPointOut
+from app.schemas import ModelMetricsOut, PerClassMetricOut, StatsSummaryOut, TimeseriesPointOut
 
 router = APIRouter(prefix="/stats", tags=["stats"], dependencies=[Depends(get_current_user)])
+
+_NON_CLASS_KEYS = {"accuracy", "macro avg", "weighted avg"}
 
 
 @router.get("/summary", response_model=StatsSummaryOut)
@@ -63,3 +67,46 @@ def timeseries(
         )
         for row in rows
     ]
+
+
+@router.get("/model-metrics", response_model=ModelMetricsOut)
+def model_metrics() -> ModelMetricsOut:
+    """Real evaluation numbers from the last training run, for the Analytics page's model card --
+    the actual macro-F1/per-class breakdown is meant to be visible proactively, not something a
+    reviewer has to ask about or compute by hand from a report they weren't given."""
+    metrics_path = settings.reports_dir / "training_metrics.json"
+    if not metrics_path.exists():
+        raise HTTPException(status_code=404, detail=f"No training_metrics.json found at {metrics_path}.")
+
+    with open(metrics_path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    bilstm_report = data["bilstm_classifier"]["classification_report"]
+    per_class = [
+        PerClassMetricOut(
+            category=category,
+            precision=values["precision"],
+            recall=values["recall"],
+            f1=values["f1-score"],
+            support=int(values["support"]),
+        )
+        for category, values in bilstm_report.items()
+        if category not in _NON_CLASS_KEYS
+    ]
+    ae_report = data["autoencoder"]["classification_report"]
+    ae_threshold = data["autoencoder"]["threshold_report"]
+    hybrid = data["hybrid_risk"]
+
+    return ModelMetricsOut(
+        trained_at=dt.datetime.fromtimestamp(metrics_path.stat().st_mtime).isoformat(),
+        bilstm_accuracy=bilstm_report["accuracy"],
+        bilstm_macro_f1=bilstm_report["macro avg"]["f1-score"],
+        bilstm_weighted_f1=bilstm_report["weighted avg"]["f1-score"],
+        bilstm_per_class=per_class,
+        autoencoder_accuracy=ae_report["accuracy"],
+        autoencoder_balanced_accuracy=ae_threshold["balanced_accuracy"],
+        autoencoder_true_positive_rate=ae_threshold["true_positive_rate"],
+        autoencoder_true_negative_rate=ae_threshold["true_negative_rate"],
+        hybrid_false_positive_rate=hybrid["false_positive_rate"],
+        hybrid_false_negative_rate=hybrid["false_negative_rate"],
+    )

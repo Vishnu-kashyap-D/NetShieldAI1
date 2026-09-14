@@ -81,6 +81,10 @@
 .retrain-run-error {
   margin-top: 14px;
 }
+.retrain-rejected-lead {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
 
 .retrain-metrics-block {
   margin-top: 18px;

@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { to: "/", label: "Dashboard", end: true, icon: <IconGrid /> },
   { to: "/alerts", label: "Alerts", icon: <IconShield /> },
   { to: "/analytics", label: "Analytics", icon: <IconChart /> },
-  { to: "/shap", label: "SHAP", icon: <IconModelShield /> },
+  { to: "/shap", label: "Assistant", icon: <IconModelShield /> },
   { to: "/feedback", label: "Feedback", icon: <IconCheck /> },
   { to: "/retraining", label: "Retraining", icon: <IconRefresh /> },
 ];
