@@ -314,6 +314,17 @@ button:focus-visible {
   font-size: 12px;
 }
 
+/* Shared "this action isn't available to your role" message -- same look wherever a
+   page needs it (Retraining's own .retrain-active-note predates this and covers the
+   identical case there; new call sites should use this one instead of duplicating it). */
+.role-restricted-note {
+  font-size: 12.5px;
+  color: var(--brand);
+  background: var(--brand-bg);
+  border-radius: 9px;
+  padding: 10px 14px;
+}
+
 .skeleton {
   background: linear-gradient(90deg, var(--bg-panel-raised) 25%, var(--line-soft) 37%, var(--bg-panel-raised) 63%);
   background-size: 400% 100%;

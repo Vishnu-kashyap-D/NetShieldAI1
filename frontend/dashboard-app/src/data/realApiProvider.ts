@@ -19,6 +19,13 @@ import type {
 } from "../types/api";
 import { getApiBaseUrl } from "./config";
 import { ApiRequestError, ApiUnavailableError, NotFoundError, RetrainAlreadyRunningError } from "./errors";
+import { SESSION_EXPIRED_EVENT } from "./events";
+
+// /auth/login's own 401 is the expected "wrong password" case the Login page already surfaces
+// itself; /auth/me's 401 is the expected "no session yet" case on a fresh load (see
+// getCurrentUser() below). Neither means an existing session just expired, so neither should
+// fire SESSION_EXPIRED_EVENT.
+const PATHS_EXEMPT_FROM_SESSION_EXPIRED = new Set(["/api/auth/login", "/api/auth/me"]);
 
 function toQuery(params: object | undefined): string {
   if (!params) return "";
@@ -86,6 +93,9 @@ export class RealApiProvider implements DataProvider {
             ? String((detail as { detail: unknown }).detail)
             : `Not found: ${path}`,
         );
+      }
+      if (response.status === 401 && !PATHS_EXEMPT_FROM_SESSION_EXPIRED.has(path)) {
+        window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
       }
       throw new ApiRequestError(`Request to ${path} failed with status ${response.status}`, response.status, detail);
     }

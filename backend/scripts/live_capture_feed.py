@@ -41,15 +41,24 @@ column drift to worry about.
 Usage:
     python backend/scripts/live_capture_feed.py capture.pcap
     python backend/scripts/live_capture_feed.py capture.pcap --source-name portscan_run1.csv
+
+    # Watch mode: instead of converting one pcap and exiting, poll a folder for new .pcap files
+    # and feed each one as it appears -- e.g. point this at the same directory `scp` drops
+    # captures into (or that a rolling `tcpdump -w slice_%Y%m%d%H%M%S.pcap -G <seconds>` on the
+    # victim VM writes to, if synced/mounted here) for a closer-to-continuous feed instead of
+    # running this script by hand after every single capture.
+    python backend/scripts/live_capture_feed.py --watch-dir ./captures
 """
 
 from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 import pandas as pd
+import requests
 from scapy.utils import PcapReader
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -242,9 +251,16 @@ def pcap_to_flow_csv(pcap_path: Path, out_csv: Path) -> pd.DataFrame:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("pcap", help="Captured pcap file (copied from the victim VM).")
+    parser.add_argument("pcap", nargs="?", default=None, help="Captured pcap file (copied from the victim VM). Omit when using --watch-dir.")
+    parser.add_argument(
+        "--watch-dir", default=None,
+        help="Instead of converting one pcap, poll this directory for new *.pcap files and feed each one as it "
+        "appears. Runs until interrupted (Ctrl+C). A processed file is moved into <watch-dir>/processed/ so a "
+        "restarted watch never re-feeds it.",
+    )
+    parser.add_argument("--poll-interval", type=float, default=5.0, help="Seconds between directory scans in --watch-dir mode (default: 5).")
     parser.add_argument("--api-url", default="http://127.0.0.1:8000", help="Base URL of the running backend.")
-    parser.add_argument("--source-name", default=None, help="Name to record as the alert source (default: the pcap's filename).")
+    parser.add_argument("--source-name", default=None, help="Name to record as the alert source (default: each pcap's filename). Ignored in --watch-dir mode.")
     parser.add_argument(
         "--include-all-windows", dest="include_all_windows", action="store_true", default=True,
         help="Store Low-risk windows too (default: on).",
@@ -257,23 +273,20 @@ def parse_args() -> argparse.Namespace:
         help="Account to log in as (POST /api/ingest/* requires Threat Hunter or Administrator).",
     )
     parser.add_argument("--password", default="NetShield@123", help="Password for --email.")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not args.pcap and not args.watch_dir:
+        parser.error("either a pcap file or --watch-dir is required")
+    return args
 
 
-def main() -> None:
-    args = parse_args()
-    pcap_path = Path(args.pcap)
-    if not pcap_path.exists():
-        raise SystemExit(f"pcap not found: {pcap_path}")
-
+def process_pcap(pcap_path: Path, args: argparse.Namespace, session: requests.Session) -> None:
+    """Converts one pcap and feeds it into the backend -- the single-file and --watch-dir modes
+    both call this, so there's exactly one place that does the actual conversion+feed work."""
     out_csv = pcap_path.with_suffix(".flows.csv")
     df = pcap_to_flow_csv(pcap_path, out_csv)
     if len(df) < 10:
-        raise SystemExit(f"Only {len(df)} flow rows -- too few to form a detection window (needs >= 10).")
-
-    session = __import__("requests").Session()
-    _check_backend_ready(session, args.api_url)
-    _login(session, args.api_url, args.email, args.password)
+        print(f"  skipped: only {len(df)} flow rows -- too few to form a detection window (needs >= 10).")
+        return
 
     source_name = args.source_name or pcap_path.with_suffix(".csv").name
     summary = _send_chunk(session, args.api_url, source_name, df, args.include_all_windows, args.shap)
@@ -282,6 +295,46 @@ def main() -> None:
     print(f"  alerts_written: {summary['alerts_written']} (duplicates_skipped: {summary['duplicates_skipped']})")
     print(f"  risk_level_counts: {summary['risk_level_counts']}")
     print(f"  predicted_label_counts: {summary['predicted_label_counts']}")
+
+
+def run_watch_loop(args: argparse.Namespace, session: requests.Session) -> None:
+    watch_dir = Path(args.watch_dir)
+    watch_dir.mkdir(parents=True, exist_ok=True)
+    processed_dir = watch_dir / "processed"
+    processed_dir.mkdir(exist_ok=True)
+
+    print(f"Watching {watch_dir} for new *.pcap files every {args.poll_interval}s. Ctrl+C to stop.")
+    try:
+        while True:
+            # Sorted for deterministic ordering across a poll cycle (e.g. rolling tcpdump
+            # slices land in capture order, not filesystem-listing order).
+            for pcap_path in sorted(watch_dir.glob("*.pcap")):
+                print(f"\n[{pcap_path.name}] new capture found")
+                try:
+                    process_pcap(pcap_path, args, session)
+                except Exception as exc:  # one bad capture shouldn't stop the whole watch
+                    print(f"  error converting/feeding {pcap_path.name}: {exc}")
+                pcap_path.rename(processed_dir / pcap_path.name)
+            time.sleep(args.poll_interval)
+    except KeyboardInterrupt:
+        print("\nStopped.")
+
+
+def main() -> None:
+    args = parse_args()
+
+    session = requests.Session()
+    _check_backend_ready(session, args.api_url)
+    _login(session, args.api_url, args.email, args.password)
+
+    if args.watch_dir:
+        run_watch_loop(args, session)
+        return
+
+    pcap_path = Path(args.pcap)
+    if not pcap_path.exists():
+        raise SystemExit(f"pcap not found: {pcap_path}")
+    process_pcap(pcap_path, args, session)
 
 
 if __name__ == "__main__":

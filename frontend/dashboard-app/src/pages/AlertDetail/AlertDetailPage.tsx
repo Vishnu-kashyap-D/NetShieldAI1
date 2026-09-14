@@ -12,6 +12,7 @@ import { ShapExplanationCard } from "../../components/alertDetail/ShapExplanatio
 import { ExplainabilityChat } from "../../components/alertDetail/ExplainabilityChat";
 import { FeedbackSection } from "../../components/alertDetail/FeedbackSection";
 import { RawFeaturesSection } from "../../components/alertDetail/RawFeaturesSection";
+import { exportAlertAsCsv } from "../../utils/exportAlert";
 import { formatFullDateTime, formatPercent } from "../../utils/format";
 import "./AlertDetailPage.css";
 
@@ -93,6 +94,9 @@ function AlertDetailContent({ alert }: { alert: AlertDetailOut }) {
         <div className="alert-detail-title-row">
           <h1>{alert.predicted_label}</h1>
           <RiskBadge level={alert.risk_level} />
+          <button className="btn alert-detail-export-btn" onClick={() => exportAlertAsCsv(alert)}>
+            Export CSV
+          </button>
         </div>
         <div className="alert-detail-subtitle">
           Alert #{alert.id} · {alert.pipeline_action} · {formatFullDateTime(alert.ingested_at)}

@@ -7,3 +7,33 @@
   color: var(--text-low);
   margin-bottom: 10px;
 }
+
+.ingest-panel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.ingest-panel-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-mid);
+}
+.ingest-panel-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.ingest-panel-message {
+  margin-top: 12px;
+}
+.ingest-panel-success {
+  font-size: 12.5px;
+  color: var(--risk-low);
+  background: var(--risk-low-bg);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+}

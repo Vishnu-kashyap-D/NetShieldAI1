@@ -8,6 +8,7 @@ import { StatTile, IconAlerts, IconWarningTriangle, IconCheckCircle } from "../.
 import { AlertsFilters, EMPTY_FILTERS, type AlertsFilterState } from "../../components/alerts/AlertsFilters";
 import { AlertsTable } from "../../components/alerts/AlertsTable";
 import { AlertsPagination } from "../../components/alerts/AlertsPagination";
+import { IngestPanel } from "../../components/alerts/IngestPanel";
 import type { AlertOut, AlertListOut } from "../../types/api";
 import "./AlertsPage.css";
 
@@ -90,6 +91,13 @@ export function AlertsPage() {
       <PageHeader title="Alerts" subtitle="Investigate detected network activity" />
 
       {dataSourceNotice && <div className="data-source-notice">{dataSourceNotice}</div>}
+
+      <IngestPanel
+        onIngested={() => {
+          alerts.refresh();
+          stats.refresh();
+        }}
+      />
 
       <AsyncSection {...stats} emptyLabel="No alerts scored yet." loadingLabel="Loading summary…">
         {(summary) => (

@@ -49,6 +49,9 @@
   font-weight: 800;
   letter-spacing: -0.4px;
 }
+.alert-detail-export-btn {
+  margin-left: auto;
+}
 .alert-detail-subtitle {
   font-size: 13px;
   color: var(--text-mid);

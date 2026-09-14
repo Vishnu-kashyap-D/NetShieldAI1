@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { UserOut } from "../types/api";
 import { useDataProvider } from "../data/DataModeContext";
+import { SESSION_EXPIRED_EVENT } from "../data/events";
 
 /**
  * Real API mode: a real session, verified server-side (backend/app/auth.py) via an httpOnly
@@ -82,6 +83,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, isReal]);
+
+  // Real mode: if a session expires mid-use (any authenticated request gets a 401), clear the
+  // analyst so RequireSession redirects to /login instead of the page silently erroring while
+  // still claiming to be signed in. Mock mode's cosmetic session never makes a real request that
+  // could 401, so this listener is a no-op there.
+  useEffect(() => {
+    if (!isReal) return;
+    const handleSessionExpired = () => setAnalyst(null);
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, [isReal]);
 
   const value = useMemo<SessionState>(
     () => ({

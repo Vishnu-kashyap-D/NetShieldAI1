@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import threading
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,17 +21,26 @@ from app.schemas import FeedbackIn, FeedbackOut
 # requires CAN_SUBMIT_FEEDBACK, enforced per-route below since it's stricter than the router default.
 router = APIRouter(prefix="/feedback", tags=["feedback"], dependencies=[Depends(get_current_user)])
 
+# submit_feedback is a sync `def`, so FastAPI runs concurrent calls to it in real OS threads
+# (Starlette's thread pool) -- two analysts submitting feedback at the same moment could both
+# see is_new=True below and both write a header row, corrupting the CSV. A single process-wide
+# lock is exactly sufficient here: the race is between threads in this one process, not between
+# separate processes (a multi-worker deployment would need real file locking instead, but that's
+# a separate, already-documented limitation, not something this fix needs to also solve).
+_feedback_store_lock = threading.Lock()
+
 
 def _append_to_feedback_store(store_path: Path, feature_names: list[str], features: dict, label: str) -> None:
-    store_path.parent.mkdir(parents=True, exist_ok=True)
-    is_new = not store_path.exists()
-    with store_path.open("a", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=[*feature_names, "Label"])
-        if is_new:
-            writer.writeheader()
-        row = {name: features.get(name, "") for name in feature_names}
-        row["Label"] = label
-        writer.writerow(row)
+    with _feedback_store_lock:
+        store_path.parent.mkdir(parents=True, exist_ok=True)
+        is_new = not store_path.exists()
+        with store_path.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=[*feature_names, "Label"])
+            if is_new:
+                writer.writeheader()
+            row = {name: features.get(name, "") for name in feature_names}
+            row["Label"] = label
+            writer.writerow(row)
 
 
 @router.post("", response_model=FeedbackOut)

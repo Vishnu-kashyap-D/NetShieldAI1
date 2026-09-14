@@ -13,3 +13,6 @@ venv/
 backend/.env
 backend/*.log
 node_modules/
+# Default example --watch-dir location for backend/scripts/live_capture_feed.py -- captured
+# pcaps and their converted CSVs are local test data, not something to commit.
+captures/
