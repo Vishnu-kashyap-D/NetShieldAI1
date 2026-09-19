@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1310" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4A5568"/>
+    </marker>
+    <marker id="arrowTeal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2C7A7B"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="1310" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="620" y="46" text-anchor="middle" font-size="26" font-weight="700" fill="#1A202C">NetShield AI — Enterprise Deployment Topology</text>
+  <text x="620" y="72" text-anchor="middle" font-size="14" fill="#718096">Passive, out-of-band sensors at network chokepoints → one central backend → SOC dashboard</text>
+
+  <!-- Legend -->
+  <g font-size="12" fill="#2D3748">
+    <rect x="110" y="92" width="14" height="14" rx="3" fill="#DCEBFB" stroke="#2B6CB0"/>
+    <text x="130" y="103">Network segment</text>
+    <rect x="290" y="92" width="14" height="14" rx="3" fill="#FEF3C7" stroke="#B7791F"/>
+    <text x="310" y="103">Sensor (passive tap)</text>
+    <rect x="490" y="92" width="14" height="14" rx="3" fill="#D8F3E8" stroke="#2C7A7B"/>
+    <text x="510" y="103">Central service</text>
+    <rect x="660" y="92" width="14" height="14" rx="3" fill="#EBE3F7" stroke="#6B46C1"/>
+    <text x="680" y="103">SOC team</text>
+    <rect x="800" y="92" width="14" height="14" rx="3" fill="#F0F0F0" stroke="#A0AEC0"/>
+    <text x="820" y="103">No agent installed</text>
+  </g>
+
+  <!-- Internet -->
+  <ellipse cx="620" cy="160" rx="110" ry="34" fill="#EDF2F7" stroke="#718096" stroke-width="1.5"/>
+  <text x="620" y="166" text-anchor="middle" font-size="14" font-weight="600" fill="#4A5568">Internet</text>
+
+  <line x1="620" y1="194" x2="620" y2="222" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Firewall / Gateway -->
+  <rect x="420" y="222" width="400" height="66" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="250" text-anchor="middle" font-size="15" font-weight="600" fill="#1A365D">Firewall / Internet Gateway</text>
+  <text x="620" y="270" text-anchor="middle" font-size="11.5" fill="#2C5282">Blocking still happens here — a separate action from detection</text>
+
+  <!-- Sensor 1 branch -->
+  <line x1="820" y1="255" x2="900" y2="255" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="905" y="245" font-size="11" fill="#B7791F">mirror port</text>
+  <rect x="900" y="230" width="280" height="70" rx="10" fill="#FEF3C7" stroke="#B7791F" stroke-width="1.5"/>
+  <text x="1040" y="254" text-anchor="middle" font-size="13.5" font-weight="600" fill="#7B341E">Sensor 1 — Perimeter</text>
+  <text x="1040" y="272" text-anchor="middle" font-size="10.5" fill="#7B341E">tcpdump → live_capture_feed.py</text>
+  <text x="1040" y="288" text-anchor="middle" font-size="10.5" fill="#7B341E">→ 76-feature schema</text>
+
+  <line x1="620" y1="288" x2="620" y2="316" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Core switch -->
+  <rect x="420" y="316" width="400" height="60" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="352" text-anchor="middle" font-size="15" font-weight="600" fill="#1A365D">Core Switch</text>
+
+  <line x1="500" y1="376" x2="500" y2="410" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="620" y1="376" x2="620" y2="410" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="740" y1="376" x2="740" y2="410" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Three segments -->
+  <rect x="120" y="410" width="360" height="84" rx="10" fill="#F0F0F0" stroke="#A0AEC0" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="300" y="436" text-anchor="middle" font-size="14" font-weight="600" fill="#4A5568">Office LAN</text>
+  <text x="300" y="455" text-anchor="middle" font-size="11" fill="#718096">Employee laptops</text>
+  <text x="300" y="472" text-anchor="middle" font-size="11" font-weight="600" fill="#822727">No agent installed here</text>
+
+  <rect x="500" y="410" width="240" height="84" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="620" y="436" text-anchor="middle" font-size="14" font-weight="600" fill="#1A365D">Server VLAN</text>
+  <text x="620" y="455" text-anchor="middle" font-size="11" fill="#2C5282">Critical internal servers</text>
+  <text x="620" y="472" text-anchor="middle" font-size="11" fill="#2C5282">(databases, file shares, etc.)</text>
+
+  <rect x="780" y="410" width="340" height="84" rx="10" fill="#DCEBFB" stroke="#2B6CB0" stroke-width="1.5"/>
+  <text x="950" y="436" text-anchor="middle" font-size="14" font-weight="600" fill="#1A365D">DMZ</text>
+  <text x="950" y="455" text-anchor="middle" font-size="11" fill="#2C5282">Public-facing servers</text>
+  <text x="950" y="472" text-anchor="middle" font-size="11" fill="#2C5282">(web, mail, VPN gateway)</text>
+
+  <!-- Sensor 2 -->
+  <line x1="740" y1="452" x2="800" y2="452" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3"/>
+  <rect x="500" y="530" width="240" height="70" rx="10" fill="#FEF3C7" stroke="#B7791F" stroke-width="1.5"/>
+  <text x="620" y="554" text-anchor="middle" font-size="13.5" font-weight="600" fill="#7B341E">Sensor 2 — Server VLAN</text>
+  <text x="620" y="572" text-anchor="middle" font-size="10.5" fill="#7B341E">tcpdump → live_capture_feed.py</text>
+  <text x="620" y="588" text-anchor="middle" font-size="10.5" fill="#7B341E">→ 76-feature schema</text>
+  <line x1="620" y1="494" x2="620" y2="530" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Sensor 3 -->
+  <rect x="800" y="530" width="280" height="70" rx="10" fill="#FEF3C7" stroke="#B7791F" stroke-width="1.5"/>
+  <text x="940" y="554" text-anchor="middle" font-size="13.5" font-weight="600" fill="#7B341E">Sensor 3 — DMZ</text>
+  <text x="940" y="572" text-anchor="middle" font-size="10.5" fill="#7B341E">tcpdump → live_capture_feed.py</text>
+  <text x="940" y="588" text-anchor="middle" font-size="10.5" fill="#7B341E">→ 76-feature schema</text>
+  <line x1="950" y1="494" x2="950" y2="530" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Converge to central backend -->
+  <line x1="1040" y1="300" x2="1040" y2="700" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3"/>
+  <line x1="1040" y1="700" x2="742" y2="700" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrowTeal)"/>
+  <line x1="620" y1="600" x2="620" y2="700" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrowTeal)"/>
+  <line x1="940" y1="600" x2="940" y2="650" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3"/>
+  <line x1="940" y1="650" x2="742" y2="650" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3"/>
+  <line x1="742" y1="650" x2="742" y2="700" stroke="#B7791F" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrowTeal)"/>
+
+  <!-- Central backend -->
+  <rect x="360" y="700" width="520" height="110" rx="10" fill="#D8F3E8" stroke="#2C7A7B" stroke-width="1.5"/>
+  <text x="620" y="732" text-anchor="middle" font-size="16" font-weight="700" fill="#22543D">NetShield AI Backend — ONE central service</text>
+  <text x="620" y="754" text-anchor="middle" font-size="12" fill="#22543D">FastAPI + MySQL + trained Autoencoder/BiLSTM models</text>
+  <text x="620" y="772" text-anchor="middle" font-size="12" fill="#22543D">Every sensor across the company reports here — not one per laptop</text>
+  <text x="620" y="792" text-anchor="middle" font-size="11" fill="#2C7A7B">(runs on one on-prem server, or one cloud VM)</text>
+
+  <line x1="620" y1="810" x2="620" y2="838" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Dashboard -->
+  <rect x="420" y="838" width="400" height="66" rx="10" fill="#EBE3F7" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="620" y="866" text-anchor="middle" font-size="15" font-weight="600" fill="#44337A">SOC Dashboard (browser)</text>
+  <text x="620" y="886" text-anchor="middle" font-size="11.5" fill="#553C9A">React app — Alerts, Analytics, Feedback, Retraining, chatbots</text>
+
+  <line x1="620" y1="904" x2="620" y2="932" stroke="#4A5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Roles -->
+  <rect x="120" y="932" width="240" height="90" rx="10" fill="#EBE3F7" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="240" y="958" text-anchor="middle" font-size="13" font-weight="600" fill="#44337A">Viewer</text>
+  <text x="240" y="976" text-anchor="middle" font-size="10.5" fill="#553C9A">Management, auditors</text>
+  <text x="240" y="992" text-anchor="middle" font-size="10.5" fill="#553C9A">Read-only dashboards</text>
+
+  <rect x="380" y="932" width="240" height="90" rx="10" fill="#EBE3F7" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="500" y="958" text-anchor="middle" font-size="13" font-weight="600" fill="#44337A">Security Analyst</text>
+  <text x="500" y="976" text-anchor="middle" font-size="10.5" fill="#553C9A">Daily driver — reviews alerts,</text>
+  <text x="500" y="992" text-anchor="middle" font-size="10.5" fill="#553C9A">confirms/corrects, submits feedback</text>
+
+  <rect x="640" y="932" width="240" height="90" rx="10" fill="#EBE3F7" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="760" y="958" text-anchor="middle" font-size="13" font-weight="600" fill="#44337A">Threat Hunter</text>
+  <text x="760" y="976" text-anchor="middle" font-size="10.5" fill="#553C9A">Sets up/maintains sensors,</text>
+  <text x="760" y="992" text-anchor="middle" font-size="10.5" fill="#553C9A">ingests new traffic sources</text>
+
+  <rect x="900" y="932" width="240" height="90" rx="10" fill="#EBE3F7" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="1020" y="958" text-anchor="middle" font-size="13" font-weight="600" fill="#44337A">Administrator</text>
+  <text x="1020" y="976" text-anchor="middle" font-size="10.5" fill="#553C9A">Triggers retraining,</text>
+  <text x="1020" y="992" text-anchor="middle" font-size="10.5" fill="#553C9A">manages accounts</text>
+
+  <!-- Footer notes -->
+  <line x1="620" y1="1050" x2="620" y2="1080" stroke="#CBD5E0" stroke-width="1" stroke-dasharray="4,4"/>
+  <rect x="120" y="1080" width="1000" height="150" rx="10" fill="#FFFAF0" stroke="#DD6B20" stroke-width="1.5"/>
+  <text x="620" y="1108" text-anchor="middle" font-size="14" font-weight="700" fill="#7B341E">This is detection (IDS), not prevention (IPS)</text>
+  <text x="620" y="1132" text-anchor="middle" font-size="12" fill="#7B341E">Sensors are passive — they read a mirrored COPY of traffic. NetShield never sits inline, so it can never</text>
+  <text x="620" y="1150" text-anchor="middle" font-size="12" fill="#7B341E">block a packet, and — just as importantly — production traffic keeps flowing normally even if it's down.</text>
+  <text x="620" y="1174" text-anchor="middle" font-size="12" fill="#7B341E">When an alert is confirmed real, an analyst takes the blocking action separately (a firewall rule, a switch</text>
+  <text x="620" y="1192" text-anchor="middle" font-size="12" fill="#7B341E">ACL, disabling an account) — that action is outside NetShield, in whatever tooling already enforces it.</text>
+  <text x="620" y="1216" text-anchor="middle" font-size="11.5" font-style="italic" fill="#9C4221">Employee laptops in the Office LAN never run any NetShield software at all — nothing is installed on them.</text>
+
+  <text x="620" y="1270" text-anchor="middle" font-size="11" fill="#A0AEC0">NetShield AI · deployment topology, one realistic example layout — the number of sensors/segments scales with the company's own network</text>
+</svg>
