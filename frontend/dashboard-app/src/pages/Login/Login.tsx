@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { DEFAULT_DEMO_ANALYST, useSession, type DemoAnalyst } from "../../auth/session";
 import { useDataMode } from "../../data/DataModeContext";
+import { describeApiError } from "../../data/errors";
 import type { UserRole } from "../../types/api";
 import { BrandMark } from "../../components/common/icons";
 import "./Login.css";
@@ -65,7 +66,10 @@ function RealLoginForm({
       await signInReal(email, password);
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not sign in.");
+      // The backend's own words ("Incorrect email or password." / "Too many failed sign-in
+      // attempts. Try again in N seconds.") rather than "Request to /api/auth/login failed with
+      // status 401".
+      setError(describeApiError(err, "Could not sign in."));
     } finally {
       setPending(false);
     }

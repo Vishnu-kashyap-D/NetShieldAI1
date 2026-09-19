@@ -3,22 +3,10 @@ import type { IngestSummaryOut } from "../../types/api";
 import { useDataProvider } from "../../data/DataModeContext";
 import { useSession } from "../../auth/session";
 import { CAN_INGEST_TRAFFIC, roleCan } from "../../auth/permissions";
-import { ApiRequestError, ApiUnavailableError } from "../../data/errors";
+import { describeApiError } from "../../data/errors";
 import { SectionCard } from "../common/SectionCard";
 
 type Status = "idle" | "uploading" | "error" | "success";
-
-function extractErrorMessage(err: unknown): string {
-  if (err instanceof ApiRequestError) {
-    const detail = err.detail;
-    if (typeof detail === "object" && detail && "detail" in detail) {
-      return String((detail as { detail: unknown }).detail);
-    }
-    return err.message;
-  }
-  if (err instanceof ApiUnavailableError) return err.message;
-  return err instanceof Error ? err.message : "Couldn't score this file.";
-}
 
 function summaryLine(summary: IngestSummaryOut): string {
   const risk = summary.risk_level_counts;
@@ -64,7 +52,7 @@ export function IngestPanel({ onIngested }: { onIngested?: () => void }) {
       onIngested?.();
     } catch (err) {
       setStatus("error");
-      setError(extractErrorMessage(err));
+      setError(describeApiError(err, "Couldn't score this file."));
     }
   }
 

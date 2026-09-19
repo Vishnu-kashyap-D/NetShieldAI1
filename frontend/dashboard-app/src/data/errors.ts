@@ -54,3 +54,28 @@ export class NotFoundError extends Error {
     this.name = "NotFoundError";
   }
 }
+
+/**
+ * The message worth showing a person for a failed request.
+ *
+ * The backend explains itself in its JSON body -- FastAPI's `{"detail": "..."}` for errors it
+ * raises on purpose (429 "Try again in 42 seconds", 413 too-large upload, 401 "Incorrect email or
+ * password"), or `{"detail": [{"msg": ...}, ...]}` for request-validation failures (422) -- but
+ * ApiRequestError.message is only the generic "Request to /x failed with status N". Prefer the
+ * backend's own words when there are any.
+ */
+export function describeApiError(err: unknown, fallback: string): string {
+  if (err instanceof ApiRequestError) {
+    const body = err.detail;
+    if (typeof body === "object" && body !== null && "detail" in body) {
+      const detail = (body as { detail: unknown }).detail;
+      if (typeof detail === "string" && detail) return detail;
+      if (Array.isArray(detail)) {
+        const first = detail[0] as { msg?: unknown } | undefined;
+        if (typeof first?.msg === "string") return first.msg;
+      }
+    }
+    return err.message;
+  }
+  return err instanceof Error ? err.message : fallback;
+}
