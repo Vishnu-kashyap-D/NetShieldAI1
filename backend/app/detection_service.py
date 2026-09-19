@@ -11,7 +11,10 @@ import tensorflow as tf
 
 from app.config import settings
 from cyber_ai.data import (
+    ATTACK_CATEGORIES,
+    BENIGN_LABEL,
     NORMAL_DECISION_LABEL,
+    RAW_LABEL_TO_ATTACK_CATEGORY,
     SOURCE_COLUMN,
     build_window_starts_grouped,
     clean_raw_dataframe,
@@ -25,6 +28,23 @@ from cyber_ai.modeling import classifier_probabilities, reconstruction_errors
 from cyber_ai.windowing import WindowSequence
 
 logger = logging.getLogger("netshield.backend")
+
+# The ingested CSV's "Label" column is ground truth the *uploader* supplies -- untrusted text --
+# and Alert.actual_label is later pasted into the per-alert chatbot's LLM prompt (chat_service.
+# build_alert_context). Anything outside the label vocabulary this project actually knows
+# (CICIDS2017's raw labels, the project's attack categories, benign/normal) is stored as a fixed
+# placeholder instead of verbatim, so a crafted CSV can't smuggle arbitrary text into that prompt.
+_KNOWN_GROUND_TRUTH_LABELS = frozenset(
+    {BENIGN_LABEL, NORMAL_DECISION_LABEL, "Normal / Ignored", *ATTACK_CATEGORIES, *RAW_LABEL_TO_ATTACK_CATEGORY}
+)
+UNRECOGNIZED_LABEL = "Unrecognized"
+
+
+def _storable_ground_truth_label(label: str) -> str | None:
+    """None for "no label supplied"; the label itself if it's a known one; else UNRECOGNIZED_LABEL."""
+    if not label:
+        return None
+    return label if label in _KNOWN_GROUND_TRUTH_LABELS else UNRECOGNIZED_LABEL
 
 
 class DetectionEngine:
@@ -146,7 +166,7 @@ class DetectionEngine:
                     "window_start": start,
                     "window_end": end,
                     "source_file": str(source_row.get(SOURCE_COLUMN, "")),
-                    "actual_label": actual_label or None,
+                    "actual_label": _storable_ground_truth_label(actual_label),
                     "actual_category": actual_category,
                     "predicted_label": predicted_label,
                     "confidence": float(confidences[position]),
