@@ -47,10 +47,8 @@ def _set_session_cookie(response: Response, token: str) -> None:
         max_age=settings.session_ttl_hours * 3600,
         httponly=True,
         samesite="lax",
-        # Not `secure=True`: this app runs over plain http://localhost in dev, and a secure
-        # cookie is silently dropped by the browser on a non-https origin -- which would make
-        # login look like it "does nothing." Revisit if this is ever deployed over https.
-        secure=False,
+        # See Settings.session_cookie_secure: False only because local dev is plain http.
+        secure=settings.session_cookie_secure,
         path="/",
     )
 
@@ -95,7 +93,13 @@ def logout(
     token = request.cookies.get(settings.session_cookie_name)
     if token:
         invalidate_session(db, token)
-    response.delete_cookie(key=settings.session_cookie_name, path="/")
+    response.delete_cookie(
+        key=settings.session_cookie_name,
+        path="/",
+        secure=settings.session_cookie_secure,
+        httponly=True,
+        samesite="lax",
+    )
     return {"status": "signed_out"}
 
 

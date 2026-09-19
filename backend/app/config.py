@@ -59,6 +59,11 @@ class Settings(BaseSettings):
     # is a real DB delete rather than waiting out a token's expiry.
     session_cookie_name: str = "netshield_session"
     session_ttl_hours: int = 24 * 7
+    # False on purpose for local development: this app runs over plain http://localhost, and a
+    # `Secure` cookie is silently dropped by the browser on a non-https origin, which would make
+    # login look like it "does nothing." MUST be set to true (SESSION_COOKIE_SECURE=true) the
+    # moment this is served over real HTTPS, or the session cookie can leak over plain http.
+    session_cookie_secure: bool = False
 
     # Abuse limits (backend/app/ratelimit.py -- in-memory, so per worker process). Failed logins
     # are counted per (client IP, email) AND per client IP across all emails, so one attacker
