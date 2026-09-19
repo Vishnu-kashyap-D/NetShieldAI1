@@ -16,7 +16,9 @@ class UserOut(BaseModel):
 
 class LoginIn(BaseModel):
     email: EmailStr
-    password: str
+    # Bounded (same cap as RegisterIn) so a multi-megabyte "password" is rejected up front instead
+    # of being copied around and handed to bcrypt.
+    password: str = Field(max_length=128)
 
 
 class RegisterIn(BaseModel):

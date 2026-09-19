@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -17,9 +19,25 @@ from app.auth import (
 from app.config import settings
 from app.database import get_db
 from app.models import User
+from app.ratelimit import SlidingWindowLimiter
 from app.schemas import LoginIn, RegisterIn, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# Failed-login throttling. Two independent limits, both must be clear to even attempt a password:
+#   - per (client IP, email): stops guessing one account's password from one address, but does NOT
+#     let an attacker lock the real owner out from a different address (the key includes the IP);
+#   - per client IP: stops one address spraying guesses across many different emails.
+# Only *failed* attempts count, and a blocked attempt records nothing (so retrying while locked
+# out doesn't extend the lockout). A successful login clears that account's counter.
+_login_account_limiter = SlidingWindowLimiter(settings.login_max_failures, settings.login_window_seconds)
+_login_ip_limiter = SlidingWindowLimiter(settings.login_ip_max_failures, settings.login_window_seconds)
+
+
+def _client_ip(request: Request) -> str:
+    # The direct socket peer, not X-Forwarded-For: any client can send that header with any value,
+    # so trusting it would let an attacker dodge the limit by rotating a fake address.
+    return request.client.host if request.client else "unknown"
 
 
 def _set_session_cookie(response: Response, token: str) -> None:
@@ -38,13 +56,28 @@ def _set_session_cookie(response: Response, token: str) -> None:
 
 
 @router.post("/login", response_model=UserOut)
-def login(payload: LoginIn, response: Response, db: Session = Depends(get_db)) -> UserOut:
+def login(payload: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)) -> UserOut:
+    ip = _client_ip(request)
+    account_key = f"{ip}|{payload.email.lower()}"
+
+    wait = max(_login_account_limiter.retry_after(account_key), _login_ip_limiter.retry_after(ip))
+    if wait > 0:
+        seconds = math.ceil(wait)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed sign-in attempts. Try again in {seconds} second{'s' if seconds != 1 else ''}.",
+            headers={"Retry-After": str(seconds)},
+        )
+
     user = db.execute(select(User).where(User.email == payload.email.lower())).scalar_one_or_none()
     if user is None or not verify_password(payload.password, user.password_hash):
+        _login_account_limiter.record(account_key)
+        _login_ip_limiter.record(ip)
         # Identical message for "no such user" and "wrong password" -- distinguishing them
         # would let an attacker enumerate which emails have accounts.
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
 
+    _login_account_limiter.clear(account_key)
     session = create_session(db, user)
     _set_session_cookie(response, session.token)
     return UserOut.model_validate(user)

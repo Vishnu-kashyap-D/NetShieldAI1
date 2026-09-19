@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     session_cookie_name: str = "netshield_session"
     session_ttl_hours: int = 24 * 7
 
+    # Abuse limits (backend/app/ratelimit.py -- in-memory, so per worker process). Failed logins
+    # are counted per (client IP, email) AND per client IP across all emails, so one attacker
+    # can't lock a real user out from another address, and can't dodge the per-account limit by
+    # spraying many emails either. The client IP is the direct socket peer -- X-Forwarded-For is
+    # deliberately not trusted, since any client can forge it.
+    login_max_failures: int = 5
+    login_ip_max_failures: int = 20
+    login_window_seconds: int = 300
+
     @property
     def sqlalchemy_url(self) -> str:
         # Credentials must be percent-encoded -- a literal "@" or ":" in the password
