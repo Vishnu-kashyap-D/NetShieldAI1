@@ -149,16 +149,27 @@ class TrainingRunOut(BaseModel):
     finished_at: dt.datetime | None
 
 
+# Chat input limits. Both chatbots can forward this text to a paid LLM, so unbounded input is
+# unbounded cost. A message is capped well above anything a person types (a whole assistant answer,
+# up to the LLM's 1024-token output cap, is a "message" too when it's sent back as history), and the
+# frontend (src/constants/chat.ts) mirrors these so the UI never lets someone compose a message this
+# API would reject -- it also sends fewer history turns than the API's ceiling, so a long
+# conversation never trips the limit.
+CHAT_QUESTION_MAX_CHARS = 2000
+CHAT_MESSAGE_MAX_CHARS = 8000
+CHAT_HISTORY_MAX_TURNS = 40
+
+
 class ChatMessageIn(BaseModel):
-    role: str  # "user" | "assistant"
-    content: str
+    role: str = Field(max_length=16)  # "user" | "assistant"
+    content: str = Field(max_length=CHAT_MESSAGE_MAX_CHARS)
 
 
 class ChatIn(BaseModel):
-    question: str
+    question: str = Field(max_length=CHAT_QUESTION_MAX_CHARS)
     # Prior turns of this same conversation, oldest first -- optional, only used to give the
     # LLM fallback path multi-turn context. The deterministic matcher is always stateless.
-    history: list[ChatMessageIn] = []
+    history: list[ChatMessageIn] = Field(default_factory=list, max_length=CHAT_HISTORY_MAX_TURNS)
 
 
 class ChatSourcesOut(BaseModel):

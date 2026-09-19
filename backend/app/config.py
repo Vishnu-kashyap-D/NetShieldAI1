@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     login_max_failures: int = 5
     login_ip_max_failures: int = 20
     login_window_seconds: int = 300
+    # Requests per minute per signed-in user, shared across both chatbots (each may call a paid LLM).
+    chat_max_requests_per_minute: int = 20
 
     @property
     def sqlalchemy_url(self) -> str:
