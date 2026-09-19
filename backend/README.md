@@ -90,6 +90,45 @@ There's no public self-registration endpoint — an Administrator creates furthe
 **not** use any of this — it's a cosmetic, client-side-only session for presenting the UI without
 a backend; only "Live API" mode talks to real auth.
 
+### Security hardening
+
+What protects the API itself (all of it verified with real requests, not just read off the code):
+
+| Protection | How it works | Where |
+|---|---|---|
+| **Hashed sessions** | The DB stores `sha256(token)`, never the token. The raw token exists only in the browser's cookie, so a leaked copy of the `sessions` table can't be replayed as logins. | `app/auth.py` |
+| **Login lockout** | 5 failed attempts per (client IP, email) — and 20 per client IP across all emails — within 5 minutes → `429` + `Retry-After`. Only failures count; a blocked attempt records nothing; success clears the counter. | `app/routers/auth.py`, `app/ratelimit.py` |
+| **CSRF: Origin verification** | Every `POST/PUT/PATCH/DELETE` carrying an `Origin` (or `Referer`) must come from a dashboard origin in `cors_origins` (or this server itself, for `/docs`) — otherwise `403`. `SameSite=Lax` alone isn't enough: "same site" ignores ports, so a page on any *other* local port could log you out (reproduced against this API before the fix). Requests with neither header (curl, the scripts in `backend/scripts/`) aren't browser cross-site requests and pass. | `app/security.py` |
+| **Security headers** | `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` everywhere; on `/api/*` also a `default-src 'none'` CSP and `Cache-Control: no-store`; `Strict-Transport-Security` only when actually served over HTTPS. CSP is deliberately not applied to `/docs` (it loads assets from a CDN). | `app/security.py` |
+| **Chat limits** | Question ≤ 2,000 chars, history ≤ 40 turns, one message ≤ 8,000 chars, and 20 chat requests/minute per user (shared by both chatbots — either may call a paid LLM). | `app/schemas.py`, `app/routers/chat.py` |
+| **Untrusted CSV labels** | The uploaded CSV's `Label` column is pasted into the per-alert chatbot's LLM prompt, so a label outside CICIDS2017's known vocabulary is stored as `Unrecognized` instead of verbatim. | `app/detection_service.py` |
+| **Bounded inputs** | Upload size cap (`MAX_UPLOAD_BYTES`), login password ≤ 128 chars, malformed CSV → clean `422`. | `app/routers/ingest.py`, `app/schemas.py` |
+
+Limits worth knowing: the lockout and chat limits live in process memory, so they're **per worker** and reset on restart (a multi-worker deployment needs a shared store such as Redis). The client IP is the direct socket peer — `X-Forwarded-For` is deliberately *not* trusted, since any client can forge it — so behind a reverse proxy every request looks like it comes from the proxy until that's configured. Old sessions from before hashing was introduced are invalid: everyone signs in once more.
+
+### Dependency auditing
+
+```bash
+# frontend
+cd frontend/dashboard-app && npm audit
+
+# backend + cyber_ai: run pip-audit from its OWN throwaway venv and point it at the environment the
+# app actually runs in, so auditing can never change the packages you run on (the TensorFlow / Keras /
+# NumPy combination in particular is fragile -- see cyber_ai/__init__.py)
+python -m venv .audit-venv
+.audit-venv/Scripts/pip install pip-audit          # Linux/macOS: .audit-venv/bin/pip
+.audit-venv/Scripts/pip-audit --path <your-site-packages-directory>
+```
+
+A finding only matters if the vulnerable code path is reachable from this app. For example, every
+Keras advisory is about loading an *untrusted* model file, and NetShield only ever loads the
+artifacts it trained itself — so **never point `artifacts/` at model files from a source you don't
+trust.** `requirements.txt` uses lower bounds only, so a fresh install resolves to current, patched
+releases; existing environments should be refreshed by rebuilding a venv from the requirements files,
+not by upgrading packages in place.
+
+**Before serving this over HTTPS:** set `SESSION_COOKIE_SECURE=true` in `backend/.env`. It defaults to `false` on purpose — a `Secure` cookie is silently dropped by the browser on plain `http://localhost`, which would make login look like it does nothing — but left `false` in production the session cookie can leak over plain http. Also add the real dashboard origin to `cors_origins` (`config.py`), which both CORS and the CSRF check read.
+
 ## API surface
 
 | Endpoint | Auth | Purpose |
@@ -101,7 +140,7 @@ a backend; only "Live API" mode talks to real auth.
 | `GET /api/auth/roles` | Any role | The fixed list of assignable roles |
 | `POST /api/auth/users` | Administrator | Create an account |
 | `GET /api/auth/users` | Administrator | List all accounts |
-| `POST /api/ingest/csv` | Threat Hunter, Administrator | Upload a traffic CSV, score it, store alerts |
+| `POST /api/ingest/csv` | Threat Hunter, Administrator | Upload a traffic CSV, score it, store alerts. Idempotent: the same file (same name + bytes) sent again stores nothing new; `allow_duplicates=true` opts out (for deliberate replays) |
 | `POST /api/ingest/demo` | Threat Hunter, Administrator | Score the repo's curated `demo/panel_demo_traffic.csv` (no upload needed — handy for testing/demos) |
 | `GET /api/alerts` | Any role | List alerts, filterable by `risk_level`, `category`, `source_file`, `batch_id`, paginated |
 | `GET /api/alerts/{id}` | Any role | Full alert detail incl. raw feature vector and SHAP explanations |
@@ -161,11 +200,21 @@ requests), so a 10-row detection window that straddles a chunk boundary is never
 Acceptable for a demo/dashboard feed; a real production stream would need a stateful
 sliding buffer server-side instead.
 
+The simulator sends `allow_duplicates=true` with every chunk. Ingest is idempotent by default
+(see Notes below), but a replay — especially `--loop`, which re-sends the same chunks on every
+pass — is *meant* to look like fresh traffic arriving, so it opts out of the duplicate check.
+
 ## Notes
 
 - `POST /api/ingest/*` defaults to storing only Medium/High-risk windows (pass
   `include_all_windows=true` to store everything, which `/ingest/demo` does by default
   so the full demo narrative — including the quiet BENIGN stretches — is visible).
+- Ingest is idempotent: re-sending the same file (same name and same bytes) stores nothing new —
+  the response reports it as `duplicates_skipped` — so clicking "Score curated demo CSV" twice, or
+  re-running a script, can't silently double every count. Identity is the pair (filename, SHA-256
+  of the bytes), so a *different* file that happens to share a name, or one file sent as many
+  chunks, is never mistaken for a duplicate. Re-sending the same file with `include_all_windows`
+  turned on after a Medium/High-only pass adds just the Low windows the first pass skipped.
 - `POST /api/retrain` runs `cyber_ai.train` as a background subprocess (it can take
   several minutes); poll `GET /api/retrain/{id}` for status. On success it automatically
   reloads the in-process model so the very next `/api/ingest/*` call uses the retrained
