@@ -10,6 +10,7 @@ from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.detection_service import get_engine
 from app.routers import alerts, auth, chat, feedback, health, ingest, retrain, stats
+from app.security import OriginVerificationMiddleware, SecurityHeadersMiddleware
 from app.seed import ensure_default_users
 
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="NetShield AI API", version="0.1.0", lifespan=lifespan)
 
+# Middleware order matters: Starlette makes the LAST one added the OUTERMOST. CORS goes last so it
+# still answers preflights first and decorates every response (including the 403/429 errors the
+# inner layers produce) with the right CORS headers.
+app.add_middleware(OriginVerificationMiddleware, allowed_origins=frozenset(settings.cors_origins))
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
