@@ -1,7 +1,8 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useDataProvider } from "../../data/DataModeContext";
-import { ApiUnavailableError } from "../../data/errors";
-import type { ChatMessage } from "../../types/api";
+import { ApiUnavailableError, describeApiError } from "../../data/errors";
+import { CHAT_QUESTION_MAX_CHARS } from "../../constants/chat";
+import { toRequestHistory } from "../../utils/chatHistory";
 import { PageHeader } from "../../components/common/PageHeader";
 import { SectionCard } from "../../components/common/SectionCard";
 import { IconModelShield, IconSend } from "../../components/common/icons";
@@ -48,7 +49,7 @@ export function ShapPage() {
     const trimmed = question.trim();
     if (!trimmed || pending) return;
 
-    const history: ChatMessage[] = messages.filter((m) => !m.isError).map((m) => ({ role: m.role, content: m.content }));
+    const history = toRequestHistory(messages);
 
     setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
     setInput("");
@@ -63,7 +64,7 @@ export function ShapPage() {
         err instanceof ApiUnavailableError
           ? `Couldn't reach the assistant: ${err.message}`
           : err instanceof Error
-            ? `Couldn't get an answer: ${err.message}`
+            ? `Couldn't get an answer: ${describeApiError(err, "")}`
             : "Couldn't get an answer.";
       setMessages((prev) => [...prev, { role: "assistant", content: message, isError: true }]);
     } finally {
@@ -146,6 +147,7 @@ export function ShapPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about the project or a network threat…"
             aria-label="Ask the project assistant"
+            maxLength={CHAT_QUESTION_MAX_CHARS}
             disabled={pending}
           />
           <button type="submit" className="btn primary chat-send-btn" disabled={pending || !input.trim()} aria-label="Send question">

@@ -1,7 +1,9 @@
 import { useRef, useState, type FormEvent } from "react";
-import type { AlertDetailOut, ChatMessage, ChatSources } from "../../types/api";
+import type { AlertDetailOut, ChatSources } from "../../types/api";
 import { useDataProvider } from "../../data/DataModeContext";
-import { ApiUnavailableError, NotFoundError } from "../../data/errors";
+import { ApiUnavailableError, NotFoundError, describeApiError } from "../../data/errors";
+import { CHAT_QUESTION_MAX_CHARS } from "../../constants/chat";
+import { toRequestHistory } from "../../utils/chatHistory";
 import { SectionCard } from "../common/SectionCard";
 import { IconModelShield, IconSend } from "../common/icons";
 import "./ExplainabilityChat.css";
@@ -67,7 +69,7 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
     const trimmed = question.trim();
     if (!trimmed || pending) return;
 
-    const history: ChatMessage[] = messages.filter((m) => !m.isError).map((m) => ({ role: m.role, content: m.content }));
+    const history = toRequestHistory(messages);
 
     setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
     setInput("");
@@ -84,7 +86,7 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
           : err instanceof ApiUnavailableError
             ? `Couldn't reach the explainability service: ${err.message}`
             : err instanceof Error
-              ? `Couldn't get an answer: ${err.message}`
+              ? `Couldn't get an answer: ${describeApiError(err, "")}`
               : "Couldn't get an answer.";
       setMessages((prev) => [...prev, { role: "assistant", content: message, isError: true }]);
     } finally {
@@ -160,6 +162,7 @@ export function ExplainabilityChat({ alert }: { alert: AlertDetailOut }) {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about this alert's prediction or evidence…"
           aria-label="Ask about this prediction"
+          maxLength={CHAT_QUESTION_MAX_CHARS}
           disabled={pending}
         />
         <button type="submit" className="btn primary chat-send-btn" disabled={pending || !input.trim()} aria-label="Send question">
