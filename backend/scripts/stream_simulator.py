@@ -82,12 +82,22 @@ def _check_backend_ready(session: requests.Session, api_url: str) -> None:
 
 
 def _send_chunk(
-    session: requests.Session, api_url: str, source_name: str, chunk: pd.DataFrame, include_all_windows: bool, shap: bool
+    session: requests.Session,
+    api_url: str,
+    source_name: str,
+    chunk: pd.DataFrame,
+    include_all_windows: bool,
+    shap: bool,
+    allow_duplicates: bool = False,
 ) -> dict:
     buffer = io.StringIO()
     chunk.to_csv(buffer, index=False)
     files = {"file": (source_name, buffer.getvalue(), "text/csv")}
-    params = {"include_all_windows": str(include_all_windows).lower(), "shap": str(shap).lower()}
+    params = {
+        "include_all_windows": str(include_all_windows).lower(),
+        "shap": str(shap).lower(),
+        "allow_duplicates": str(allow_duplicates).lower(),
+    }
     response = session.post(f"{api_url}/api/ingest/csv", files=files, params=params, timeout=120)
     response.raise_for_status()
     return response.json()
@@ -119,7 +129,14 @@ def main() -> None:
                 if len(chunk) < 10:
                     break  # trailing remainder too small to form even one window
 
-                summary = _send_chunk(session, args.api_url, input_path.name, chunk, args.include_all_windows, args.shap)
+                # A replay is *meant* to look like new traffic arriving (--loop sends the same chunks
+                # again and again), so it opts out of the API's duplicate check, which would
+                # otherwise drop everything after the first pass. Other callers of _send_chunk
+                # (live_capture_feed.py) keep the default: re-sending the same capture IS a duplicate.
+                summary = _send_chunk(
+                    session, args.api_url, input_path.name, chunk, args.include_all_windows, args.shap,
+                    allow_duplicates=True,
+                )
                 risk = summary["risk_level_counts"]
                 labels = {k: v for k, v in summary["predicted_label_counts"].items() if k != "Normal"}
                 label_note = f" -> {labels}" if labels else ""
