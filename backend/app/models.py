@@ -66,8 +66,10 @@ class User(Base):
 class UserSession(Base):
     __tablename__ = "sessions"
 
-    # Opaque random token (see app.auth.create_session), not an auto-increment id -- this IS
-    # the session cookie's value, so it must be unguessable, not just unique.
+    # sha256 hex of the opaque random token (see app.auth._hash_token / create_session) -- NOT the
+    # token itself. The raw token exists only in the browser's cookie, so a copy of this table
+    # can't be replayed as live logins. Not an auto-increment id: the lookup key must be derived
+    # from something unguessable, not just unique. (sha256 hexdigest is exactly 64 chars.)
     token: Mapped[str] = mapped_column(String(64), primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
 

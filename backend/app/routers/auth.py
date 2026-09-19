@@ -78,8 +78,8 @@ def login(payload: LoginIn, request: Request, response: Response, db: Session = 
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
 
     _login_account_limiter.clear(account_key)
-    session = create_session(db, user)
-    _set_session_cookie(response, session.token)
+    _, raw_token = create_session(db, user)
+    _set_session_cookie(response, raw_token)
     return UserOut.model_validate(user)
 
 

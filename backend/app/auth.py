@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import secrets
 
 import bcrypt
@@ -48,19 +49,35 @@ def verify_password(plain: str, password_hash: str) -> bool:
         return False
 
 
-def create_session(db: DbSession, user: User) -> UserSession:
+def _hash_token(token: str) -> str:
+    """What the `sessions` table actually stores and is looked up by: sha256(cookie value).
+
+    Passwords need a slow salted hash (bcrypt) because humans pick guessable ones; a session token
+    is 384 bits from `secrets`, so a plain fast hash is enough -- there is nothing to brute-force.
+    The point is that the raw token exists only in the browser's cookie: someone who reads the
+    database (a backup, a leaked dump, a stray SELECT) gets hashes they can't turn back into a
+    working cookie, instead of a table of live, replayable logins. 64 hex chars fits the column.
+    """
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_session(db: DbSession, user: User) -> tuple[UserSession, str]:
+    """Creates a session row and returns (row, raw_token). Only the raw token goes in the
+    cookie; the row (and the DB) only ever holds its hash -- see _hash_token."""
+    raw_token = secrets.token_urlsafe(48)
     session = UserSession(
-        token=secrets.token_urlsafe(48),
+        token=_hash_token(raw_token),
         user_id=user.id,
         expires_at=dt.datetime.utcnow() + dt.timedelta(hours=settings.session_ttl_hours),
     )
     db.add(session)
     db.commit()
-    return session
+    return session, raw_token
 
 
 def invalidate_session(db: DbSession, token: str) -> None:
-    session = db.get(UserSession, token)
+    """`token` is the raw cookie value, not the stored hash."""
+    session = db.get(UserSession, _hash_token(token))
     if session is not None:
         db.delete(session)
         db.commit()
@@ -77,7 +94,7 @@ def get_current_user(request: Request, db: DbSession = Depends(get_db)) -> User:
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated.")
 
-    session = db.get(UserSession, token)
+    session = db.get(UserSession, _hash_token(token))
     if session is None:
         raise HTTPException(status_code=401, detail="Session not found or already logged out.")
     if session.expires_at < dt.datetime.utcnow():
