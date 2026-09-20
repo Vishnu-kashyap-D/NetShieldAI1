@@ -18,7 +18,7 @@ from cyber_ai.data import (
     to_attack_category,
 )
 from cyber_ai.explain import explain_autoencoder_windows, explain_classifier_windows
-from cyber_ai.hybrid_risk import compute_risk_score, normalize_anomaly_score, risk_levels_for
+from cyber_ai.hybrid_risk import apply_abstention, compute_risk_score, normalize_anomaly_score, risk_levels_for
 from cyber_ai.modeling import classifier_probabilities, reconstruction_errors
 from cyber_ai.reporting import timestamp_slug, write_json
 from cyber_ai.windowing import WindowSequence
@@ -33,6 +33,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--include-all-windows", action="store_true", help="Save every scored window.")
     parser.add_argument("--start-window", type=int, default=0, help="Skip this many generated windows before scoring.")
     parser.add_argument("--max-windows", type=int, help="Optional cap for quick scoring runs.")
+    parser.add_argument(
+        "--unknown-threshold", type=float, default=None,
+        help="Label flagged windows whose classifier confidence is below this as 'Unknown' instead of forcing a known "
+        "category (0.9 is recommended; see python -m cyber_ai.abstention_analysis). Default: off.",
+    )
     parser.add_argument("--shap", action="store_true", help="Attach SHAP top-feature explanations.")
     parser.add_argument("--shap-background", type=int, default=20, help="Background windows for SHAP.")
     parser.add_argument("--shap-samples", type=int, default=100, help="Kernel SHAP samples.")
@@ -124,6 +129,8 @@ def main() -> None:
         confidences[classifier_positions] = max_probabilities
         classifier_confidence_for_risk[classifier_positions] = max_probabilities
 
+    predicted_labels, abstained = apply_abstention(predicted_labels, confidences, is_anomaly, args.unknown_threshold)
+
     normalized_anomaly_scores = normalize_anomaly_score(anomaly_scores, anomaly_score_low, anomaly_score_high)
     risk_scores = compute_risk_score(normalized_anomaly_scores, classifier_confidence_for_risk)
     risk_levels = risk_levels_for(risk_scores, risk_low_threshold, risk_high_threshold)
@@ -178,7 +185,11 @@ def main() -> None:
             "anomaly_score": float(anomaly_scores[position]),
             "anomaly_threshold": anomaly_threshold,
             "is_anomaly": bool(is_anomaly[position]),
-            "pipeline_action": "Classified and alerted" if is_anomaly[position] else "Ignored as normal",
+            "pipeline_action": (
+                "Ignored as normal" if not is_anomaly[position]
+                else "Flagged as anomalous, category unknown" if abstained[position]
+                else "Classified and alerted"
+            ),
             "risk_score": float(risk_scores[position]),
             "risk_level": risk_levels[position],
             "top_classifier_features": classifier_explanations.get(start, ""),

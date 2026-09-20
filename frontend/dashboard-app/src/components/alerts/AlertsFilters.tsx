@@ -1,6 +1,6 @@
 import { useEffect, useState, type KeyboardEvent } from "react";
 import type { AttackCategory, RiskLevel } from "../../types/api";
-import { CATEGORY_ORDER, RISK_LEVEL_ORDER } from "../../constants/taxonomy";
+import { PREDICTABLE_CATEGORIES, RISK_LEVEL_ORDER } from "../../constants/taxonomy";
 import "./AlertsFilters.css";
 
 export interface AlertsFilterState {
@@ -89,7 +89,7 @@ export function AlertsFilters({ filters, onChange, onClear }: AlertsFiltersProps
         aria-label="Filter by predicted category"
       >
         <option value="">All categories</option>
-        {CATEGORY_ORDER.map((category) => (
+        {PREDICTABLE_CATEGORIES.map((category) => (
           <option key={category} value={category}>
             {category}
           </option>

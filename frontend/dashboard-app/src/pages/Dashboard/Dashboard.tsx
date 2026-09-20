@@ -10,6 +10,7 @@ import { SecurityPosture } from "../../components/dashboard/SecurityPosture";
 import { RiskTimeseriesChart } from "../../components/dashboard/RiskTimeseriesChart";
 import { CategoryDistribution } from "../../components/dashboard/CategoryDistribution";
 import { RecentAlertsTable } from "../../components/dashboard/RecentAlertsTable";
+import { CampaignsTable } from "../../components/dashboard/CampaignsTable";
 import { HealthBanner } from "../../components/dashboard/HealthBanner";
 import { DemoScenarioPanel } from "../../components/dashboard/DemoScenarioPanel";
 import "./Dashboard.css";
@@ -25,6 +26,7 @@ export function Dashboard() {
   const stats = usePolledAsync(() => provider.getStatsSummary(), [provider], POLL_MS);
   const timeseries = usePolledAsync(() => provider.getTimeseries(TIMESERIES_PARAMS), [provider], POLL_MS);
   const recentAlerts = usePolledAsync(() => provider.listAlerts({ limit: 8 }), [provider], POLL_MS);
+  const campaigns = usePolledAsync(() => provider.listCampaigns({ limit: 5 }), [provider], POLL_MS);
 
   // Tick "time ago" labels on recent alerts without waiting for the next poll.
   useEffect(() => {
@@ -141,6 +143,20 @@ export function Dashboard() {
           loadingLabel="Loading recent alerts…"
         >
           {(list) => <RecentAlertsTable alerts={list.items} now={now} />}
+        </AsyncSection>
+      </SectionCard>
+
+      <SectionCard
+        title="Sustained activity"
+        subtitle="Runs of windows the classifier kept reading as one category at very high confidence -- including activity no single alert caught"
+      >
+        <AsyncSection
+          {...campaigns}
+          isEmpty={(list) => list.items.length === 0}
+          emptyLabel="No sustained campaigns found in the ingested traffic."
+          loadingLabel="Loading campaigns…"
+        >
+          {(list) => <CampaignsTable campaigns={list.items} />}
         </AsyncSection>
       </SectionCard>
 

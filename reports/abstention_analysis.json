@@ -1,0 +1,150 @@
+{
+  "method": "Only windows the Autoencoder flags reach the classifier. 'False alarms' are flagged windows that are actually BENIGN -- the classifier has no correct answer for them. Threshold chosen on validation, confirmed on test.",
+  "recommended_threshold": 0.9,
+  "validation": {
+    "flagged_windows": 7393,
+    "known_attack_windows": 6821,
+    "false_alarm_windows": 572,
+    "auroc_confidence_separates_attacks_from_false_alarms": 0.9793774983263328,
+    "confidence_percentiles_known_attacks": {
+      "p5": 0.9824612736701965,
+      "p25": 0.9993854761123657,
+      "p50": 0.9995076656341553,
+      "p75": 0.9995602965354919,
+      "p95": 0.9996188879013062
+    },
+    "confidence_percentiles_false_alarms": {
+      "p5": 0.3686254918575287,
+      "p25": 0.47465088963508606,
+      "p50": 0.5991625189781189,
+      "p75": 0.7554250359535217,
+      "p95": 0.9700963497161865
+    },
+    "by_threshold": [
+      {
+        "threshold": 0.5,
+        "known_attacks_still_named": 0.9920832722474711,
+        "accuracy_of_named_attacks": 0.9923156494753953,
+        "false_alarms_relabelled_unknown": 0.32167832167832167,
+        "known_attacks_relabelled_unknown": 0.007916727752528954
+      },
+      {
+        "threshold": 0.6,
+        "known_attacks_still_named": 0.9884181205101891,
+        "accuracy_of_named_attacks": 0.9948086621180658,
+        "false_alarms_relabelled_unknown": 0.5017482517482518,
+        "known_attacks_relabelled_unknown": 0.011581879489810877
+      },
+      {
+        "threshold": 0.7,
+        "known_attacks_still_named": 0.982553877730538,
+        "accuracy_of_named_attacks": 0.9977618621307073,
+        "false_alarms_relabelled_unknown": 0.6590909090909091,
+        "known_attacks_relabelled_unknown": 0.017446122269461954
+      },
+      {
+        "threshold": 0.8,
+        "known_attacks_still_named": 0.97932854420173,
+        "accuracy_of_named_attacks": 0.9989520958083832,
+        "false_alarms_relabelled_unknown": 0.8024475524475524,
+        "known_attacks_relabelled_unknown": 0.02067145579827005
+      },
+      {
+        "threshold": 0.9,
+        "known_attacks_still_named": 0.9712652103797097,
+        "accuracy_of_named_attacks": 0.9998490566037735,
+        "false_alarms_relabelled_unknown": 0.8671328671328671,
+        "known_attacks_relabelled_unknown": 0.02873478962029028
+      },
+      {
+        "threshold": 0.95,
+        "known_attacks_still_named": 0.9654009676000587,
+        "accuracy_of_named_attacks": 1.0,
+        "false_alarms_relabelled_unknown": 0.9300699300699301,
+        "known_attacks_relabelled_unknown": 0.03459903239994136
+      },
+      {
+        "threshold": 0.99,
+        "known_attacks_still_named": 0.9330010262424865,
+        "accuracy_of_named_attacks": 1.0,
+        "false_alarms_relabelled_unknown": 0.951048951048951,
+        "known_attacks_relabelled_unknown": 0.06699897375751356
+      }
+    ]
+  },
+  "test": {
+    "flagged_windows": 7409,
+    "known_attack_windows": 6867,
+    "false_alarm_windows": 542,
+    "auroc_confidence_separates_attacks_from_false_alarms": 0.9796546884210651,
+    "confidence_percentiles_known_attacks": {
+      "p5": 0.9852904677391052,
+      "p25": 0.999387264251709,
+      "p50": 0.9995088577270508,
+      "p75": 0.999560534954071,
+      "p95": 0.9996185898780823
+    },
+    "confidence_percentiles_false_alarms": {
+      "p5": 0.3710564374923706,
+      "p25": 0.4813426733016968,
+      "p50": 0.5997782945632935,
+      "p75": 0.7710204124450684,
+      "p95": 0.9550734162330627
+    },
+    "by_threshold": [
+      {
+        "threshold": 0.5,
+        "known_attacks_still_named": 0.9918450560652395,
+        "accuracy_of_named_attacks": 0.9930993980325943,
+        "false_alarms_relabelled_unknown": 0.29704797047970477,
+        "known_attacks_relabelled_unknown": 0.00815494393476045
+      },
+      {
+        "threshold": 0.6,
+        "known_attacks_still_named": 0.9868938401048493,
+        "accuracy_of_named_attacks": 0.9958683783384978,
+        "false_alarms_relabelled_unknown": 0.5,
+        "known_attacks_relabelled_unknown": 0.01310615989515072
+      },
+      {
+        "threshold": 0.7,
+        "known_attacks_still_named": 0.9828163681374691,
+        "accuracy_of_named_attacks": 0.9980737887094384,
+        "false_alarms_relabelled_unknown": 0.6642066420664207,
+        "known_attacks_relabelled_unknown": 0.017183631862530944
+      },
+      {
+        "threshold": 0.8,
+        "known_attacks_still_named": 0.9788845201689238,
+        "accuracy_of_named_attacks": 0.9992561737578102,
+        "false_alarms_relabelled_unknown": 0.7841328413284133,
+        "known_attacks_relabelled_unknown": 0.021115479831076162
+      },
+      {
+        "threshold": 0.9,
+        "known_attacks_still_named": 0.9750982961992136,
+        "accuracy_of_named_attacks": 0.9997013142174432,
+        "false_alarms_relabelled_unknown": 0.8837638376383764,
+        "known_attacks_relabelled_unknown": 0.02490170380078637
+      },
+      {
+        "threshold": 0.95,
+        "known_attacks_still_named": 0.9698558322411533,
+        "accuracy_of_named_attacks": 1.0,
+        "false_alarms_relabelled_unknown": 0.9446494464944649,
+        "known_attacks_relabelled_unknown": 0.03014416775884666
+      },
+      {
+        "threshold": 0.99,
+        "known_attacks_still_named": 0.9367991845056065,
+        "accuracy_of_named_attacks": 1.0,
+        "false_alarms_relabelled_unknown": 0.9575645756457565,
+        "known_attacks_relabelled_unknown": 0.06320081549439348
+      }
+    ]
+  },
+  "limits": [
+    "False alarms are a proxy for unfamiliar traffic, not a substitute for genuinely novel attacks.",
+    "No held-out attack CLASS was available (that needs retraining without a class); lab tool traffic (hping3/hydra) would be the natural real-world check."
+  ]
+}

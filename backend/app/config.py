@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from urllib.parse import quote_plus
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Must happen before the first `import tensorflow` anywhere in the process. app.main imports
@@ -20,6 +21,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # importable, so make sure the repo root is always on sys.path.
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+
+from cyber_ai.correlation import DEFAULT_MAX_GAP, DEFAULT_MIN_CONFIDENCE, DEFAULT_MIN_WINDOWS  # noqa: E402  (needs REPO_ROOT on sys.path)
 
 
 class Settings(BaseSettings):
@@ -50,6 +54,24 @@ class Settings(BaseSettings):
     # into memory (the endpoint reads the full body before parsing). 200MB comfortably covers
     # a real CICIDS2017-sized CSV with room to spare.
     max_upload_bytes: int = 200 * 1024 * 1024
+
+    # Classifier confidence below which a flagged window is labelled "Unknown" instead of being forced into
+    # one of the six known attack categories (the classifier is trained on attacks only, so it has no way to
+    # say "none of these"). Unset/0 = off: every flagged window gets a category, as before. 0.9 is what the
+    # validation windows recommend -- see `python -m cyber_ai.abstention_analysis` and backend/README.md. Turning
+    # it on changes labels only; scores, risk levels and alert counts are unchanged.
+    unknown_confidence_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+
+    # Cross-window correlation (cyber_ai/correlation.py): a persistence layer that reports "campaigns" -- long runs
+    # of consecutive windows the classifier keeps reading as the SAME category at very high confidence, whether or
+    # not the Autoencoder flagged any of them (it misses most Port Scanning windows, for example, that this catches).
+    # It only adds information: no alert, label or risk level changes. Turning it on makes the classifier also score
+    # the windows the anomaly gate did not flag, so ingest does somewhat more work. The defaults were chosen by
+    # `python -m cyber_ai.correlation_eval`.
+    campaign_detection_enabled: bool = True
+    campaign_min_confidence: float = Field(default=DEFAULT_MIN_CONFIDENCE, ge=0.5, le=1.0)
+    campaign_min_windows: int = Field(default=DEFAULT_MIN_WINDOWS, ge=3)
+    campaign_max_gap: int = Field(default=DEFAULT_MAX_GAP, ge=0, le=5)
 
     # Both chatbots (backend/app/chat_service.py -- the per-alert assistant's LLM fallback AND the
     # sidebar's general "Assistant" project/threat chatbot) run on this one Gemini key/model, so the

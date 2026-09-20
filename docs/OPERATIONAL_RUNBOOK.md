@@ -18,11 +18,15 @@ The **risk score** fuses the two, and the level is a band of that score:
 
 | Level | Meaning | What to do |
 |---|---|---|
-| **High** | At least as suspicious as a typical confirmed attack window in the validation data | Work it now — steps 1–5 below |
-| **Medium** | Above what normal traffic usually scores, below a typical attack | Review when High alerts are clear; look for repeats |
-| **Low** | Scores like known-normal traffic (stored only if ingest was run with "all windows") | No action |
+| **High** | At least as suspicious as a typical confirmed attack window in the validation data. In held-out testing **97.6 %** of High windows were real attacks | Work it now — steps 1–5 below |
+| **Medium** | Above what normal traffic usually scores, below a typical attack. Held-out: **53 %** were attacks — a coin flip | Review when High alerts are clear; look for repeats |
+| **Low** | The model did not flag it (stored only if ingest was run with "all windows"). **Not the same as safe:** in held-out testing 45 % of Low windows were attacks the model missed — see §2 | No action *on the alert*; see "Sustained activity" below |
 
 The category on the alert (DoS / DDoS, Port Scanning, Brute Force, Botnet Activity, Malware Traffic, Data Exfiltration) is the **model's best guess**, not a verdict.
+
+How far to trust the classifier's **confidence**: in held-out testing, windows the classifier was ≥ 99 % sure of were right **every time** (10,561 of 10,561); windows it was under 80 % sure of were right only about **a third** of the time. So 99.9 % means something; 65 % means "probably not this."
+
+**"Unknown" alerts.** If the operator has enabled abstention (`UNKNOWN_CONFIDENCE_THRESHOLD`), a flagged window the classifier is not confident about is labelled **Unknown** instead of being forced into one of the six categories. That is honest, not an error: the anomaly is real, the category is not known. Most Unknowns are false alarms on ordinary traffic — but not all, so look at the evidence.
 
 ---
 
@@ -50,7 +54,7 @@ Use **"Ask about this prediction"** on the same page. Good first questions (they
 In **Analyst feedback**:
 
 - **"Yes, confirm prediction"** if the category is right, or
-- **"No, correct it"** and pick the true category (or **Normal** for a false alarm), and add a note explaining why.
+- **"No, correct it"** and pick the true category (or **Normal** for a false alarm), and add a note explaining why. On an **Unknown** alert there is nothing to confirm, so only this option is offered — "Unknown" is never a valid label.
 
 Things to know:
 
@@ -69,17 +73,27 @@ NetShield **detects and explains**; it does not block, quarantine or open ticket
 | High alert whose SHAP evidence **fits** the category and the assistant agrees | Likely real |
 | Predicted **Data Exfiltration** | The whole dataset has only ~36 rows of it (one window in the held-out test set), so the model's call on it is **statistically unreliable** — verify by hand |
 | High risk but the **category looks wrong** for the evidence | The alarm may be real while the label is not (e.g. tooling like hping3 or hydra has been seen labelled *Malware Traffic*) — trust the anomaly, not the label |
+| The category is **Unknown** but the SHAP evidence or the raw features look attack-like | The classifier didn't recognise it — which is exactly what a *new* kind of attack looks like |
+| A **Sustained activity** entry appears (see below) | Long-running activity the per-window alerts mostly did not catch |
 | You cannot decide | A second pair of eyes beats a wrong training label |
 
 To find *who* is involved, go back to the original capture / flow log using the **source file + window row range** from Step 1.
 
 ---
 
+### Sustained activity (Dashboard)
+The **Sustained activity** card lists *campaigns*: runs of many consecutive windows that the classifier kept reading as the **same category at ≥ 99 % confidence**, whether or not the anomaly detector flagged them. It exists because the sequential design misses whole attacks — about **93 % of Port Scanning windows** never raise an alert on their own, yet the classifier recognises them clearly when it is asked.
+
+- "Alerting alone: 0 of 27" is the interesting case: 27 windows of activity, none of which is an alert.
+- Treat a campaign as a lead, not a verdict: open the source file at the listed rows.
+- It currently helps mainly with **Port Scanning**; it did not help with Brute Force, Botnet or web attacks in testing, so its silence about those means nothing. (Details in `docs/PHASE6_FINDINGS.md`.)
+
 ## 2. What NetShield does not tell you
 
 - **No IP addresses or hostnames.** The model's 76 features are flow statistics (the port column is deliberately excluded). An alert says *this stretch of traffic looks like a DoS*, not *which host*. Correlate with the source capture.
 - **A quiet dashboard is not a clean bill of health.** The Autoencoder gate currently misses roughly **44 %** of attack windows in held-out evaluation (hybrid false-negative rate); those windows are never classified or alerted on. About **9 %** of normal windows raise a false alarm. Current figures are on the *Analytics* page (model card) — check them, they change after a retrain.
-- **Confidence is not accuracy.** A model can be very confident and wrong on traffic unlike its training data (CICIDS2017).
+- **Confidence is not accuracy.** The numbers above are on CICIDS2017 test windows. On traffic unlike its training data a model can be confident and wrong; the classifier has, for example, labelled hping3/hydra traffic *Malware Traffic*.
+- **The model can drift.** The *Analytics → Model drift* card compares how ordinary (unflagged) traffic scores now with the validation traffic the thresholds were calibrated on. **Drifting** means the false-alarm / miss balance has probably moved: review recent traffic and consider a retrain. **Not enough data** just means too few windows have been ingested to say.
 - **Windows straddling a chunk boundary are never scored** when traffic arrives via the stream simulator.
 
 ---

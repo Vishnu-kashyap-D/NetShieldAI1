@@ -4,9 +4,10 @@ import { useDataProvider } from "../../data/DataModeContext";
 import { useSession } from "../../auth/session";
 import { CAN_SUBMIT_FEEDBACK, roleCan } from "../../auth/permissions";
 import { usePolledAsync } from "../../hooks/usePolledAsync";
-import { CATEGORY_ORDER } from "../../constants/taxonomy";
+import { CATEGORY_ORDER, UNKNOWN_CATEGORY } from "../../constants/taxonomy";
 import { SectionCard } from "../../components/common/SectionCard";
 import { RiskBadge } from "../../components/common/RiskBadge";
+import { ThreatLabel } from "../common/ThreatLabel";
 import { ApiUnavailableError } from "../../data/errors";
 import { formatFullDateTime, formatPercent } from "../../utils/format";
 import "./FeedbackSection.css";
@@ -44,6 +45,9 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
   const feedbackList = usePolledAsync(() => provider.listFeedback(), [provider]);
   const historyForAlert = (feedbackList.data ?? []).filter((f) => f.alert_id === alert.id);
   const canSubmitFeedback = roleCan(analyst?.role, CAN_SUBMIT_FEEDBACK);
+  // An "Unknown" prediction has nothing to confirm: the analyst's only useful answer is what it really was.
+  const predictionIsUnknown = String(alert.predicted_label) === UNKNOWN_CATEGORY; // the API type omits "Unknown"; see types/api.ts
+  const effectiveVerdict: Verdict = predictionIsUnknown ? "correct" : verdict;
 
   function resetForm() {
     setVerdict(null);
@@ -55,17 +59,17 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
   }
 
   async function handleSubmit() {
-    if (verdict === null) {
+    if (effectiveVerdict === null) {
       setValidationMessage("Choose whether the prediction is correct before submitting.");
       return;
     }
-    if (verdict === "correct" && !correctedLabel) {
+    if (effectiveVerdict === "correct" && !correctedLabel) {
       setValidationMessage("Select the validated classification before submitting.");
       return;
     }
     setValidationMessage(null);
 
-    const validatedLabel = verdict === "agree" ? alert.predicted_label : correctedLabel;
+    const validatedLabel = effectiveVerdict === "agree" ? alert.predicted_label : correctedLabel;
     setSubmitState("submitting");
     setSubmitError(null);
     try {
@@ -100,7 +104,9 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
       <div className="feedback-prediction">
         <div className="feedback-prediction-label">AI prediction (unchanged by feedback)</div>
         <div className="feedback-prediction-row">
-          <span className="feedback-prediction-category">{alert.predicted_label}</span>
+          <span className="feedback-prediction-category">
+            <ThreatLabel label={alert.predicted_label} />
+          </span>
           <RiskBadge level={alert.risk_level} />
           {alert.is_anomaly && <span className="feedback-prediction-confidence">{formatPercent(alert.confidence)} confidence</span>}
         </div>
@@ -140,8 +146,11 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
         </div>
       ) : (
         <div className="feedback-form">
-          <div className="feedback-question">Is the AI prediction above correct?</div>
+          <div className="feedback-question">
+            {predictionIsUnknown ? "The model could not name a category. What was this traffic?" : "Is the AI prediction above correct?"}
+          </div>
           <div className="feedback-verdict-row">
+            {!predictionIsUnknown && (
             <button
               type="button"
               className={`btn feedback-verdict-btn${verdict === "agree" ? " active" : ""}`}
@@ -153,6 +162,8 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
             >
               Yes, confirm prediction
             </button>
+            )}
+            {!predictionIsUnknown && (
             <button
               type="button"
               className={`btn feedback-verdict-btn${verdict === "correct" ? " active" : ""}`}
@@ -164,9 +175,10 @@ export function FeedbackSection({ alert }: { alert: AlertDetailOut }) {
             >
               No, correct it
             </button>
+            )}
           </div>
 
-          {verdict === "correct" && (
+          {effectiveVerdict === "correct" && (
             <div className="field">
               <label htmlFor="fbCorrectedLabel">Validated classification</label>
               <select

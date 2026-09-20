@@ -13,6 +13,9 @@ LABEL_COLUMN = "Label"
 SOURCE_COLUMN = "source_file"
 BENIGN_LABEL = "BENIGN"
 NORMAL_DECISION_LABEL = "Normal"
+# What a window is called when the Autoencoder flagged it but the classifier was not confident enough to
+# name a known attack (see cyber_ai.hybrid_risk.apply_abstention). Never a training label.
+UNKNOWN_DECISION_LABEL = "Unknown"
 
 ATTACK_CATEGORY_MAP: dict[str, set[str]] = {
     "Brute Force": {

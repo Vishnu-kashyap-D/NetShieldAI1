@@ -46,3 +46,8 @@
     grid-template-columns: 90px 1fr 30px !important;
   }
 }
+
+.bar-list-flag {
+  color: var(--risk-med);
+  cursor: help;
+}

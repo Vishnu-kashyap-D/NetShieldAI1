@@ -1,0 +1,465 @@
+{
+  "days": {
+    "Monday-WorkingHours.pcap_ISCX.csv": "benign only",
+    "Tuesday-WorkingHours.pcap_ISCX.csv": "FTP/SSH brute force",
+    "Wednesday-workingHours.pcap_ISCX.csv": "DoS variants, Heartbleed",
+    "Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv": "web attacks",
+    "Friday-WorkingHours-Morning.pcap_ISCX.csv": "botnet",
+    "Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv": "port scan",
+    "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv": "DDoS"
+  },
+  "shipped_defaults": {
+    "min_confidence": 0.99,
+    "min_windows": 8,
+    "max_gap": 1
+  },
+  "shipped_results": {
+    "Monday-WorkingHours.pcap_ISCX.csv": {
+      "windows": 100595,
+      "attack_windows": 0,
+      "campaigns": 0,
+      "windows_in_campaigns": 0,
+      "benign_windows_in_campaigns": 0,
+      "attack_windows_alerted_alone": 0,
+      "quiet_attack_windows": 0,
+      "quiet_attack_windows_recovered": 0,
+      "quiet_by_category": {}
+    },
+    "Tuesday-WorkingHours.pcap_ISCX.csv": {
+      "windows": 84367,
+      "attack_windows": 1819,
+      "campaigns": 0,
+      "windows_in_campaigns": 0,
+      "benign_windows_in_campaigns": 0,
+      "attack_windows_alerted_alone": 200,
+      "quiet_attack_windows": 1619,
+      "quiet_attack_windows_recovered": 0,
+      "quiet_by_category": {
+        "Brute Force": {
+          "quiet_attack_windows": 1619,
+          "recovered": 0
+        }
+      }
+    },
+    "Wednesday-workingHours.pcap_ISCX.csv": {
+      "windows": 122157,
+      "attack_windows": 38805,
+      "campaigns": 320,
+      "windows_in_campaigns": 31846,
+      "benign_windows_in_campaigns": 1029,
+      "attack_windows_alerted_alone": 31551,
+      "quiet_attack_windows": 7254,
+      "quiet_attack_windows_recovered": 2206,
+      "quiet_by_category": {
+        "DoS / DDoS": {
+          "quiet_attack_windows": 7253,
+          "recovered": 2206
+        },
+        "Malware Traffic": {
+          "quiet_attack_windows": 1,
+          "recovered": 0
+        }
+      }
+    },
+    "Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv": {
+      "windows": 32859,
+      "attack_windows": 435,
+      "campaigns": 0,
+      "windows_in_campaigns": 0,
+      "benign_windows_in_campaigns": 0,
+      "attack_windows_alerted_alone": 36,
+      "quiet_attack_windows": 399,
+      "quiet_attack_windows_recovered": 0,
+      "quiet_by_category": {
+        "Brute Force": {
+          "quiet_attack_windows": 270,
+          "recovered": 0
+        },
+        "Malware Traffic": {
+          "quiet_attack_windows": 129,
+          "recovered": 0
+        }
+      }
+    },
+    "Friday-WorkingHours-Morning.pcap_ISCX.csv": {
+      "windows": 36828,
+      "attack_windows": 413,
+      "campaigns": 0,
+      "windows_in_campaigns": 0,
+      "benign_windows_in_campaigns": 0,
+      "attack_windows_alerted_alone": 67,
+      "quiet_attack_windows": 346,
+      "quiet_attack_windows_recovered": 0,
+      "quiet_by_category": {
+        "Botnet Activity": {
+          "quiet_attack_windows": 346,
+          "recovered": 0
+        }
+      }
+    },
+    "Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv": {
+      "windows": 42821,
+      "attack_windows": 18175,
+      "campaigns": 136,
+      "windows_in_campaigns": 18164,
+      "benign_windows_in_campaigns": 382,
+      "attack_windows_alerted_alone": 1115,
+      "quiet_attack_windows": 17060,
+      "quiet_attack_windows_recovered": 16695,
+      "quiet_by_category": {
+        "Port Scanning": {
+          "quiet_attack_windows": 17060,
+          "recovered": 16695
+        }
+      }
+    },
+    "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv": {
+      "windows": 44621,
+      "attack_windows": 25602,
+      "campaigns": 83,
+      "windows_in_campaigns": 21237,
+      "benign_windows_in_campaigns": 22,
+      "attack_windows_alerted_alone": 13857,
+      "quiet_attack_windows": 11745,
+      "quiet_attack_windows_recovered": 7438,
+      "quiet_by_category": {
+        "DoS / DDoS": {
+          "quiet_attack_windows": 11745,
+          "recovered": 7438
+        }
+      }
+    }
+  },
+  "best_setting": {
+    "min_confidence": 0.99,
+    "min_windows": 5,
+    "max_gap": 1,
+    "false_campaigns_on_benign_day": 0,
+    "false_coverage": 0.003841698790761981,
+    "quiet_attack_windows": 38423,
+    "quiet_attack_windows_recovered": 26494,
+    "recovery_rate": 0.6895349139838117
+  },
+  "sweep": [
+    {
+      "min_confidence": 0.9,
+      "min_windows": 5,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 494,
+      "false_coverage": 0.040081899952242615,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 32417,
+      "recovery_rate": 0.843687374749499
+    },
+    {
+      "min_confidence": 0.9,
+      "min_windows": 5,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 650,
+      "false_coverage": 0.05527191364621015,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 32882,
+      "recovery_rate": 0.8557895010800822
+    },
+    {
+      "min_confidence": 0.9,
+      "min_windows": 8,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 171,
+      "false_coverage": 0.021469713640405383,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 31950,
+      "recovery_rate": 0.8315331962626552
+    },
+    {
+      "min_confidence": 0.9,
+      "min_windows": 8,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 295,
+      "false_coverage": 0.03522436734661569,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 32508,
+      "recovery_rate": 0.8460557478593551
+    },
+    {
+      "min_confidence": 0.9,
+      "min_windows": 12,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 60,
+      "false_coverage": 0.012253330483721592,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 31482,
+      "recovery_rate": 0.819352991697681
+    },
+    {
+      "min_confidence": 0.9,
+      "min_windows": 12,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 110,
+      "false_coverage": 0.021781060108338017,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 32116,
+      "recovery_rate": 0.8358535252322827
+    },
+    {
+      "min_confidence": 0.9,
+      "min_windows": 20,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 10,
+      "false_coverage": 0.005865450832324095,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 30952,
+      "recovery_rate": 0.8055591702886292
+    },
+    {
+      "min_confidence": 0.9,
+      "min_windows": 20,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 28,
+      "false_coverage": 0.010907680495199195,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 31545,
+      "recovery_rate": 0.8209926346198891
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 5,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 180,
+      "false_coverage": 0.017005321913778137,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 27466,
+      "recovery_rate": 0.7148322619264503
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 5,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 227,
+      "false_coverage": 0.021715096873606527,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 27861,
+      "recovery_rate": 0.7251125627879135
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 8,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 53,
+      "false_coverage": 0.009715065211253855,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 27167,
+      "recovery_rate": 0.7070504645654946
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 8,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 88,
+      "false_coverage": 0.013319296356982473,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 27611,
+      "recovery_rate": 0.7186060432553418
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 12,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 13,
+      "false_coverage": 0.005788933480035567,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 26897,
+      "recovery_rate": 0.7000234234703172
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 12,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 27,
+      "false_coverage": 0.008192633753651065,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 27277,
+      "recovery_rate": 0.7099133331598262
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 20,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 1,
+      "false_coverage": 0.004081804965184605,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 26515,
+      "recovery_rate": 0.6900814616245478
+    },
+    {
+      "min_confidence": 0.95,
+      "min_windows": 20,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 4,
+      "false_coverage": 0.0047915693708954375,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 26983,
+      "recovery_rate": 0.7022616661895219
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 5,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003662278792292328,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 26083,
+      "recovery_rate": 0.678838195872264
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 5,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003841698790761981,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 26494,
+      "recovery_rate": 0.6895349139838117
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 8,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003591038498782319,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 25716,
+      "recovery_rate": 0.6692866251984488
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 8,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.00378101261480901,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 26339,
+      "recovery_rate": 0.6855008718736174
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 12,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003474943205654896,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 25216,
+      "recovery_rate": 0.6562735861333056
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 12,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003725603497634558,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 26097,
+      "recovery_rate": 0.679202560966088
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 20,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003303438795353022,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 24142,
+      "recovery_rate": 0.6283215782213778
+    },
+    {
+      "min_confidence": 0.99,
+      "min_windows": 20,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003630616439621213,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 25663,
+      "recovery_rate": 0.6679072430575437
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 5,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003390510265198589,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 24883,
+      "recovery_rate": 0.6476069021159202
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 5,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003569930263668242,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 25621,
+      "recovery_rate": 0.6668141477760716
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 8,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.00331663144229932,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 24231,
+      "recovery_rate": 0.6306378991749734
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 8,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.0035197982052723093,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 25265,
+      "recovery_rate": 0.6575488639616897
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 12,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.0032137287961181956,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 23504,
+      "recovery_rate": 0.6117169403742551
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 12,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.0034643890880978576,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 24825,
+      "recovery_rate": 0.6460973895843636
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 20,
+      "max_gap": 0,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.0030105620331452062,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 22315,
+      "recovery_rate": 0.5807719334773443
+    },
+    {
+      "min_confidence": 0.995,
+      "min_windows": 20,
+      "max_gap": 1,
+      "false_campaigns_on_benign_day": 0,
+      "false_coverage": 0.003329824089245618,
+      "quiet_attack_windows": 38423,
+      "quiet_attack_windows_recovered": 24041,
+      "recovery_rate": 0.6256929443302188
+    }
+  ]
+}

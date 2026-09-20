@@ -2,6 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 
+from cyber_ai.data import UNKNOWN_DECISION_LABEL
+
+# Confidence below which a flagged window is called "Unknown" instead of being forced into one of the six
+# known attack categories. 0.9 is what the VALIDATION windows recommend (python -m cyber_ai.abstention_analysis):
+# it still names ~97.5% of real attacks, those names are ~99.97% right, and ~88% of false alarms -- windows the
+# classifier has no correct answer for -- become "Unknown". Off by default in the backend (UNKNOWN_CONFIDENCE_THRESHOLD).
+RECOMMENDED_UNKNOWN_CONFIDENCE_THRESHOLD = 0.9
+
 
 def normalize_anomaly_score(raw_error: np.ndarray | float, low: float, high: float) -> np.ndarray:
     """Scale raw Autoencoder reconstruction error into a [0, 1] "how anomalous" signal.
@@ -100,3 +108,24 @@ def risk_levels_for(risk_scores: np.ndarray, low_threshold: float, high_threshol
     levels[risk_scores >= low_threshold] = "Medium"
     levels[risk_scores >= high_threshold] = "High"
     return levels
+
+
+def apply_abstention(
+    predicted_labels: np.ndarray,
+    confidences: np.ndarray,
+    classified_mask: np.ndarray,
+    threshold: float | None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Replace the label of every *classified* window whose confidence is below `threshold` with "Unknown".
+
+    Returns (labels, abstained_mask). `threshold=None` (or 0) abstains from nothing -- the labels come back
+    untouched -- so the unmodified behaviour is one argument away. Windows the classifier never saw
+    (`classified_mask` False, i.e. the Autoencoder called them normal) are never touched.
+    Only the *label* changes: the confidence, anomaly score and risk score stay exactly as computed.
+    """
+    labels = np.array(predicted_labels, dtype=object, copy=True)
+    abstained = np.zeros(len(labels), dtype=bool)
+    if threshold:
+        abstained = np.asarray(classified_mask, dtype=bool) & (np.asarray(confidences, dtype=np.float64) < threshold)
+        labels[abstained] = UNKNOWN_DECISION_LABEL
+    return labels, abstained

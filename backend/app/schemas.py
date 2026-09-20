@@ -72,6 +72,9 @@ class IngestSummaryOut(BaseModel):
     anomalous_windows: int
     alerts_written: int
     duplicates_skipped: int
+    # Cross-window "campaigns" found in this upload (see GET /api/campaigns): sustained activity that no single
+    # window alerts on. Counted, not deduplicated -- a re-upload reports the same ones it found the first time.
+    campaigns_found: int = 0
     risk_level_counts: dict[str, int]
     predicted_label_counts: dict[str, int]
 
@@ -117,9 +120,63 @@ class ModelMetricsOut(BaseModel):
     hybrid_false_negative_rate: float
 
 
+class DriftBinOut(BaseModel):
+    bin: int
+    expected: float
+    live: float
+
+
+class DriftOut(BaseModel):
+    """Is ordinary traffic still scoring like the validation traffic the risk thresholds were calibrated on?"""
+
+    # unavailable (no reference for this model) | insufficient_data | stable | watch | drifting
+    status: str
+    message: str
+    period_hours: int
+    # Population Stability Index of the unflagged windows' score distribution vs the validation reference;
+    # None until there are enough windows. < 0.1 stable, 0.1-0.25 watch, > 0.25 drifting.
+    psi: float | None = None
+    psi_watch: float
+    psi_drifting: float
+    windows: int = 0
+    quiet_windows: int = 0
+    flag_rate: float | None = None
+    reference_flag_rate: float | None = None
+    # Live flag rate / validation false-alarm rate. Context only: real attacks raise it legitimately.
+    flag_rate_ratio: float | None = None
+    batches_considered: int = 0
+    # Ingests in the period scored under an earlier model (different bins), left out of the comparison.
+    batches_excluded: int = 0
+    bins: list[DriftBinOut] = []
+
+
+class CampaignOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    batch_id: str
+    source_file: str
+    category: str
+    first_window: int
+    last_window: int
+    windows: int
+    alerted_windows: int
+    mean_confidence: float
+    detected_at: dt.datetime
+
+
+class CampaignListOut(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[CampaignOut]
+
+
 class FeedbackIn(BaseModel):
     alert_id: int
     validated_label: str
+    # Accepted so older clients don't 422, but IGNORED: the server records the signed-in user's own name, so a
+    # label can't be attributed to someone else (same rule as a retrain's `triggered_by`).
     analyst: str | None = None
     notes: str | None = None
 
@@ -191,4 +248,3 @@ class HealthOut(BaseModel):
     status: str
     model_loaded: bool
     feature_count: int | None
-    artifacts_dir: str

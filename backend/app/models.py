@@ -102,6 +102,48 @@ class Feedback(Base):
     alert: Mapped["Alert"] = relationship(back_populates="feedback")
 
 
+class ScoreBatch(Base):
+    """What one ingest's scoring looked like, over ALL its windows (not just the stored Medium/High ones).
+
+    `alerts` only keeps windows worth alerting on, so it can't show whether ordinary traffic has started
+    scoring differently. This keeps a tiny histogram per ingest instead -- the counts of windows falling in
+    each of the drift reference's score bins (cyber_ai/drift.py) -- which is all drift monitoring needs.
+    """
+
+    __tablename__ = "score_batches"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    batch_id: Mapped[str] = mapped_column(String(36), unique=True)
+    source_file: Mapped[str] = mapped_column(String(255))
+    # Fingerprint of the drift reference the counts were binned under: counts from before a retrain (a
+    # different model, different bins) must never be compared with the new reference.
+    reference_id: Mapped[str] = mapped_column(String(16), index=True)
+    windows_scored: Mapped[int] = mapped_column(Integer)
+    flagged_windows: Mapped[int] = mapped_column(Integer)
+    quiet_bin_counts: Mapped[list] = mapped_column(JSON)
+    ingested_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow, index=True)
+
+
+class CorrelatedCampaign(Base):
+    """A long run of consecutive windows the classifier kept reading as one category at very high confidence
+    (cyber_ai/correlation.py) -- typically activity the anomaly gate never flagged, so no per-window alert exists
+    for most of it. Reported beside the alerts; never replaces them."""
+
+    __tablename__ = "campaigns"
+    __table_args__ = (UniqueConstraint("batch_id", "source_file", "first_window", name="uq_campaign_span"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    batch_id: Mapped[str] = mapped_column(String(36), index=True)
+    source_file: Mapped[str] = mapped_column(String(255), index=True)
+    category: Mapped[str] = mapped_column(String(64), index=True)   # what the run consistently looked like
+    first_window: Mapped[int] = mapped_column(Integer)      # row where the first window of the run starts
+    last_window: Mapped[int] = mapped_column(Integer)       # row where the last window of the run ends
+    windows: Mapped[int] = mapped_column(Integer)
+    alerted_windows: Mapped[int] = mapped_column(Integer)   # of those, windows that were Medium/High on their own
+    mean_confidence: Mapped[float] = mapped_column(Float)   # classifier confidence, averaged over the run
+    detected_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow, index=True)
+
+
 class TrainingRun(Base):
     __tablename__ = "training_runs"
 

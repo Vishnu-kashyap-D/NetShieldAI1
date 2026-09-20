@@ -22,6 +22,9 @@ export type AttackCategory =
   | "Botnet Activity"
   | "Malware Traffic"
   | "Data Exfiltration";
+// (`predicted_label` can additionally be "Unknown" when the classifier abstains -- see constants/taxonomy.ts.
+// It is deliberately not part of this type: the mock data and the analyst's validated-label picker are
+// keyed by exactly these seven, and "Unknown" is never a valid validated label.)
 
 /**
  * Status values of a `training_runs` row. "rejected" means training itself succeeded but the
@@ -111,7 +114,8 @@ export interface HealthOut {
   status: string;
   model_loaded: boolean;
   feature_count: number | null;
-  artifacts_dir: string;
+  /** Not sent by the backend any more (it disclosed the server's filesystem layout); only the mock provider fills it. */
+  artifacts_dir?: string;
 }
 
 /** One row of the `alerts` table, as returned by GET /api/alerts. */
@@ -160,6 +164,8 @@ export interface IngestSummaryOut {
   anomalous_windows: number;
   alerts_written: number;
   duplicates_skipped: number;
+  /** Cross-window "campaigns" found in this upload (GET /api/campaigns). Absent from older backends. */
+  campaigns_found?: number;
   risk_level_counts: Record<string, number>;
   predicted_label_counts: Record<string, number>;
 }
@@ -204,6 +210,66 @@ export interface ModelMetricsOut {
   autoencoder_true_negative_rate: number;
   hybrid_false_positive_rate: number;
   hybrid_false_negative_rate: number;
+}
+
+/**
+ * GET /api/campaigns -- sustained activity found by the cross-window layer (cyber_ai/correlation.py): a run of
+ * consecutive windows the classifier kept reading as the same category at very high confidence, typically
+ * activity the anomaly gate never flagged, so most of its windows raised no alert on their own.
+ */
+export interface CampaignOut {
+  id: number;
+  batch_id: string;
+  source_file: string;
+  /** The category the run consistently looked like. */
+  category: string;
+  /** Row where the first window of the run starts / the last one ends, in the source file. */
+  first_window: number;
+  last_window: number;
+  windows: number;
+  /** Of `windows`, how many raised an alert (Medium/High) on their own. The rest were only visible in aggregate. */
+  alerted_windows: number;
+  /** Classifier confidence averaged over the run. */
+  mean_confidence: number;
+  detected_at: string;
+}
+
+export interface CampaignListOut {
+  total: number;
+  limit: number;
+  offset: number;
+  items: CampaignOut[];
+}
+
+/** GET /api/stats/drift -- has ordinary traffic started scoring differently from the validation traffic? */
+export type DriftStatus = "unavailable" | "insufficient_data" | "stable" | "watch" | "drifting";
+
+export interface DriftBinOut {
+  bin: number;
+  /** Share of validation quiet windows in this score bin (10% each by construction). */
+  expected: number;
+  /** Share of live quiet windows in this score bin. */
+  live: number;
+}
+
+export interface DriftOut {
+  status: DriftStatus;
+  message: string;
+  period_hours: number;
+  /** Population Stability Index of unflagged windows' scores vs validation; null until enough windows. */
+  psi: number | null;
+  psi_watch: number;
+  psi_drifting: number;
+  windows: number;
+  quiet_windows: number;
+  flag_rate: number | null;
+  reference_flag_rate: number | null;
+  /** Live flag rate / validation false-alarm rate. Context only: real attacks raise it legitimately. */
+  flag_rate_ratio: number | null;
+  batches_considered: number;
+  /** Ingests in the period scored under an earlier model, left out of the comparison. */
+  batches_excluded: number;
+  bins: DriftBinOut[];
 }
 
 /** POST /api/feedback request body. */

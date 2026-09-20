@@ -4,6 +4,8 @@ import { useDataProvider } from "../../data/DataModeContext";
 import { usePolledAsync } from "../../hooks/usePolledAsync";
 import { ApiUnavailableError, NotFoundError } from "../../data/errors";
 import { RiskBadge } from "../../components/common/RiskBadge";
+import { ThreatLabel } from "../../components/common/ThreatLabel";
+import { reliabilityWarning } from "../../constants/reliability";
 import { SectionCard } from "../../components/common/SectionCard";
 import { IconArrowLeft, IconModelShield } from "../../components/common/icons";
 import { MetricCard } from "../../components/alertDetail/MetricCard";
@@ -83,7 +85,7 @@ function AlertDetailContent({ alert }: { alert: AlertDetailOut }) {
     { key: "ingested_at", label: "Ingested at", value: formatFullDateTime(alert.ingested_at) },
     { key: "actual_label", label: "Actual label (ground truth)", value: alert.actual_label },
     { key: "actual_category", label: "Actual category (ground truth)", value: alert.actual_category },
-    { key: "predicted_label", label: "Predicted label", value: alert.predicted_label },
+    { key: "predicted_label", label: "Predicted label", value: <ThreatLabel label={alert.predicted_label} /> },
     { key: "pipeline_action", label: "Pipeline action", value: alert.pipeline_action },
   ];
 
@@ -92,7 +94,9 @@ function AlertDetailContent({ alert }: { alert: AlertDetailOut }) {
       {/* WHAT HAPPENED + WHAT WAS PREDICTED, at a glance */}
       <header className={`alert-detail-header alert-detail-header--${alert.risk_level.toLowerCase()}`}>
         <div className="alert-detail-title-row">
-          <h1>{alert.predicted_label}</h1>
+          <h1>
+            <ThreatLabel label={alert.predicted_label} />
+          </h1>
           <RiskBadge level={alert.risk_level} />
           <button className="btn alert-detail-export-btn" onClick={() => exportAlertAsCsv(alert)}>
             Export CSV
@@ -101,6 +105,11 @@ function AlertDetailContent({ alert }: { alert: AlertDetailOut }) {
         <div className="alert-detail-subtitle">
           Alert #{alert.id} · {alert.pipeline_action} · {formatFullDateTime(alert.ingested_at)}
         </div>
+        {reliabilityWarning(alert.predicted_label) && (
+          <div className="reliability-banner" role="note">
+            <b>Treat this category with caution.</b> {reliabilityWarning(alert.predicted_label)}
+          </div>
+        )}
       </header>
 
       {/* WHAT HAPPENED -- the raw event this alert is about */}

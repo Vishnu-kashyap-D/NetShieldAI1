@@ -1,0 +1,269 @@
+{
+  "classifier": {
+    "note": "Attack windows only -- the same test windows the trainer reported classifier accuracy on.",
+    "as_deployed": {
+      "windows": 12783,
+      "accuracy": 0.9606508644293202,
+      "mean_confidence": 0.9688510392894303,
+      "ece": 0.02073868386418872,
+      "mce": 0.3780582468639049,
+      "brier": 0.05275008202959098,
+      "log_loss": 0.12950821945576707
+    },
+    "reliability_bins": [
+      {
+        "low": 0.0,
+        "high": 0.1,
+        "count": 0,
+        "mean_confidence": null,
+        "accuracy": null,
+        "gap": null,
+        "wilson_low": null,
+        "wilson_high": null
+      },
+      {
+        "low": 0.1,
+        "high": 0.2,
+        "count": 0,
+        "mean_confidence": null,
+        "accuracy": null,
+        "gap": null,
+        "wilson_low": null,
+        "wilson_high": null
+      },
+      {
+        "low": 0.2,
+        "high": 0.30000000000000004,
+        "count": 2,
+        "mean_confidence": 0.2724979817867279,
+        "accuracy": 0.5,
+        "gap": -0.2275020182132721,
+        "wilson_low": 0.09452865480086614,
+        "wilson_high": 0.9054713451991339
+      },
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "count": 46,
+        "mean_confidence": 0.3659454901581225,
+        "accuracy": 0.10869565217391304,
+        "gap": 0.2572498379842095,
+        "wilson_low": 0.04733076082742689,
+        "wilson_high": 0.23038103012631456
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "count": 158,
+        "mean_confidence": 0.4512860043139397,
+        "accuracy": 0.2848101265822785,
+        "gap": 0.16647587773166123,
+        "wilson_low": 0.220196337626779,
+        "wilson_high": 0.3596397490159631
+      },
+      {
+        "low": 0.5,
+        "high": 0.6000000000000001,
+        "count": 160,
+        "mean_confidence": 0.5531752791255713,
+        "accuracy": 0.25625,
+        "gap": 0.2969252791255713,
+        "wilson_low": 0.19487319519495178,
+        "wilson_high": 0.329057235171939
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "count": 189,
+        "mean_confidence": 0.6497335175357798,
+        "accuracy": 0.26455026455026454,
+        "gap": 0.38518325298551526,
+        "wilson_low": 0.2068074953731352,
+        "wilson_high": 0.3316738281587169
+      },
+      {
+        "low": 0.7000000000000001,
+        "high": 0.8,
+        "count": 138,
+        "mean_confidence": 0.7534301367358885,
+        "accuracy": 0.5579710144927537,
+        "gap": 0.1954591222431349,
+        "wilson_low": 0.47465511928617377,
+        "wilson_high": 0.6381467667613611
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "count": 231,
+        "mean_confidence": 0.8721750453437046,
+        "accuracy": 0.935064935064935,
+        "gap": -0.06288988972123044,
+        "wilson_low": 0.895638597556531,
+        "wilson_high": 0.9602574617447172
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "count": 11859,
+        "mean_confidence": 0.9932867597795797,
+        "accuracy": 0.998819462011974,
+        "gap": -0.0055327022323943265,
+        "wilson_low": 0.9980192240092812,
+        "wilson_high": 0.9992966298920302
+      }
+    ],
+    "top_end": [
+      {
+        "low": 0.0,
+        "high": 0.5,
+        "count": 206,
+        "mean_confidence": 0.4304935786041241,
+        "accuracy": 0.24757281553398058,
+        "gap": 0.18292076307014354,
+        "wilson_low": 0.19361400879571924,
+        "wilson_high": 0.3107740629688879
+      },
+      {
+        "low": 0.5,
+        "high": 0.8,
+        "count": 487,
+        "mean_confidence": 0.6473943292482678,
+        "accuracy": 0.34496919917864477,
+        "gap": 0.302425130069623,
+        "wilson_low": 0.30411114323118293,
+        "wilson_high": 0.3882539700762466
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "count": 231,
+        "mean_confidence": 0.8721750453437046,
+        "accuracy": 0.935064935064935,
+        "gap": -0.06288988972123044,
+        "wilson_low": 0.895638597556531,
+        "wilson_high": 0.9602574617447172
+      },
+      {
+        "low": 0.9,
+        "high": 0.99,
+        "count": 1298,
+        "mean_confidence": 0.9460749868160037,
+        "accuracy": 0.9892141756548536,
+        "gap": -0.04313918883884993,
+        "wilson_low": 0.9819767133535495,
+        "wilson_high": 0.9935643970242414
+      },
+      {
+        "low": 0.99,
+        "high": 0.999,
+        "count": 2680,
+        "mean_confidence": 0.9980554300235278,
+        "accuracy": 1.0,
+        "gap": -0.001944569976472188,
+        "wilson_low": 0.9985686189527727,
+        "wilson_high": 1.0
+      },
+      {
+        "low": 0.999,
+        "high": 0.9999,
+        "count": 7881,
+        "mean_confidence": 0.9994409083715022,
+        "accuracy": 1.0,
+        "gap": -0.0005590916284977654,
+        "wilson_low": 0.9995127866614341,
+        "wilson_high": 1.0
+      },
+      {
+        "low": 0.9999,
+        "high": 1.0000001,
+        "count": 0,
+        "mean_confidence": null,
+        "accuracy": null,
+        "gap": null,
+        "wilson_low": null,
+        "wilson_high": null
+      }
+    ],
+    "per_predicted_class": {
+      "Botnet Activity": {
+        "predicted_windows": 354,
+        "precision": 0.12429378531073447,
+        "mean_confidence": 0.5664356205254625,
+        "true_windows": 59
+      },
+      "Brute Force": {
+        "predicted_windows": 340,
+        "precision": 0.7088235294117647,
+        "mean_confidence": 0.7890728535021052,
+        "true_windows": 321
+      },
+      "Data Exfiltration": {
+        "predicted_windows": 0
+      },
+      "DoS / DDoS": {
+        "predicted_windows": 9272,
+        "precision": 0.9998921484037964,
+        "mean_confidence": 0.9866526962914428,
+        "true_windows": 9652
+      },
+      "Malware Traffic": {
+        "predicted_windows": 114,
+        "precision": 0.21052631578947367,
+        "mean_confidence": 0.6191229760123972,
+        "true_windows": 25
+      },
+      "Port Scanning": {
+        "predicted_windows": 2703,
+        "precision": 0.9988901220865705,
+        "mean_confidence": 0.9978527695524926,
+        "true_windows": 2725
+      }
+    },
+    "temperature_scaling": {
+      "fitted_on": "validation attack windows",
+      "temperature": 1.1324938916699518,
+      "test_after_scaling": {
+        "windows": 12783,
+        "accuracy": 0.9606508644293202,
+        "mean_confidence": 0.9618502894666674,
+        "ece": 0.02309070282153487,
+        "mce": 0.31823581790508315,
+        "brier": 0.05200436463825459,
+        "log_loss": 0.12805417548703701
+      }
+    },
+    "confidence_is_informative": {
+      "errors": 503,
+      "mean_confidence_when_right": 0.9846443688151114,
+      "mean_confidence_when_wrong": 0.5832802906306553,
+      "auroc_confidence_predicts_correct": 0.9911574526780683
+    }
+  },
+  "risk_levels": {
+    "note": "A risk level is a band of a fused score, not a probability. This is what each band means in practice.",
+    "by_level": {
+      "Low": {
+        "windows": 12459,
+        "actually_attack": 5671,
+        "attack_fraction": 0.45517296733285173,
+        "wilson_low": 0.4464436812856621,
+        "wilson_high": 0.46392988873547975
+      },
+      "Medium": {
+        "windows": 1179,
+        "actually_attack": 628,
+        "attack_fraction": 0.5326547921967769,
+        "wilson_low": 0.5041147594982214,
+        "wilson_high": 0.560982714246361
+      },
+      "High": {
+        "windows": 6645,
+        "actually_attack": 6484,
+        "attack_fraction": 0.9757712565838976,
+        "wilson_low": 0.9717902345469037,
+        "wilson_high": 0.9792024917649998
+      }
+    },
+    "overall_attack_fraction_in_test_set": 0.6302322141695016
+  }
+}

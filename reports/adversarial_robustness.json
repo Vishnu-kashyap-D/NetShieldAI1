@@ -1,0 +1,1038 @@
+{
+  "baseline": {
+    "overall": {
+      "windows": 12783,
+      "ae_detection_rate": 0.537197840882422,
+      "hybrid_detection_rate": 0.5563639208323554,
+      "evaded_ae": 0.0,
+      "evaded_hybrid": 0.0
+    },
+    "by_category": {
+      "Botnet Activity": {
+        "windows": 59,
+        "ae_detection_rate": 0.2033898305084746,
+        "hybrid_detection_rate": 0.2033898305084746,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "Brute Force": {
+        "windows": 321,
+        "ae_detection_rate": 0.056074766355140186,
+        "hybrid_detection_rate": 0.102803738317757,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "Data Exfiltration": {
+        "windows": 1,
+        "ae_detection_rate": 0.0,
+        "hybrid_detection_rate": 1.0,
+        "evaded_ae": null,
+        "evaded_hybrid": 0.0
+      },
+      "DoS / DDoS": {
+        "windows": 9652,
+        "ae_detection_rate": 0.6891835888934936,
+        "hybrid_detection_rate": 0.7129092416079569,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "Malware Traffic": {
+        "windows": 25,
+        "ae_detection_rate": 0.08,
+        "hybrid_detection_rate": 0.08,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "Port Scanning": {
+        "windows": 2725,
+        "ae_detection_rate": 0.0671559633027523,
+        "hybrid_detection_rate": 0.0671559633027523,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      }
+    }
+  },
+  "experiments": [
+    {
+      "name": "slow x2",
+      "family": "slow down",
+      "strength": 2,
+      "slow": 2,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5392317922240476,
+        "hybrid_detection_rate": 0.5591801611515294,
+        "evaded_ae": 0.028105431775156547,
+        "evaded_hybrid": 0.02671541057367829
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.2033898305084746,
+          "hybrid_detection_rate": 0.2711864406779661,
+          "evaded_ae": 0.25,
+          "evaded_hybrid": 0.16666666666666666
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.2087227414330218,
+          "hybrid_detection_rate": 0.26479750778816197,
+          "evaded_ae": 0.2222222222222222,
+          "evaded_hybrid": 0.15151515151515152
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 0.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.703999171156237,
+          "hybrid_detection_rate": 0.7274140074595938,
+          "evaded_ae": 0.000751653638003608,
+          "evaded_hybrid": 0.0007266385699752943
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.04,
+          "hybrid_detection_rate": 0.04,
+          "evaded_ae": 1.0,
+          "evaded_hybrid": 1.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.0066055045871559635,
+          "hybrid_detection_rate": 0.008807339449541285,
+          "evaded_ae": 0.9781420765027322,
+          "evaded_hybrid": 0.9617486338797814
+        }
+      }
+    },
+    {
+      "name": "slow x5",
+      "family": "slow down",
+      "strength": 5,
+      "slow": 5,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5763905186575922,
+        "hybrid_detection_rate": 0.5951654541187514,
+        "evaded_ae": 0.027959807776321538,
+        "evaded_hybrid": 0.02699662542182227
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.4406779661016949,
+          "hybrid_detection_rate": 0.4576271186440678,
+          "evaded_ae": 0.3333333333333333,
+          "evaded_hybrid": 0.25
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.514018691588785,
+          "hybrid_detection_rate": 0.5451713395638629,
+          "evaded_ae": 0.2222222222222222,
+          "evaded_hybrid": 0.12121212121212122
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.7352880232076253,
+          "hybrid_detection_rate": 0.7587028595109822,
+          "evaded_ae": 0.0009019843656043296,
+          "evaded_hybrid": 0.0011626217119604708
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.04,
+          "hybrid_detection_rate": 0.16,
+          "evaded_ae": 1.0,
+          "evaded_hybrid": 0.5
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.028623853211009173,
+          "hybrid_detection_rate": 0.028623853211009173,
+          "evaded_ae": 0.9617486338797814,
+          "evaded_hybrid": 0.9617486338797814
+        }
+      }
+    },
+    {
+      "name": "slow x10",
+      "family": "slow down",
+      "strength": 10,
+      "slow": 10,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.6360009387467731,
+        "hybrid_detection_rate": 0.6546194164124227,
+        "evaded_ae": 0.02781418377748653,
+        "evaded_hybrid": 0.02685601799775028
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.4915254237288136,
+          "hybrid_detection_rate": 0.5084745762711864,
+          "evaded_ae": 0.3333333333333333,
+          "evaded_hybrid": 0.25
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.6105919003115264,
+          "hybrid_detection_rate": 0.6230529595015576,
+          "evaded_ae": 0.16666666666666666,
+          "evaded_hybrid": 0.09090909090909091
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.807293825113966,
+          "hybrid_detection_rate": 0.8311230832987981,
+          "evaded_ae": 0.0013529765484064944,
+          "evaded_hybrid": 0.0014532771399505887
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.2,
+          "hybrid_detection_rate": 0.2,
+          "evaded_ae": 0.5,
+          "evaded_hybrid": 0.5
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.03926605504587156,
+          "hybrid_detection_rate": 0.04036697247706422,
+          "evaded_ae": 0.9508196721311475,
+          "evaded_hybrid": 0.9508196721311475
+        }
+      }
+    },
+    {
+      "name": "slow x50",
+      "family": "slow down",
+      "strength": 50,
+      "slow": 50,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.7301103027458343,
+        "hybrid_detection_rate": 0.7367597590549949,
+        "evaded_ae": 0.026794815785641475,
+        "evaded_hybrid": 0.025590551181102362
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.5254237288135594,
+          "hybrid_detection_rate": 0.576271186440678,
+          "evaded_ae": 0.3333333333333333,
+          "evaded_hybrid": 0.25
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.9813084112149533,
+          "hybrid_detection_rate": 0.9875389408099688,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.9164939908827187,
+          "hybrid_detection_rate": 0.9247824285122255,
+          "evaded_ae": 0.0009019843656043296,
+          "evaded_hybrid": 0.0007266385699752943
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.04220183486238532,
+          "hybrid_detection_rate": 0.04220183486238532,
+          "evaded_ae": 0.9508196721311475,
+          "evaded_hybrid": 0.9508196721311475
+        }
+      }
+    },
+    {
+      "name": "slow x200",
+      "family": "slow down",
+      "strength": 200,
+      "slow": 200,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.7479464914339357,
+        "hybrid_detection_rate": 0.7503715872643354,
+        "evaded_ae": 0.026066695791466435,
+        "evaded_hybrid": 0.025168728908886388
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.6949152542372882,
+          "hybrid_detection_rate": 0.711864406779661,
+          "evaded_ae": 0.16666666666666666,
+          "evaded_hybrid": 0.08333333333333333
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.9875389408099688,
+          "hybrid_detection_rate": 0.9875389408099688,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.938251139660174,
+          "hybrid_detection_rate": 0.9413593037712391,
+          "evaded_ae": 0.0004509921828021648,
+          "evaded_hybrid": 0.0005813108559802354
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.04440366972477064,
+          "hybrid_detection_rate": 0.04440366972477064,
+          "evaded_ae": 0.9508196721311475,
+          "evaded_hybrid": 0.9508196721311475
+        }
+      }
+    },
+    {
+      "name": "pad +10B",
+      "family": "pad",
+      "strength": 10,
+      "pad": 10,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5404834545881249,
+        "hybrid_detection_rate": 0.559805992333568,
+        "evaded_ae": 0.0010193679918450561,
+        "evaded_hybrid": 0.000421822272215973
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.2033898305084746,
+          "hybrid_detection_rate": 0.2033898305084746,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.056074766355140186,
+          "hybrid_detection_rate": 0.102803738317757,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 0.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.6941566514711976,
+          "hybrid_detection_rate": 0.7174678823041857,
+          "evaded_ae": 0.0001503307276007216,
+          "evaded_hybrid": 0.0004359831419851766
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.08,
+          "hybrid_detection_rate": 0.08,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.06495412844036698,
+          "hybrid_detection_rate": 0.0671559633027523,
+          "evaded_ae": 0.03278688524590164,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "pad +50B",
+      "family": "pad",
+      "strength": 50,
+      "pad": 50,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5599624501290776,
+        "hybrid_detection_rate": 0.5833528905577721,
+        "evaded_ae": 0.000145623998835008,
+        "evaded_hybrid": 0.000421822272215973
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.2033898305084746,
+          "hybrid_detection_rate": 0.23728813559322035,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.06542056074766354,
+          "hybrid_detection_rate": 0.12461059190031153,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 0.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.7190219643597182,
+          "hybrid_detection_rate": 0.7477206796518856,
+          "evaded_ae": 0.0001503307276007216,
+          "evaded_hybrid": 0.0004359831419851766
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.08,
+          "hybrid_detection_rate": 0.08,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.0671559633027523,
+          "hybrid_detection_rate": 0.0671559633027523,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "pad +200B",
+      "family": "pad",
+      "strength": 200,
+      "pad": 200,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.7226785574591253,
+        "hybrid_detection_rate": 0.8188218727998122,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.7288135593220338,
+          "hybrid_detection_rate": 0.864406779661017,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.6978193146417445,
+          "hybrid_detection_rate": 0.9127725856697819,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.8893493576460837,
+          "hybrid_detection_rate": 0.976688769167012,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.48,
+          "hybrid_detection_rate": 0.84,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.13724770642201836,
+          "hybrid_detection_rate": 0.2473394495412844,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "pad +500B",
+      "family": "pad",
+      "strength": 500,
+      "pad": 500,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 1.0,
+        "hybrid_detection_rate": 1.0,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "pad +1000B",
+      "family": "pad",
+      "strength": 1000,
+      "pad": 1000,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 1.0,
+        "hybrid_detection_rate": 1.0,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "jitter 0.5x",
+      "family": "jitter",
+      "strength": 0.5,
+      "jitter": 0.5,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5368066963936479,
+        "hybrid_detection_rate": 0.5565203786278652,
+        "evaded_ae": 0.002329983981360128,
+        "evaded_hybrid": 0.00140607424071991
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.2033898305084746,
+          "hybrid_detection_rate": 0.2033898305084746,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.06853582554517133,
+          "hybrid_detection_rate": 0.11838006230529595,
+          "evaded_ae": 0.05555555555555555,
+          "evaded_hybrid": 0.030303030303030304
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 0.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.688251139660174,
+          "hybrid_detection_rate": 0.7125984251968503,
+          "evaded_ae": 0.002254960914010824,
+          "evaded_hybrid": 0.0013079494259555296
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.08,
+          "hybrid_detection_rate": 0.08,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.0671559633027523,
+          "hybrid_detection_rate": 0.0671559633027523,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "jitter 1x",
+      "family": "jitter",
+      "strength": 1,
+      "jitter": 1,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5411092857701635,
+        "hybrid_detection_rate": 0.5615270280841743,
+        "evaded_ae": 0.0014562399883500802,
+        "evaded_hybrid": 0.000984251968503937
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.22033898305084745,
+          "hybrid_detection_rate": 0.2542372881355932,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.1308411214953271,
+          "hybrid_detection_rate": 0.19003115264797507,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 0.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.6909448818897638,
+          "hybrid_detection_rate": 0.7156029838375466,
+          "evaded_ae": 0.001503307276007216,
+          "evaded_hybrid": 0.001017293997965412
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.12,
+          "hybrid_detection_rate": 0.12,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.06972477064220184,
+          "hybrid_detection_rate": 0.07009174311926605,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "jitter 2x",
+      "family": "jitter",
+      "strength": 2,
+      "jitter": 2,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5496362356254401,
+        "hybrid_detection_rate": 0.5688805444731284,
+        "evaded_ae": 0.000145623998835008,
+        "evaded_hybrid": 0.00014060742407199101
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.3050847457627119,
+          "hybrid_detection_rate": 0.3220338983050847,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.23052959501557632,
+          "hybrid_detection_rate": 0.24922118380062305,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 0.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.6960215499378367,
+          "hybrid_detection_rate": 0.7199544135930377,
+          "evaded_ae": 0.0001503307276007216,
+          "evaded_hybrid": 0.00014532771399505885
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.12,
+          "hybrid_detection_rate": 0.12,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.0781651376146789,
+          "hybrid_detection_rate": 0.08073394495412844,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "jitter 5x",
+      "family": "jitter",
+      "strength": 5,
+      "jitter": 5,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.5609011969021357,
+        "hybrid_detection_rate": 0.5795196745677853,
+        "evaded_ae": 0.000291247997670016,
+        "evaded_hybrid": 0.00014060742407199101
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.3559322033898305,
+          "hybrid_detection_rate": 0.3728813559322034,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.2554517133956386,
+          "hybrid_detection_rate": 0.2897196261682243,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.7060712805636138,
+          "hybrid_detection_rate": 0.7292789059262329,
+          "evaded_ae": 0.0003006614552014432,
+          "evaded_hybrid": 0.00014532771399505885
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.12,
+          "hybrid_detection_rate": 0.12,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.09100917431192661,
+          "hybrid_detection_rate": 0.09174311926605505,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    },
+    {
+      "name": "combined mild (x5, +200B, 1x)",
+      "family": "combined",
+      "strength": 1,
+      "slow": 5,
+      "pad": 200,
+      "jitter": 1,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 0.744582648830478,
+        "hybrid_detection_rate": 0.7820542908550419,
+        "evaded_ae": 0.025338575797291395,
+        "evaded_hybrid": 0.017857142857142856
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 0.6949152542372882,
+          "hybrid_detection_rate": 0.847457627118644,
+          "evaded_ae": 0.08333333333333333,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 0.7975077881619937,
+          "hybrid_detection_rate": 0.9283489096573209,
+          "evaded_ae": 0.05555555555555555,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 0.9413593037712391,
+          "hybrid_detection_rate": 0.9791753004558641,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 0.68,
+          "hybrid_detection_rate": 0.92,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 0.04293577981651376,
+          "hybrid_detection_rate": 0.06385321100917431,
+          "evaded_ae": 0.9398907103825137,
+          "evaded_hybrid": 0.6939890710382514
+        }
+      }
+    },
+    {
+      "name": "combined heavy (x50, +500B, 2x)",
+      "family": "combined",
+      "strength": 2,
+      "slow": 50,
+      "pad": 500,
+      "jitter": 2,
+      "overall": {
+        "windows": 12783,
+        "ae_detection_rate": 1.0,
+        "hybrid_detection_rate": 1.0,
+        "evaded_ae": 0.0,
+        "evaded_hybrid": 0.0
+      },
+      "by_category": {
+        "Botnet Activity": {
+          "windows": 59,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Brute Force": {
+          "windows": 321,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Data Exfiltration": {
+          "windows": 1,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": null,
+          "evaded_hybrid": 0.0
+        },
+        "DoS / DDoS": {
+          "windows": 9652,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Malware Traffic": {
+          "windows": 25,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        },
+        "Port Scanning": {
+          "windows": 2725,
+          "ae_detection_rate": 1.0,
+          "hybrid_detection_rate": 1.0,
+          "evaded_ae": 0.0,
+          "evaded_hybrid": 0.0
+        }
+      }
+    }
+  ],
+  "best_case": {
+    "grid": {
+      "slow": [
+        1,
+        2,
+        5,
+        10,
+        50,
+        200
+      ],
+      "pad": [
+        0,
+        10,
+        50,
+        200
+      ],
+      "jitter": [
+        0,
+        0.5,
+        1,
+        2
+      ],
+      "combinations": 96
+    },
+    "detected_windows": 6867,
+    "evadable": 222,
+    "evadable_fraction": 0.03232852774137178,
+    "by_category": {
+      "Botnet Activity": {
+        "detected_windows": 12,
+        "evadable": 5,
+        "evadable_fraction": 0.4166666666666667
+      },
+      "Brute Force": {
+        "detected_windows": 18,
+        "evadable": 5,
+        "evadable_fraction": 0.2777777777777778
+      },
+      "DoS / DDoS": {
+        "detected_windows": 6652,
+        "evadable": 31,
+        "evadable_fraction": 0.0046602525556223694
+      },
+      "Malware Traffic": {
+        "detected_windows": 2,
+        "evadable": 2,
+        "evadable_fraction": 1.0
+      },
+      "Port Scanning": {
+        "detected_windows": 183,
+        "evadable": 179,
+        "evadable_fraction": 0.9781420765027322
+      }
+    },
+    "most_used_evasions": {
+      "slow x200, pad +10B, jitter 2x": 78,
+      "slow x50, pad +0B, jitter 2x": 69,
+      "slow x50, pad +10B, jitter 2x": 16,
+      "slow x1, pad +10B, jitter 0.5x": 10,
+      "slow x50, pad +0B, jitter 0x": 5
+    },
+    "gate_detection_rate_unperturbed": 0.537197840882422,
+    "gate_detection_rate_adaptive_attacker": 0.5198310255808496
+  },
+  "method": "Take the deployed model's held-out ATTACK windows, apply the kinds of change an attacker can make to\n  their own traffic without stopping the attack from working, re-score with the frozen model, and see\n  how detection degrades:\n\n    slow down   send the same packets ``k`` times more slowly     (durations and gaps x k, rates / k)\n    pad         add ``p`` bytes to every packet                    (lengths, totals and byte-rate follow)\n    jitter      randomise packet timing by a fraction ``j`` of the mean gap (IAT spread and extremes widen)\n    combined    all three together\n\n  The perturbations edit the *flow features* the model consumes, keeping related features consistent\n  (e.g. slowing a flow also divides its packets/s), not the packets themselves.  That is an approximation\n  of what re-sending real traffic would produce -- good for asking \"how fragile is the decision boundary?\",\n  not a substitute for re-capturing perturbed attacks in the lab.  It also ignores whether the attack\n  still *works* once it is slowed or padded (a slowed flood is a weaker flood), so evasion rates here are\n  upper bounds on what an attacker can achieve while still hurting the victim."
+}

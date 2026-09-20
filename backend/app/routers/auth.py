@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import math
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -32,6 +33,17 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # out doesn't extend the lockout). A successful login clears that account's counter.
 _login_account_limiter = SlidingWindowLimiter(settings.login_max_failures, settings.login_window_seconds)
 _login_ip_limiter = SlidingWindowLimiter(settings.login_ip_max_failures, settings.login_window_seconds)
+
+
+@functools.lru_cache(maxsize=1)
+def _timing_decoy_hash() -> str:
+    """A real bcrypt hash of a throwaway password, made once with the same cost as every real account's.
+
+    A login for an email with no account used to skip the (deliberately slow) password check and answer in
+    milliseconds, while a wrong password on a real account took ~0.25 s -- so response time alone revealed which
+    emails have accounts, defeating the identical error message. Checking against this decoy makes both paths
+    take the same time."""
+    return hash_password("this-account-does-not-exist")
 
 
 def _client_ip(request: Request) -> str:
@@ -68,7 +80,9 @@ def login(payload: LoginIn, request: Request, response: Response, db: Session = 
         )
 
     user = db.execute(select(User).where(User.email == payload.email.lower())).scalar_one_or_none()
-    if user is None or not verify_password(payload.password, user.password_hash):
+    # Always run exactly one password check, whether or not the account exists (see _timing_decoy_hash).
+    password_ok = verify_password(payload.password, user.password_hash if user is not None else _timing_decoy_hash())
+    if user is None or not password_ok:
         _login_account_limiter.record(account_key)
         _login_ip_limiter.record(ip)
         # Identical message for "no such user" and "wrong password" -- distinguishing them

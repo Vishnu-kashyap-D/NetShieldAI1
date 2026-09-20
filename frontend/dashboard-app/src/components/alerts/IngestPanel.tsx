@@ -12,6 +12,7 @@ function summaryLine(summary: IngestSummaryOut): string {
   const risk = summary.risk_level_counts;
   const parts = [`${summary.windows_scored} window(s) scored`, `${summary.alerts_written} alert(s) written`];
   if (summary.duplicates_skipped > 0) parts.push(`${summary.duplicates_skipped} duplicate(s) skipped`);
+  if (summary.campaigns_found) parts.push(`${summary.campaigns_found} sustained campaign(s) found`);
   const riskParts = [
     risk.High ? `${risk.High} High` : null,
     risk.Medium ? `${risk.Medium} Medium` : null,

@@ -5,6 +5,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 
+from cyber_ai.data import UNKNOWN_DECISION_LABEL
 from cyber_ai.explain import SHAP_DIRECTION_MEANING
 
 from app.config import settings
@@ -94,6 +95,7 @@ def build_alert_context(alert: Alert) -> dict:
         "confidence": alert.confidence,
         "is_anomaly": alert.is_anomaly,
         "pipeline_action": alert.pipeline_action,
+        "category_unknown": alert.predicted_label == UNKNOWN_DECISION_LABEL,
         "anomaly_score": alert.anomaly_score,
         "anomaly_threshold": alert.anomaly_threshold,
         "risk_score": alert.risk_score,
@@ -104,6 +106,12 @@ def build_alert_context(alert: Alert) -> dict:
         "feature_glossary": get_definitions(named_features),
         "shap_direction_meaning": SHAP_DIRECTION_MEANING,
     }
+
+
+def _predicted_name(context: dict) -> str:
+    """How to refer to the alert's predicted category in a sentence. An "Unknown" alert has no named category
+    (the classifier's best guess fell below the abstention threshold), so don't present "Unknown" as one."""
+    return "the classifier's best-guess category, which it was too unsure of to name" if context.get("category_unknown") else context["predicted_label"]
 
 
 # ---------------------------------------------------------------------------
@@ -191,6 +199,15 @@ def try_deterministic_answer(question: str, context: dict) -> ChatAnswer | None:
                 f"({context['anomaly_threshold']:.4f}), so the anomaly gate did not flag it for classification.",
                 ChatSources(prediction=True),
             )
+        if context.get("category_unknown"):
+            return ChatAnswer(
+                f"The anomaly detector flagged this window (anomaly score {context['anomaly_score']:.4f} vs threshold "
+                f"{context['anomaly_threshold']:.4f}), but the classifier's most likely category had only "
+                f"{_fmt_pct(context['confidence'])} confidence -- below the level at which NetShield will name a category -- "
+                f"so it is labelled Unknown rather than forced into one of the six known attack types. Treat it as an "
+                f"unclassified anomaly.",
+                ChatSources(prediction=True),
+            )
         if not classifier_shap:
             return ChatAnswer(
                 f"This traffic was classified as {context['predicted_label']} with {_fmt_pct(context['confidence'])} "
@@ -263,7 +280,7 @@ def try_deterministic_answer(question: str, context: dict) -> ChatAnswer | None:
             )
         top = sorted(classifier_shap, key=lambda e: e["mean_abs_shap"], reverse=True)
         return ChatAnswer(
-            f"The features that contributed most to the prediction ({context['predicted_label']}) were:\n{_list_features(top, 5)}",
+            f"The features that contributed most to the prediction ({_predicted_name(context)}) were:\n{_list_features(top, 5)}",
             ChatSources(prediction=True, shap=True, feature_values=bool(context["relevant_feature_values"])),
         )
 
@@ -283,7 +300,7 @@ def try_deterministic_answer(question: str, context: dict) -> ChatAnswer | None:
                 ChatSources(prediction=True, shap=True),
             )
         return ChatAnswer(
-            f"These features pushed toward the predicted class ({context['predicted_label']}):\n{_list_features(positives, 5)}\n\n"
+            f"These features pushed toward the predicted class ({_predicted_name(context)}):\n{_list_features(positives, 5)}\n\n"
             f"{SHAP_DIRECTION_MEANING['classifier']}",
             ChatSources(prediction=True, shap=True, feature_values=bool(context["relevant_feature_values"])),
         )
@@ -304,7 +321,7 @@ def try_deterministic_answer(question: str, context: dict) -> ChatAnswer | None:
                 ChatSources(prediction=True, shap=True),
             )
         return ChatAnswer(
-            f"These features pushed away from the predicted class ({context['predicted_label']}):\n{_list_features(negatives, 5)}\n\n"
+            f"These features pushed away from the predicted class ({_predicted_name(context)}):\n{_list_features(negatives, 5)}\n\n"
             f"{SHAP_DIRECTION_MEANING['classifier']}",
             ChatSources(prediction=True, shap=True, feature_values=bool(context["relevant_feature_values"])),
         )
@@ -315,6 +332,12 @@ def try_deterministic_answer(question: str, context: dict) -> ChatAnswer | None:
             return ChatAnswer(
                 "There is no classifier confidence for this window -- it never reached the classifier because the "
                 "anomaly gate didn't flag it as anomalous.",
+                ChatSources(prediction=True),
+            )
+        if context.get("category_unknown"):
+            return ChatAnswer(
+                f"The BiLSTM classifier's confidence in its best-guess category was only {_fmt_pct(context['confidence'])}, "
+                f"below the level required to name a category, so this alert is labelled Unknown.",
                 ChatSources(prediction=True),
             )
         return ChatAnswer(

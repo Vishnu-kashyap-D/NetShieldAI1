@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AlertOut } from "../../types/api";
 import { RiskBadge } from "../common/RiskBadge";
+import { ThreatLabel } from "../common/ThreatLabel";
 import { formatPercent } from "../../utils/format";
 import "./AlertsTable.css";
 
@@ -76,7 +77,9 @@ export function AlertsTable({ alerts, enableLiveFlash = false }: AlertsTableProp
               <td data-label="Time" className="mono" title={new Date(alert.ingested_at).toLocaleString()}>
                 {formatFullTimestamp(alert.ingested_at)}
               </td>
-              <td data-label="Threat">{alert.predicted_label}</td>
+              <td data-label="Threat">
+                <ThreatLabel label={alert.predicted_label} />
+              </td>
               <td data-label="Risk">
                 <RiskBadge level={alert.risk_level} />
               </td>

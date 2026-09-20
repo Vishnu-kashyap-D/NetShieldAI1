@@ -1,0 +1,32 @@
+.threat-flag {
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: help;
+}
+.threat-flag--warn {
+  color: var(--risk-med);
+  background: var(--risk-med-bg);
+}
+.threat-flag--info {
+  color: var(--text-mid);
+  background: var(--surface-2, rgba(128, 128, 128, 0.15));
+}
+.threat-flag:focus-visible {
+  outline: 2px solid var(--brand, currentColor);
+  outline-offset: 1px;
+}
+
+/* Full-width note under the alert header when the predicted category can't be trusted. */
+.reliability-banner {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--risk-med);
+  background: var(--risk-med-bg);
+}

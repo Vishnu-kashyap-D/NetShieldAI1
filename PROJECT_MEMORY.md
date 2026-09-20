@@ -193,11 +193,29 @@ deliberately **not** pushed to the live repo per the user's explicit instruction
   tests; see `backend/README.md` "Tests"), plus `docs/OPERATIONAL_RUNBOOK.md`,
   `docs/THREAT_MODEL.md`, `docs/LAB_RULES_OF_ENGAGEMENT.md` (R5-R10 there are *proposed*
   wording for the user to confirm — only R1-R4 record existing practice).
-- Phase 6 (research stretch: OOD rejection, calibration, adversarial, drift, ...) — not started.
-- Known small open items found while writing the threat model (not fixed): feedback `analyst`
-  is client-supplied; scoring blocks the event loop in `ingest_csv`; `/api/health` leaks the
-  artifacts path; unknown-email login is faster than wrong-password (timing); no
-  password-change/delete-account endpoint (seeded demo accounts share a public password).
+- Phase 6 (research stretch) — done on 2026-09-20 EXCEPT 6.2 (UNSW-NB15, dataset unavailable; user said skip).
+  Uncommitted when written. Results + caveats: `docs/PHASE6_FINDINGS.md`. What exists:
+  * 6.7 `ThreatLabel` flags Data Exfiltration "unreliable" everywhere (`frontend/.../constants/reliability.ts`).
+  * 6.3 `python -m cyber_ai.calibration_check`: confidence >=0.99 is right 100% (10,561 windows); <0.8 right ~1/3.
+    High risk = 97.6% real attacks, Medium 53%, Low 45.5% (Low is NOT safe).
+  * 6.1 "Unknown" abstention (`UNKNOWN_CONFIDENCE_THRESHOLD`, `--unknown-threshold`): OFF by default because at the
+    recommended 0.9 the demo's 3 Botnet windows (conf 0.70-0.78) become Unknown. Analyst can't validate "Unknown".
+  * 6.4 `cyber_ai/adversarial_robustness.py`: adaptive slow/pad/jitter attacker hides only 3.2% of detected windows
+    (gate detection 53.7% -> 52.0%); bigger issue is 46% of attacks (93% of Port Scan) are never flagged anyway.
+  * 6.5 drift: `cyber_ai/drift.py`, `score_batches` table, `GET /api/stats/drift`, Analytics "Model drift" card;
+    reference `artifacts/drift_reference.json` (written by train.py; `python -m cyber_ai.drift` rebuilds it).
+  * 6.6 cross-window "campaigns": FIRST DESIGN (CUSUM on risk) FAILED evaluation (215 false campaigns on benign Monday)
+    and was replaced by a persistence detector (>=8 consecutive windows, same category, >=99% classifier confidence;
+    classifier is run on ALL windows). Recovers 97.9% of the Port Scanning windows the gate misses, 0 false campaigns
+    on benign day; does NOTHING for Brute Force/Botnet/Web. `campaigns` table, `GET /api/campaigns`, Dashboard card.
+  * Shared helper `cyber_ai/holdout.py` rebuilds the exact held-out split (verified against training_metrics.json);
+    scores cached in `reports/.cache/` (gitignored). Big caveat: stride-5/size-10 windows + random split overlap
+    train/test, so all accuracy/calibration numbers are optimistic (documented in README + findings).
+- Four small threat-model items FIXED on 2026-09-20 (tests in `backend/tests/test_hardening_fixes.py`):
+  feedback `analyst` now comes from the session; `ingest_csv` is a plain `def` (worker thread, no event-loop
+  blocking); `/api/health` no longer returns the artifacts path/exception (logged instead; `artifacts_dir` field
+  removed); unknown-email login checks a bcrypt decoy so it takes as long as a wrong password.
+  Still open: no password-change/delete-account endpoint (seeded demo accounts share a public password).
 
 Top priority (Phase 1 of the roadmap):
 1. Retrain quality gate (don't hot-swap the live model if new metrics are worse)

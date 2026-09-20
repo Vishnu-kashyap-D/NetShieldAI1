@@ -8,6 +8,8 @@ import type {
   HealthOut,
   IngestSummaryOut,
   LoginIn,
+  CampaignListOut,
+  DriftOut,
   ModelMetricsOut,
   RetrainTriggerIn,
   RiskLevel,
@@ -82,6 +84,18 @@ export interface DataProvider {
    * last training run (reports/training_metrics.json), for the Analytics page's model card.
    */
   getModelMetrics(): Promise<ModelMetricsOut>;
+
+  /**
+   * GET /api/stats/drift -- concept-drift check: does ordinary traffic still score like the validation
+   * traffic the risk thresholds were calibrated on? (Population Stability Index over per-ingest score bins.)
+   */
+  getDrift(hours?: number): Promise<DriftOut>;
+
+  /**
+   * GET /api/campaigns -- sustained activity the cross-window layer found: runs of consecutive windows that
+   * stayed elevated long enough to matter, including ones that never raised a per-window alert.
+   */
+  listCampaigns(params?: { limit?: number; offset?: number; source_file?: string; batch_id?: string }): Promise<CampaignListOut>;
 
   /** POST /api/ingest/demo */
   ingestDemo(params?: IngestParams): Promise<IngestSummaryOut>;

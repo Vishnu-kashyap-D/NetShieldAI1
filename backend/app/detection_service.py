@@ -24,8 +24,10 @@ from cyber_ai.data import (
     normalize_label,
     to_attack_category,
 )
+from cyber_ai.correlation import find_campaigns
+from cyber_ai.drift import bin_scores, load_reference, reference_id
 from cyber_ai.explain import explain_autoencoder_windows, explain_classifier_windows
-from cyber_ai.hybrid_risk import compute_risk_score, normalize_anomaly_score, risk_levels_for
+from cyber_ai.hybrid_risk import apply_abstention, compute_risk_score, normalize_anomaly_score, risk_levels_for
 from cyber_ai.modeling import classifier_probabilities, reconstruction_errors
 from cyber_ai.windowing import WindowSequence
 
@@ -57,7 +59,17 @@ class DetectionEngine:
     the same input -- it's a reusable version of that script, not a reimplementation.
     """
 
-    def __init__(self, artifacts_dir: Path):
+    def __init__(
+        self,
+        artifacts_dir: Path,
+        unknown_confidence_threshold: float | None = None,
+        campaign_params: dict | None = None,
+    ):
+        # Cross-window campaign detection settings (min_confidence / min_windows / max_gap); None = off.
+        self.campaign_params = campaign_params
+        # Below this classifier confidence a flagged window is labelled "Unknown" rather than forced into one of
+        # the six known categories (cyber_ai.hybrid_risk.apply_abstention). None / 0 = never abstain.
+        self.unknown_confidence_threshold = unknown_confidence_threshold
         preprocessing = joblib.load(artifacts_dir / "preprocessing.joblib")
         self.feature_names: list[str] = preprocessing["feature_names"]
         self.feature_schema_version: str = feature_schema_version(self.feature_names)
@@ -72,6 +84,13 @@ class DetectionEngine:
         self.risk_low_threshold = float(preprocessing["risk_low_threshold"])
         self.risk_high_threshold = float(preprocessing["risk_high_threshold"])
 
+        # Bins for drift monitoring (cyber_ai/drift.py). Optional: absent for artifacts trained before this
+        # existed, and ignored if it was built for a different anomaly threshold (i.e. a different model).
+        reference = load_reference(artifacts_dir)
+        if reference is not None and abs(reference["anomaly_threshold"] - self.anomaly_threshold) > 1e-9:
+            reference = None
+        self.drift_reference = reference
+
         self.autoencoder = tf.keras.models.load_model(artifacts_dir / "models" / "autoencoder.keras")
         self.classifier = tf.keras.models.load_model(artifacts_dir / "models" / "bilstm_classifier.keras")
 
@@ -81,6 +100,35 @@ class DetectionEngine:
             return starts
         positions = np.linspace(0, len(starts) - 1, max_background, dtype=np.int64)
         return starts[positions]
+
+    def _detect_campaigns(
+        self,
+        window_sources: np.ndarray,
+        starts: np.ndarray,
+        classes: np.ndarray,
+        confidences: np.ndarray,
+        risk_scores: np.ndarray,
+    ) -> list[dict]:
+        """Long runs of consecutive windows the classifier keeps reading as one category at very high confidence,
+        whether or not the anomaly gate flagged them (see cyber_ai/correlation.py). Each capture file is its own
+        stream: a run never bridges two files."""
+        found: list[dict] = []
+        for source in dict.fromkeys(window_sources.tolist()):  # distinct sources, in order of appearance
+            mask = window_sources == source
+            for campaign in find_campaigns(
+                starts[mask], classes[mask], confidences[mask], risk_scores[mask],
+                self.risk_low_threshold, self.window_size, self.stride, **self.campaign_params,
+            ):
+                found.append({
+                    "source_file": str(source),
+                    "category": normalize_label(self.label_encoder.inverse_transform([campaign.category])[0]),
+                    "first_window": campaign.first_window,
+                    "last_window": campaign.last_window,
+                    "windows": campaign.windows,
+                    "alerted_windows": campaign.alerted_windows,
+                    "mean_confidence": campaign.mean_confidence,
+                })
+        return found
 
     def score_dataframe(
         self,
@@ -122,11 +170,31 @@ class DetectionEngine:
             confidences[classifier_positions] = max_probabilities
             classifier_confidence_for_risk[classifier_positions] = max_probabilities
 
+        predicted_labels, abstained = apply_abstention(
+            predicted_labels, confidences, is_anomaly, self.unknown_confidence_threshold
+        )
+
+        score_distribution = None
+        if self.drift_reference is not None:
+            score_distribution = {**bin_scores(anomaly_scores, self.drift_reference), "reference_id": reference_id(self.drift_reference)}
+
         normalized_anomaly_scores = normalize_anomaly_score(
             anomaly_scores, self.anomaly_score_low, self.anomaly_score_high
         )
         risk_scores = compute_risk_score(normalized_anomaly_scores, classifier_confidence_for_risk)
         risk_levels = risk_levels_for(risk_scores, self.risk_low_threshold, self.risk_high_threshold)
+
+        campaigns: list[dict] = []
+        if self.campaign_params:
+            # The classifier normally only ever sees the windows the anomaly gate flagged; persistence detection
+            # needs its opinion on every window, because the gate misses whole attacks (most Port Scanning).
+            every_window = classifier_probabilities(
+                self.classifier,
+                WindowSequence(X, starts=starts, window_size=self.window_size, batch_size=1024, target_mode=None, shuffle=False),
+            )  # batch 1024: measured ~1.8x faster than 256 here, bit-identical output
+            campaigns = self._detect_campaigns(
+                df[SOURCE_COLUMN].to_numpy()[starts], starts, every_window.argmax(axis=1), every_window.max(axis=1), risk_scores
+            )
 
         keep_mask = np.ones(len(starts), dtype=bool) if include_all_windows else (risk_levels != "Low")
         kept_positions = np.where(keep_mask)[0]
@@ -176,7 +244,7 @@ class DetectionEngine:
                     "anomaly_score": float(anomaly_scores[position]),
                     "anomaly_threshold": self.anomaly_threshold,
                     "is_anomaly": bool(is_anomaly[position]),
-                    "pipeline_action": "Classified and alerted" if is_anomaly[position] else "Ignored as normal",
+                    "pipeline_action": _pipeline_action(bool(is_anomaly[position]), bool(abstained[position])),
                     "risk_score": float(risk_scores[position]),
                     "risk_level": str(risk_levels[position]),
                     "top_classifier_features": classifier_explanations.get(start, "") or None,
@@ -198,8 +266,28 @@ class DetectionEngine:
             "predicted_label_counts": {
                 str(label): int(count) for label, count in pd.Series(predicted_labels).value_counts().items()
             },
+            # Not part of the API response: ingest stores it as a ScoreBatch row (see routers/ingest.py).
+            "score_distribution": score_distribution,
+            # Not part of the API response either: stored as CorrelatedCampaign rows by routers/ingest.py.
+            "campaigns": campaigns,
         }
         return records, summary
+
+
+def _campaign_params() -> dict | None:
+    if not settings.campaign_detection_enabled:
+        return None
+    return {
+        "min_confidence": settings.campaign_min_confidence,
+        "min_windows": settings.campaign_min_windows,
+        "max_gap": settings.campaign_max_gap,
+    }
+
+
+def _pipeline_action(is_anomaly: bool, abstained: bool) -> str:
+    if not is_anomaly:
+        return "Ignored as normal"
+    return "Flagged as anomalous, category unknown" if abstained else "Classified and alerted"
 
 
 def _json_safe(value: object) -> object:
@@ -225,7 +313,7 @@ def new_batch_id() -> str:
 # Per-process cache whose invalidation is shared across worker processes through a marker file
 # (see app.engine_cache) -- so a retrain accepted on one `uvicorn` worker reloads all of them.
 _engine_cache: ReloadableCache[DetectionEngine] = ReloadableCache(
-    loader=lambda: DetectionEngine(settings.artifacts_dir),
+    loader=lambda: DetectionEngine(settings.artifacts_dir, settings.unknown_confidence_threshold, _campaign_params()),
     marker_path=lambda: settings.model_generation_file,
 )
 

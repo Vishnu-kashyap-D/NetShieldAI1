@@ -28,6 +28,7 @@ from cyber_ai.data import (
     unmapped_attack_labels,
     window_labels,
 )
+from cyber_ai.drift import REFERENCE_FILENAME as DRIFT_REFERENCE_FILENAME, build_reference as build_drift_reference
 from cyber_ai.feature_selection import rank_feature_importance, select_top_k_features
 from cyber_ai.hybrid_risk import (
     calibrate_anomaly_score_range,
@@ -532,6 +533,17 @@ def main() -> None:
         "config": config,
     }
     joblib.dump(preprocessing_artifact, artifacts_dir / "preprocessing.joblib")
+
+    # What the quiet end of this model's anomaly scores looks like on validation traffic, so the backend can
+    # notice later if live traffic stops scoring like it (cyber_ai/drift.py). Skipped, never fatal, if there
+    # are too few benign validation windows to describe a distribution.
+    drift_reference = build_drift_reference(
+        threshold_errors, window_labels(y_raw, threshold_starts, window_size) == benign_id, anomaly_threshold
+    )
+    if drift_reference is not None:
+        write_json(artifacts_dir / DRIFT_REFERENCE_FILENAME, drift_reference)
+    elif (artifacts_dir / DRIFT_REFERENCE_FILENAME).exists():
+        (artifacts_dir / DRIFT_REFERENCE_FILENAME).unlink()  # a stale reference would describe the previous model
 
     autoencoder.save(models_dir / "autoencoder.keras")
     classifier.save(models_dir / "bilstm_classifier.keras")

@@ -7,8 +7,8 @@ out by hand and asserted exactly -- independent of whatever weights happen to be
 How the stand-ins behave (window = 10 rows, stride = 10, 3 features):
   * "autoencoder": reconstructs every window as all zeros, so a window's reconstruction error is
     mean(x**2) over its values. A block of rows holding the value v scores v**2.
-  * "classifier": says "DoS / DDoS" with probability 0.6 for a window whose values are all 2.0, and
-    "Port Scanning" with probability 0.9 for anything else it is asked to classify.
+  * "classifier": says "DoS / DDoS" with probability 0.6 for a window whose values are all 2.0, "Port Scanning"
+    with probability 0.9995 for a window of all 1.5s, and "Port Scanning" with probability 0.9 for anything else.
   * imputer / scaler: pass values through unchanged.
 """
 from __future__ import annotations
@@ -40,6 +40,8 @@ class _TwoClassClassifier:
         for row, window in enumerate(windows):
             if np.allclose(window, 2.0):
                 probabilities[row] = [0.6, 0.4]      # DoS / DDoS, confidence 0.6
+            elif np.allclose(window, 1.5):
+                probabilities[row] = [0.0005, 0.9995]  # Port Scanning, 99.95% sure (used by the campaign tests)
             else:
                 probabilities[row] = [0.1, 0.9]      # Port Scanning, confidence 0.9
         return probabilities
@@ -55,7 +57,11 @@ class _Encoder:
         return CLASSES[np.asarray(ids)]
 
 
-def make_engine() -> DetectionEngine:
+def make_engine(
+    unknown_confidence_threshold: float | None = None,
+    drift_reference: dict | None = None,
+    campaign_params: dict | None = None,
+) -> DetectionEngine:
     engine = DetectionEngine.__new__(DetectionEngine)  # skip __init__: it loads real model files
     engine.feature_names = list(FEATURES)
     engine.feature_schema_version = feature_schema_version(FEATURES)
@@ -71,6 +77,9 @@ def make_engine() -> DetectionEngine:
     engine.risk_high_threshold = RISK_HIGH
     engine.autoencoder = _ZeroAutoencoder()
     engine.classifier = _TwoClassClassifier()
+    engine.unknown_confidence_threshold = unknown_confidence_threshold
+    engine.drift_reference = drift_reference
+    engine.campaign_params = campaign_params
     return engine
 
 

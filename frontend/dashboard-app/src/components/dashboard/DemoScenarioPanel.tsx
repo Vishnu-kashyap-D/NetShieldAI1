@@ -5,6 +5,7 @@ import type { SimulatedWorkflowEvent } from "../../data/mock/scenario";
 import { MockDataProvider } from "../../data/mockProvider";
 import { useDataProvider } from "../../data/DataModeContext";
 import { RiskBadge } from "../common/RiskBadge";
+import { ThreatLabel } from "../common/ThreatLabel";
 import "./DemoScenarioPanel.css";
 
 interface ScenarioState {
@@ -123,7 +124,7 @@ export function DemoScenarioPanel({ onWorkflowEvent }: DemoScenarioPanelProps) {
             <ScenarioStep done={!!latestAlert}>
               {latestAlert ? (
                 <>
-                  Threat classified as <b>{latestAlert.predicted_label}</b>
+                  Threat classified as <b><ThreatLabel label={latestAlert.predicted_label} /></b>
                 </>
               ) : (
                 "Threat classified"
@@ -181,7 +182,7 @@ export function DemoScenarioPanel({ onWorkflowEvent }: DemoScenarioPanelProps) {
               <div className="demo-scenario-alerts-list">
                 {state.alerts.map((alert) => (
                   <Link key={alert.id} to={`/alerts/${alert.id}`} className="demo-scenario-alert-chip">
-                    #{alert.id} {alert.predicted_label}
+                    #{alert.id} <ThreatLabel label={alert.predicted_label} />
                     <RiskBadge level={alert.risk_level} />
                   </Link>
                 ))}

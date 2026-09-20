@@ -7,6 +7,8 @@ export interface BarListItem {
   value: number;
   /** Pre-formatted string shown at the end of the row. */
   displayValue: string;
+  /** When set, a small warning mark is shown after the label with this text as its explanation. */
+  flagTitle?: string;
 }
 
 interface BarListProps {
@@ -32,6 +34,11 @@ export function BarList({ items, labelWidth = "auto", accent = "brand" }: BarLis
         <div className="bar-list-row" style={{ gridTemplateColumns: `${labelWidth} 1fr auto` }} key={item.key}>
           <span className="bar-list-label" title={item.label}>
             {item.label}
+            {item.flagTitle && (
+              <span className="bar-list-flag" title={item.flagTitle} tabIndex={0} aria-label={item.flagTitle}>
+                {" "}⚠
+              </span>
+            )}
           </span>
           <div className="bar-list-track">
             <div

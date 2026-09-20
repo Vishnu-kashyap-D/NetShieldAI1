@@ -199,6 +199,72 @@ unaffected):
   workers rewriting it at the same instant could lose a line. Feedback volume is tiny, so the practical
   advice is one worker for anything that writes feedback, or a real file lock if that ever changes.
 
+## Model behaviour options & monitoring
+
+Three additions on top of the per-window pipeline. All are additive: with none of them switched on, every alert,
+label and risk level is exactly what it was before.
+
+### "Unknown" instead of a forced category — `UNKNOWN_CONFIDENCE_THRESHOLD` (off by default)
+
+The BiLSTM is trained on attacks only, so it can never answer "none of these": a false alarm on ordinary traffic
+still gets one of the six attack names. Set `UNKNOWN_CONFIDENCE_THRESHOLD` (0–1) and any *flagged* window the
+classifier is less sure of than that is labelled **Unknown** (`pipeline_action` reads "Flagged as anomalous,
+category unknown"). Only the label changes — confidence, anomaly score, risk score and level are untouched.
+
+`python -m cyber_ai.abstention_analysis` measures the trade-off on held-out data: classifier confidence separates
+real attacks from false alarms with AUROC 0.98, and the validation windows recommend **0.9** (about 97% of real
+attacks keep their name, and those names are ~99.97% right; ~88% of false alarms become Unknown). It is **off by
+default because it relabels the demo's Botnet scene** (those windows score 0.70–0.78 confidence) — turn it on
+deliberately. "Unknown" can't be used as a validated feedback label (`422`): an analyst resolves it to a real
+category or Normal.
+
+### Drift monitoring — `GET /api/stats/drift`
+
+If normal traffic starts scoring differently, false alarms and misses shift and nothing says so. Each ingest
+records a small histogram of *every* window's anomaly score (the `alerts` table only keeps Medium/High, so it
+cannot answer this); the endpoint compares the pooled histogram of the unflagged windows with a reference built at
+training time (`artifacts/drift_reference.json`) using the Population Stability Index — < 0.1 `stable`, 0.1–0.25
+`watch`, > 0.25 `drifting`. Only the quiet end is compared, so a real burst of attacks is not mistaken for drift;
+the alert rate is reported beside it for context. It needs ≥ 200 unflagged windows in the period (`?hours=` 1–720,
+default 24) before it will say anything, and counts an ingest once however many times its file is re-sent. A
+retrain writes a new reference; ingests scored under the previous model are excluded, not compared.
+`python -m cyber_ai.drift` rebuilds the reference for the current artifacts. It measures a shift in how ordinary
+traffic *scores*, not accuracy — that needs labelled data.
+
+### Cross-window campaigns — `GET /api/campaigns`
+
+Detection is per 10-row window, and the design is sequential: the Autoencoder decides which windows the classifier
+ever sees. Measured on real time-ordered traffic, that gate lets most windows of some attacks through (about 93% of
+Port Scanning), yet the classifier, shown those windows, recognises them at ~99.8% confidence, window after window.
+The campaign layer looks for that **persistence**: ≥ `CAMPAIGN_MIN_WINDOWS` (8) consecutive windows the classifier
+reads as the *same* category at ≥ `CAMPAIGN_MIN_CONFIDENCE` (0.99), tolerating `CAMPAIGN_MAX_GAP` (1) off-pattern
+window. Each is stored as a campaign (source file, category, row range, windows, how many alerted on their own,
+mean confidence) and the upload response carries `campaigns_found`. The dashboard's **Sustained activity** card
+lists them.
+
+Read its limits before relying on it: (1) it makes the classifier score *every* window — measured at about 0.5 ms extra per window, so ingest takes
+roughly 1.4–1.5× as long (`CAMPAIGN_DETECTION_ENABLED=false` turns it off); (2) each uploaded file is one stream — the stream simulator's tiny
+chunks (a window or none each) can never form a campaign; (3) in testing it helped mainly with **Port Scanning**, and
+not with Brute Force, Botnet or web attacks, whose windows the classifier is not that confident about — silence
+about those means nothing. The first design (a CUSUM over the risk score) was measured and **rejected**: it reported
+hundreds of false campaigns on a pure-benign day. `python -m cyber_ai.correlation_eval` reproduces the evidence.
+
+### Research and evaluation scripts
+
+Analysis-only: they read `artifacts/` and the CICIDS2017 CSVs, write into `reports/`, and change nothing else. The
+first run rebuilds the model's exact held-out split (about 4 minutes; checked against `training_metrics.json`, so a
+result is never computed on the wrong windows) and caches the scores in `reports/.cache/`.
+
+| Command | Answers | Writes |
+|---|---|---|
+| `python -m cyber_ai.calibration_check` | Is "99.99% confident" really ~99.99% right? Reliability, ECE, Brier, temperature scaling, what each risk level means | `reports/calibration.json`, `figures/calibration_reliability.png` |
+| `python -m cyber_ai.abstention_analysis` | What does "Unknown" cost and buy, and at which threshold? | `reports/abstention_analysis.json`, `figures/abstention_tradeoff.png` |
+| `python -m cyber_ai.adversarial_robustness` | Can attack traffic be slowed / padded / jittered under the anomaly threshold? | `reports/adversarial_robustness.json`, `figures/adversarial_robustness.png` |
+| `python -m cyber_ai.drift` | Build the drift reference for the current model | `artifacts/drift_reference.json` |
+| `python -m cyber_ai.correlation_eval` | Do campaigns catch missed attacks without false alarms? (scores 7 capture days; ~15 min) | `reports/correlation_eval.json` |
+
+The results, with their caveats, are written up in [`docs/PHASE6_FINDINGS.md`](../docs/PHASE6_FINDINGS.md).
+
 ## Tests
 
 ```bash
@@ -221,6 +287,9 @@ expected result that can be worked out by hand — no MySQL, no `artifacts/`. Wh
 | `test_alerts_stats_chat.py` | Alert filters and paging, stats, model-metrics, chatbot limits and no-LLM degradation |
 | `test_security_middleware.py` | CSRF Origin checks, security headers, the rate limiter, `CORS_ORIGINS` parsing |
 | `test_feedback_upsert.py`, `test_feature_schema_versioning.py`, `test_migrations.py`, `test_engine_cache.py` | The Phase 4 work: one label per alert, schema versioning, the startup migration (incl. the multi-worker race), cross-worker reload (spawns a real second process) |
+| `test_abstention.py`, `test_calibration_metrics.py`, `test_adversarial_perturbations.py` | "Unknown" (engine, API, feedback, chatbot), the calibration / abstention maths, and the feature-space attack perturbations |
+| `test_drift.py` | Drift reference, per-ingest histograms (recorded once per batch), PSI assessment, `/api/stats/drift` |
+| `test_correlation.py`, `test_campaigns.py` | The persistence detector on synthetic streams, and campaigns through the engine, ingest and `/api/campaigns` |
 | `test_real_model.py` | The **committed** `artifacts/` load under the installed library versions, and the demo CSV behaves as the demo claims (marker `real_model`) |
 
 `test_real_model.py` is the one that fails first on a scikit-learn / Keras version mismatch. If a retrain
@@ -234,12 +303,13 @@ suite failed every time.
 - [`docs/OPERATIONAL_RUNBOOK.md`](../docs/OPERATIONAL_RUNBOOK.md) — what an analyst does when a High-risk alert appears; administrator tasks.
 - [`docs/THREAT_MODEL.md`](../docs/THREAT_MODEL.md) — NetShield's own attack surface, mitigations and open risks.
 - [`docs/LAB_RULES_OF_ENGAGEMENT.md`](../docs/LAB_RULES_OF_ENGAGEMENT.md) — rules for generating real attack traffic in the VM lab.
+- [`docs/PHASE6_FINDINGS.md`](../docs/PHASE6_FINDINGS.md) — calibration, abstention, adversarial robustness, drift and cross-window results, with their caveats.
 
 ## API surface
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
-| `GET /api/health` | None | Model-loaded status |
+| `GET /api/health` | None | Whether the model is loaded (`ok` / `degraded`). Deliberately says nothing about paths or errors — those go to the server log |
 | `POST /api/auth/login` | None (this *is* login) | Verify email/password, set the session cookie |
 | `POST /api/auth/logout` | Any role | Invalidate this browser's session |
 | `GET /api/auth/me` | Any role | Current user's identity — used on page load to check for an existing valid session |
@@ -254,6 +324,8 @@ suite failed every time.
 | `POST /api/chat` | Any role | General project/network-threat chatbot (not tied to an alert) |
 | `GET /api/stats/summary` | Any role | Counts by risk level / category, for dashboard tiles |
 | `GET /api/stats/timeseries` | Any role | Per-minute alert counts for the last N minutes, for a chart |
+| `GET /api/stats/drift` | Any role | Has ordinary traffic started scoring differently from the validation traffic? (PSI over per-ingest score histograms; see [Drift monitoring](#drift-monitoring--get-apistatsdrift)) |
+| `GET /api/campaigns` | Any role | Sustained activity: runs of windows the classifier keeps reading as one category at very high confidence, often unflagged by the anomaly gate; filterable by `source_file` / `batch_id`, paginated |
 | `POST /api/feedback` | Security Analyst, Threat Hunter, Administrator | Analyst submits a validated label for an alert (one per alert — resubmitting updates it, see [Feedback](#feedback-one-label-per-alert)); writes the training row to `data/feedback/validated_traffic.csv` (same file `cyber_ai.train --feedback-csv` reads) |
 | `GET /api/feedback` | Any role | List submitted feedback |
 | `POST /api/retrain` | Administrator | Kick off `cyber_ai.train` with accumulated feedback, in the background |

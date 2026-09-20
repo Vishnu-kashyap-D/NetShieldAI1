@@ -23,3 +23,6 @@ captures/
 # Cross-worker "reload the model" marker (backend/app/engine_cache.py) -- runtime state, never committed.
 .model_generation
 .model_generation.tmp
+
+# Cached held-out-window scores for the research scripts (cyber_ai/holdout.py) -- large, rebuildable.
+reports/.cache/

@@ -10,7 +10,7 @@ from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.detection_service import get_engine
 from app.migrations import run_migrations
-from app.routers import alerts, auth, chat, feedback, health, ingest, retrain, stats
+from app.routers import alerts, auth, campaigns, chat, feedback, health, ingest, retrain, stats
 from app.security import OriginVerificationMiddleware, SecurityHeadersMiddleware
 from app.seed import ensure_default_users
 
@@ -60,6 +60,7 @@ app.include_router(health.router, prefix="/api")  # public: infra/uptime checks,
 app.include_router(auth.router, prefix="/api")
 app.include_router(ingest.router, prefix="/api")
 app.include_router(alerts.router, prefix="/api")
+app.include_router(campaigns.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(chat.project_router, prefix="/api")
 app.include_router(stats.router, prefix="/api")

@@ -118,3 +118,58 @@ def test_the_demo_flows_through_the_api_into_a_feedback_row_the_trainer_can_read
     training_rows = pd.read_csv(settings.feedback_store)
     assert list(training_rows.columns) == [*engine.feature_names, "Label"]
     assert len(training_rows) == 1 and training_rows.loc[0, "Label"] == "DoS / DDoS"
+
+
+# --- Phase 6 features against the real model ---------------------------------------------------------
+
+
+def test_the_committed_drift_reference_belongs_to_the_committed_model(engine):
+    """artifacts/drift_reference.json must have been built for this model, or drift monitoring silently does nothing."""
+    from cyber_ai.drift import load_reference
+
+    reference = load_reference(ARTIFACTS)
+    assert reference is not None, "artifacts/drift_reference.json is missing (python -m cyber_ai.drift)"
+    assert reference["anomaly_threshold"] == pytest.approx(engine.anomaly_threshold)
+    assert engine.drift_reference is not None                    # ...so the engine picked it up
+
+
+def test_every_ingest_of_the_real_model_reports_a_score_histogram(scored, engine):
+    frame = scored[0]
+    _, summary = engine.score_dataframe(frame)
+    distribution = summary["score_distribution"]
+    assert distribution["quiet_windows"] + distribution["flagged_windows"] == summary["windows_scored"]
+    assert distribution["flagged_windows"] == summary["anomalous_windows"]
+    assert len(distribution["quiet_bin_counts"]) == len(engine.drift_reference["bin_edges"]) + 1
+
+
+def test_abstention_on_the_real_demo_only_renames_the_unsure_botnet_windows(scored, engine):
+    """The reason "Unknown" is off by default: at 0.9 the demo's three Botnet windows (0.70-0.78 confidence) lose their
+    name, while every DDoS and Port Scanning window (>= 0.998) keeps it. Scores and risk levels never change."""
+    from app.detection_service import DetectionEngine
+
+    frame, plain_records, _ = scored
+    abstaining = DetectionEngine.__new__(DetectionEngine)
+    abstaining.__dict__.update(engine.__dict__)
+    abstaining.unknown_confidence_threshold = 0.9
+    records, _ = abstaining.score_dataframe(frame, include_all_windows=True)
+
+    for plain, new in zip(plain_records, records):
+        assert (plain["risk_score"], plain["risk_level"], plain["confidence"]) == (new["risk_score"], new["risk_level"], new["confidence"])
+        if plain["actual_category"] == "Botnet Activity" and plain["is_anomaly"]:
+            assert new["predicted_label"] == "Unknown"
+        elif plain["is_anomaly"]:
+            assert new["predicted_label"] == plain["predicted_label"] != "Unknown"
+
+
+def test_campaign_detection_runs_on_the_real_model_and_finds_nothing_in_a_short_demo(scored, engine):
+    """The demo has at most six consecutive same-category windows, under the 8-window minimum -- and it must not
+    disturb a single per-window result."""
+    from app.detection_service import DetectionEngine
+
+    frame, plain_records, _ = scored
+    with_campaigns = DetectionEngine.__new__(DetectionEngine)
+    with_campaigns.__dict__.update(engine.__dict__)
+    with_campaigns.campaign_params = {"min_confidence": 0.99, "min_windows": 8, "max_gap": 1}
+    records, summary = with_campaigns.score_dataframe(frame, include_all_windows=True)
+    assert summary["campaigns"] == []
+    assert records == plain_records

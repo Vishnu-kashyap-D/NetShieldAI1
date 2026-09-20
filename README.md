@@ -116,6 +116,22 @@ python -m cyber_ai.predict --input-csv MachineLearningCVE\Friday-WorkingHours-Af
 
 SHAP uses `shap.GradientExplainer` (native to the Keras models, not the flattened-window black-box Kernel SHAP approach) for both the classifier and the Autoencoder, then aggregates attribution back to original CICIDS feature names. For the Autoencoder, the explained target is the same scalar reconstruction-error signal the anomaly threshold actually acts on (via a small wrapper model in `cyber_ai/explain.py`), not the raw reconstruction.
 
+To name a flagged window **`Unknown`** instead of forcing it into one of the six categories when the classifier is not confident (the BiLSTM is trained on attacks only, so it otherwise can never say "none of these"), add `--unknown-threshold 0.9`. It changes labels only; 0.9 is what the validation windows recommend.
+
+## Model Analysis Scripts
+
+Analysis-only scripts that evaluate the *deployed* model on its held-out data (they rebuild the exact validation/test windows the trainer used and refuse to run if the rebuilt split does not match `reports/training_metrics.json`; the first run takes a few minutes, later runs use a cache in `reports/.cache/`):
+
+```powershell
+python -m cyber_ai.calibration_check        # is "99.99% confident" really ~99.99% right?  -> reports/calibration.json
+python -m cyber_ai.abstention_analysis      # what does "Unknown" cost and buy?           -> reports/abstention_analysis.json
+python -m cyber_ai.adversarial_robustness   # can attacks be slowed/padded/jittered under the threshold? -> reports/adversarial_robustness.json
+python -m cyber_ai.drift                    # build artifacts/drift_reference.json (also written by every train)
+python -m cyber_ai.correlation_eval         # do cross-window "campaigns" catch missed attacks without false alarms?
+```
+
+Results and caveats: [`docs/PHASE6_FINDINGS.md`](docs/PHASE6_FINDINGS.md).
+
 ## Latency Benchmark
 
 Measures real per-window detection latency (not batched — one window at a time, matching how a live stream would actually be scored) across three stages, using the trained artifacts:
@@ -192,3 +208,5 @@ Two dashboards exist:
 - **Sequential architecture caps overall detection recall.** BiLSTM only classifies windows the Autoencoder already flagged as anomalous; the Autoencoder currently misses a meaningful share of real attacks at that gate (see `hybrid_risk.classification_report` in `training_metrics.json` for the current recall), so those attacks never reach classification, explanation, or alerting. This is a known, documented tradeoff of the sequential-gate design (vs. a parallel design where both models see every window), not a bug.
 - **`Data Exfiltration`** has too few raw samples (36) in CICIDS2017 for its per-class metrics to be statistically meaningful — see the `low_sample_categories` warning above.
 - The current results are validated on CICIDS2017 only; no cross-dataset generalization check (e.g. against UNSW-NB15) has been run yet.
+- **The held-out split overlaps its training data.** Windows are 10 rows with a stride of 5, so each window shares half its rows with each neighbour, and the train/validation/test split is random at window level. For classes kept whole (most attack classes; benign windows are subsampled to 50,000, which thins their neighbours), a random 70/15/15 split means roughly nine in ten test windows have a half-overlapping neighbour in training. That makes accuracy and calibration figures — including everything in `docs/PHASE6_FINDINGS.md` — optimistic. A split by capture day or by contiguous time block would be a fairer test.
+- **Two of the six categories are not usable as evidence.** `Data Exfiltration` (36 dataset rows) and, to a lesser degree, `Malware Traffic` and `Botnet Activity` have low precision on held-out data (12–21% for the latter two); the dashboard flags Data Exfiltration as unreliable.

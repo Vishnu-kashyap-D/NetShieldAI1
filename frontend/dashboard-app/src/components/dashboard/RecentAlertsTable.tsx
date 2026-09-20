@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AlertOut } from "../../types/api";
 import { RiskBadge } from "../common/RiskBadge";
+import { ThreatLabel } from "../common/ThreatLabel";
 import { formatClockTime, formatPercent, formatRelativeTime } from "../../utils/format";
 import "./RecentAlertsTable.css";
 
@@ -50,7 +51,9 @@ export function RecentAlertsTable({ alerts, now }: { alerts: AlertOut[]; now: nu
                 {formatClockTime(alert.ingested_at)}
                 <span className="recent-alerts-relative">{formatRelativeTime(alert.ingested_at, now)}</span>
               </td>
-              <td>{alert.predicted_label}</td>
+              <td>
+                <ThreatLabel label={alert.predicted_label} />
+              </td>
               <td>
                 <RiskBadge level={alert.risk_level} />
               </td>

@@ -9,6 +9,7 @@ import { StatTile, IconAlerts, IconWarningTriangle, IconCheckCircle } from "../.
 import { RiskTimeseriesChart } from "../../components/dashboard/RiskTimeseriesChart";
 import { CategoryDistribution } from "../../components/dashboard/CategoryDistribution";
 import { RiskLevelBreakdown } from "../../components/dashboard/RiskLevelBreakdown";
+import { DriftCard } from "../../components/dashboard/DriftCard";
 import { MetricCard } from "../../components/alertDetail/MetricCard";
 import { TrainingStatusBadge } from "../../components/retraining/TrainingStatusBadge";
 import { formatFullDateTime, formatPercent } from "../../utils/format";
@@ -49,6 +50,7 @@ export function AnalyticsPage() {
   const trend = usePolledAsync(() => provider.getTimeseries(TREND_PARAMS), [provider], POLL_MS);
   const sample = usePolledAsync(() => provider.listAlerts({ limit: SAMPLE_LIMIT, offset: 0 }), [provider], POLL_MS);
   const modelMetrics = usePolledAsync(() => provider.getModelMetrics(), [provider], POLL_MS);
+  const drift = usePolledAsync(() => provider.getDrift(), [provider], POLL_MS);
   const feedback = usePolledAsync(() => provider.listFeedback(), [provider], POLL_MS);
   const retrainRuns = usePolledAsync(() => provider.listRetrainRuns(), [provider], POLL_MS);
 
@@ -161,6 +163,15 @@ export function AnalyticsPage() {
       >
         <AsyncSection {...modelMetrics} emptyLabel="No training metrics available." loadingLabel="Loading evaluation…">
           {(metrics) => <ModelEvaluationGrid metrics={metrics} />}
+        </AsyncSection>
+      </SectionCard>
+
+      <SectionCard
+        title="Model drift"
+        subtitle="Does ordinary traffic still score like the validation traffic the risk thresholds were calibrated on?"
+      >
+        <AsyncSection {...drift} emptyLabel="No drift data yet." loadingLabel="Checking drift…">
+          {(result) => <DriftCard drift={result} />}
         </AsyncSection>
       </SectionCard>
 

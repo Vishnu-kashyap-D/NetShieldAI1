@@ -7,11 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
+from cyber_ai.drift import PSI_DRIFTING, PSI_WATCH, assess, load_reference, reference_id
+
 from app.auth import get_current_user
 from app.config import settings
 from app.database import get_db
-from app.models import Alert
-from app.schemas import ModelMetricsOut, PerClassMetricOut, StatsSummaryOut, TimeseriesPointOut
+from app.models import Alert, ScoreBatch
+from app.schemas import DriftOut, ModelMetricsOut, PerClassMetricOut, StatsSummaryOut, TimeseriesPointOut
 
 router = APIRouter(prefix="/stats", tags=["stats"], dependencies=[Depends(get_current_user)])
 
@@ -67,6 +69,42 @@ def timeseries(
         )
         for row in rows
     ]
+
+
+@router.get("/drift", response_model=DriftOut)
+def drift(
+    hours: int = Query(24, ge=1, le=720, description="How far back to look at ingested traffic."),
+    db: Session = Depends(get_db),
+) -> DriftOut:
+    """Concept-drift check: has ordinary traffic started scoring differently from the validation traffic?
+
+    Compares the anomaly-score distribution of every window scored in the period (recorded per ingest,
+    including the Low-risk windows that are never stored as alerts) with the reference built at training time.
+    Only unflagged windows are compared, so a genuine burst of attacks does not read as drift -- see
+    cyber_ai/drift.py for the reasoning and the PSI thresholds.
+    """
+    common = {"period_hours": hours, "psi_watch": PSI_WATCH, "psi_drifting": PSI_DRIFTING}
+    reference = load_reference(settings.artifacts_dir)
+    if reference is None:
+        return DriftOut(
+            status="unavailable",
+            message="No drift reference exists for the deployed model. Retrain, or run `python -m cyber_ai.drift`.",
+            **common,
+        )
+
+    since = dt.datetime.utcnow() - dt.timedelta(hours=hours)
+    rows = db.execute(select(ScoreBatch).where(ScoreBatch.ingested_at >= since)).scalars().all()
+    current = reference_id(reference)
+    usable = [row for row in rows if row.reference_id == current]
+    result = assess(reference, [
+        {"quiet_bin_counts": row.quiet_bin_counts, "flagged_windows": row.flagged_windows} for row in usable
+    ])
+    return DriftOut(
+        **common,
+        **result,
+        batches_considered=len(usable),
+        batches_excluded=len(rows) - len(usable),
+    )
 
 
 @router.get("/model-metrics", response_model=ModelMetricsOut)

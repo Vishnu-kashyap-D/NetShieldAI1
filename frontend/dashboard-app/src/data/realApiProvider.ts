@@ -10,6 +10,8 @@ import type {
   HealthOut,
   IngestSummaryOut,
   LoginIn,
+  CampaignListOut,
+  DriftOut,
   ModelMetricsOut,
   RetrainTriggerIn,
   StatsSummaryOut,
@@ -113,7 +115,6 @@ export class RealApiProvider implements DataProvider {
           status: `unreachable: ${error.message}`,
           model_loaded: false,
           feature_count: null,
-          artifacts_dir: "",
         };
       }
       throw error;
@@ -138,6 +139,14 @@ export class RealApiProvider implements DataProvider {
 
   getModelMetrics(): Promise<ModelMetricsOut> {
     return this.request<ModelMetricsOut>("/api/stats/model-metrics");
+  }
+
+  listCampaigns(params?: { limit?: number; offset?: number; source_file?: string; batch_id?: string }): Promise<CampaignListOut> {
+    return this.request<CampaignListOut>(`/api/campaigns${toQuery(params)}`);
+  }
+
+  getDrift(hours?: number): Promise<DriftOut> {
+    return this.request<DriftOut>(`/api/stats/drift${toQuery({ hours })}`);
   }
 
   ingestDemo(params?: IngestParams): Promise<IngestSummaryOut> {

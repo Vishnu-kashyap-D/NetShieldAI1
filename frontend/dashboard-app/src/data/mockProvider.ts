@@ -11,6 +11,8 @@ import type {
   HealthOut,
   IngestSummaryOut,
   LoginIn,
+  CampaignListOut,
+  DriftOut,
   ModelMetricsOut,
   RetrainTriggerIn,
   RiskLevel,
@@ -194,6 +196,32 @@ export class MockDataProvider implements DataProvider {
       autoencoder_true_negative_rate: 0.9237333333333333,
       hybrid_false_positive_rate: 0.09493333333333333,
       hybrid_false_negative_rate: 0.4436360791676445,
+    };
+  }
+
+  // Campaigns come from the real model scoring real, time-ordered windows; the mock dataset has none.
+  async listCampaigns(params?: { limit?: number; offset?: number }): Promise<CampaignListOut> {
+    return { total: 0, limit: params?.limit ?? 50, offset: params?.offset ?? 0, items: [] };
+  }
+
+  // Drift is measured from real ingests scored by the real model; the mock dataset has neither, so
+  // demo mode says so instead of showing a made-up "stable".
+  async getDrift(hours = 24): Promise<DriftOut> {
+    return {
+      status: "unavailable",
+      message: "Drift monitoring measures real traffic scored by the backend model. Switch to Live API mode to see it.",
+      period_hours: hours,
+      psi: null,
+      psi_watch: 0.1,
+      psi_drifting: 0.25,
+      windows: 0,
+      quiet_windows: 0,
+      flag_rate: null,
+      reference_flag_rate: null,
+      flag_rate_ratio: null,
+      batches_considered: 0,
+      batches_excluded: 0,
+      bins: [],
     };
   }
 

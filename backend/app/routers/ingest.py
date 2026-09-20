@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import logging
 import uuid
 
 import pandas as pd
@@ -13,8 +14,10 @@ from app.auth import CAN_INGEST_TRAFFIC, require_role
 from app.config import settings
 from app.database import get_db
 from app.detection_service import get_engine, load_csv_as_traffic_frame, new_batch_id
-from app.models import Alert
+from app.models import Alert, CorrelatedCampaign, ScoreBatch
 from app.schemas import IngestSummaryOut
+
+logger = logging.getLogger("netshield.backend")
 
 # Both routes here run real traffic through the trained models and write alerts -- a Viewer
 # or Security Analyst shouldn't be able to trigger that, only Threat Hunter/Administrator.
@@ -71,6 +74,10 @@ def _score_and_store(
         db.bulk_save_objects([Alert(batch_id=batch_id, **record) for record in new_records])
         db.commit()
 
+    _record_score_distribution(db, batch_id, source, summary.pop("score_distribution", None), summary["windows_scored"])
+    campaigns = summary.pop("campaigns", [])
+    _record_campaigns(db, batch_id, campaigns)
+
     # Counts in the response reflect what actually got written this call, not the full
     # scored batch -- windows_scored/anomalous_windows stay as scoring-layer facts (the
     # model ran on all of them regardless of storage dedup); the rest describe storage.
@@ -84,11 +91,54 @@ def _score_and_store(
         "predicted_label_counts": {str(k): int(v) for k, v in new_predicted_labels.value_counts().items()},
     }
 
-    return IngestSummaryOut(batch_id=batch_id, source=source, **summary)
+    return IngestSummaryOut(batch_id=batch_id, source=source, campaigns_found=len(campaigns), **summary)
+
+
+def _record_score_distribution(db: Session, batch_id: str, source: str, distribution: dict | None, windows: int) -> None:
+    """Keep a histogram of this ingest's anomaly scores for drift monitoring (see ScoreBatch).
+
+    Recorded once per batch id: re-sending the same file is the same traffic, not more of it -- exactly like
+    the alert de-duplication above. Never allowed to fail an ingest: drift monitoring is advisory.
+    """
+    if distribution is None:
+        return
+    try:
+        if db.execute(select(ScoreBatch.id).where(ScoreBatch.batch_id == batch_id)).first() is not None:
+            return
+        db.add(ScoreBatch(
+            batch_id=batch_id, source_file=source[:255], reference_id=distribution["reference_id"],
+            windows_scored=windows, flagged_windows=distribution["flagged_windows"],
+            quiet_bin_counts=distribution["quiet_bin_counts"],
+        ))
+        db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception("Could not record the score distribution for batch %s; drift monitoring skips it.", batch_id)
+
+
+def _record_campaigns(db: Session, batch_id: str, campaigns: list[dict]) -> None:
+    """Store the cross-window campaigns found in this ingest (see CorrelatedCampaign).
+
+    Idempotent like the alerts: a campaign already stored for this batch (same file, same first window) is not
+    stored again. Advisory, so a failure here is logged and never fails the ingest.
+    """
+    if not campaigns:
+        return
+    try:
+        existing = set(db.execute(
+            select(CorrelatedCampaign.source_file, CorrelatedCampaign.first_window).where(CorrelatedCampaign.batch_id == batch_id)
+        ).all())
+        fresh = [c for c in campaigns if (c["source_file"][:255], c["first_window"]) not in existing]
+        if fresh:
+            db.add_all([CorrelatedCampaign(batch_id=batch_id, **{**c, "source_file": c["source_file"][:255]}) for c in fresh])
+            db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception("Could not record the campaigns for batch %s; they are skipped.", batch_id)
 
 
 @router.post("/csv", response_model=IngestSummaryOut)
-async def ingest_csv(
+def ingest_csv(
     file: UploadFile,
     include_all_windows: bool = Query(False, description="Store Low-risk windows too, not just Medium/High."),
     shap: bool = Query(False, description="Attach SHAP explanations (slower)."),
@@ -104,6 +154,8 @@ async def ingest_csv(
     # Declared Content-Length lets an oversized upload be rejected before reading any of the
     # body; a client that omits it (some multipart encoders do) still gets caught by the
     # len(raw) check right after reading, just after the bytes are already in memory once.
+    # A plain `def` (not `async def`): FastAPI runs it on a worker thread, so parsing and model scoring -- seconds
+    # to minutes for a big upload -- never block the event loop that serves every other request.
     declared_size = file.size
     if declared_size is not None and declared_size > settings.max_upload_bytes:
         raise HTTPException(
@@ -111,7 +163,7 @@ async def ingest_csv(
             detail=f"File is {declared_size} bytes, over the {settings.max_upload_bytes}-byte limit.",
         )
 
-    raw = await file.read()
+    raw = file.file.read()
     if len(raw) > settings.max_upload_bytes:
         raise HTTPException(
             status_code=413,

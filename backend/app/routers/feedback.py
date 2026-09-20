@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from cyber_ai.data import UNKNOWN_DECISION_LABEL
 from cyber_ai.feedback import feedback_label
 
 from app.auth import CAN_SUBMIT_FEEDBACK, get_current_user, require_role
@@ -88,13 +89,20 @@ def _replace_in_feedback_store(
 def submit_feedback(
     payload: FeedbackIn,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role(*CAN_SUBMIT_FEEDBACK)),
+    user: User = Depends(require_role(*CAN_SUBMIT_FEEDBACK)),
 ) -> FeedbackOut:
     alert = db.get(Alert, payload.alert_id)
     if alert is None:
         raise HTTPException(status_code=404, detail="Alert not found")
 
     label = feedback_label(payload.validated_label)
+    if label == UNKNOWN_DECISION_LABEL:
+        # "Unknown" is what the model says when it isn't sure -- confirming it would write a training row with a
+        # label that isn't in the taxonomy (train.py would just exclude it). The analyst's job is to resolve it.
+        raise HTTPException(
+            status_code=422,
+            detail="'Unknown' can't be used as a validated label. Choose the actual category, or Normal for a false alarm.",
+        )
     engine = get_engine()
 
     # The stored vector becomes a retraining row laid out under the *currently deployed* feature
@@ -119,7 +127,7 @@ def submit_feedback(
             feedback = Feedback(
                 alert_id=alert.id,
                 validated_label=label,
-                analyst=payload.analyst,
+                analyst=user.name,  # the signed-in user, never a client-supplied name (payload.analyst is ignored)
                 notes=payload.notes,
                 written_to_feedback_store=False,
             )
@@ -147,7 +155,7 @@ def submit_feedback(
                 )
             # Same label resubmitted: nothing to change in the CSV -- resubmitting is idempotent.
             feedback.validated_label = label
-            feedback.analyst = payload.analyst
+            feedback.analyst = user.name  # whoever made the latest change
             feedback.notes = payload.notes
             feedback.created_at = dt.datetime.utcnow()  # time of the current validated label
 
