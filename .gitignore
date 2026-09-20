@@ -26,3 +26,6 @@ captures/
 
 # Cached held-out-window scores for the research scripts (cyber_ai/holdout.py) -- large, rebuildable.
 reports/.cache/
+
+# docker-compose secrets (copy .env.example to .env) -- never committed
+/.env

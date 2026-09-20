@@ -1,0 +1,15 @@
+.git
+.gitignore
+MachineLearningCVE
+# Secrets must never be baked into an image: the containers get them from docker-compose's environment.
+.env
+backend/.env
+**/__pycache__
+**/.pytest_cache
+.venv
+.audit-venv
+**/node_modules
+frontend/dashboard-app/dist
+reports/.cache
+captures
+.model_generation
