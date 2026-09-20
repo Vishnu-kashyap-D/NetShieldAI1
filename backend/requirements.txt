@@ -1,11 +1,14 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-sqlalchemy>=2.0
-pymysql>=1.1
-cryptography>=42
-pydantic-settings>=2.4
-python-multipart>=0.0.9
-requests>=2.31
-google-genai>=1.0
-bcrypt>=4.0
-email-validator>=2.0
+# Exact pins -- the versions verified working together with the root requirements.txt (pip check
+# clean; backend smoke-tested). Install the root requirements.txt too: this file adds only what the
+# API layer needs on top of cyber_ai's own dependencies.
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+sqlalchemy==2.0.52
+pymysql==1.2.0
+cryptography==50.0.0
+pydantic-settings==2.15.0
+python-multipart==0.0.32
+requests==2.32.4
+google-genai==2.23.0
+bcrypt==5.0.0
+email-validator==2.3.0

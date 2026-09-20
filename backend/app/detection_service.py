@@ -10,6 +10,8 @@ import pandas as pd
 import tensorflow as tf
 
 from app.config import settings
+from app.engine_cache import ReloadableCache
+from app.feature_schema import feature_schema_version
 from cyber_ai.data import (
     ATTACK_CATEGORIES,
     BENIGN_LABEL,
@@ -58,6 +60,7 @@ class DetectionEngine:
     def __init__(self, artifacts_dir: Path):
         preprocessing = joblib.load(artifacts_dir / "preprocessing.joblib")
         self.feature_names: list[str] = preprocessing["feature_names"]
+        self.feature_schema_version: str = feature_schema_version(self.feature_names)
         self.imputer = preprocessing["imputer"]
         self.scaler = preprocessing["scaler"]
         self.label_encoder = preprocessing["label_encoder"]
@@ -181,6 +184,7 @@ class DetectionEngine:
                     "features": {
                         feature: _json_safe(source_row.get(feature, np.nan)) for feature in self.feature_names
                     },
+                    "feature_schema_version": self.feature_schema_version,
                 }
             )
 
@@ -218,17 +222,21 @@ def new_batch_id() -> str:
     return str(uuid.uuid4())
 
 
-_engine: DetectionEngine | None = None
+# Per-process cache whose invalidation is shared across worker processes through a marker file
+# (see app.engine_cache) -- so a retrain accepted on one `uvicorn` worker reloads all of them.
+_engine_cache: ReloadableCache[DetectionEngine] = ReloadableCache(
+    loader=lambda: DetectionEngine(settings.artifacts_dir),
+    marker_path=lambda: settings.model_generation_file,
+)
 
 
 def get_engine() -> DetectionEngine:
-    global _engine
-    if _engine is None:
-        _engine = DetectionEngine(settings.artifacts_dir)
-    return _engine
+    return _engine_cache.get()
 
 
 def reload_engine() -> None:
-    """Drop the cached engine so the next get_engine() picks up freshly retrained weights."""
-    global _engine
-    _engine = None
+    """Make every worker reload the model from artifacts/ on its next get_engine().
+
+    Call this only once the new weights are final and approved (the retrain quality gate does).
+    """
+    _engine_cache.invalidate()

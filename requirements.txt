@@ -1,8 +1,20 @@
-numpy>=1.26,<2.3
-pandas>=2.2
-scikit-learn>=1.4
-tensorflow>=2.16,<2.21
-shap>=0.45
-matplotlib>=3.8
-PyYAML>=6.0
-joblib>=1.3
+# Exact pins: the versions verified working together (pip check clean; trained, served and
+# backend-smoke-tested on Python 3.12). The TensorFlow / Keras / NumPy combination in particular is
+# fragile -- see cyber_ai/__init__.py -- so bump these deliberately, together, and re-test, rather
+# than letting a fresh install drift to whatever is newest.
+numpy==2.2.5
+pandas==2.2.3
+# This pin is load-bearing, not cosmetic: artifacts/preprocessing.joblib (committed) was pickled under
+# scikit-learn 1.7.2, and 1.8.0 cannot run an imputer saved by 1.7.2 -- every ingest fails with
+# "AttributeError: 'SimpleImputer' object has no attribute '_fill_dtype'". Only move this to a newer
+# scikit-learn together with a retrain that re-saves the artifacts under that version.
+scikit-learn==1.7.2
+tensorflow==2.20.0
+# Required, not optional: cyber_ai/__init__.py and backend/app/config.py set TF_USE_LEGACY_KERAS=1 so
+# the Keras-2-format models in artifacts/ keep loading, and TensorFlow can only honour that when the
+# tf-keras package is installed. Its version must track TensorFlow's (2.20.x <-> 2.20.x).
+tf-keras==2.20.1
+shap==0.52.0
+matplotlib==3.10.3
+PyYAML==6.0.2
+joblib==1.5.2

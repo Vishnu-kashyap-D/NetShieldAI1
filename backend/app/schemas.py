@@ -53,6 +53,9 @@ class AlertOut(BaseModel):
 
 class AlertDetailOut(AlertOut):
     features: dict
+    # Which feature set `features` was scored under (app.feature_schema); None only for a row the
+    # startup migration hasn't reached yet.
+    feature_schema_version: str | None = None
 
 
 class AlertListOut(BaseModel):

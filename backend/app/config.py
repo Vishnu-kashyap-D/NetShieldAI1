@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     train_config: Path = REPO_ROOT / "configs" / "default.yaml"
     training_logs_dir: Path = REPO_ROOT / "reports" / "training_runs"
 
+    # Shared "reload the model" signal between worker processes (see app/engine_cache.py). Kept
+    # OUTSIDE artifacts_dir on purpose: the retrain quality gate deletes and restores that whole
+    # directory when it rejects a run.
+    model_generation_file: Path = REPO_ROOT / ".model_generation"
+
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     # Guards POST /api/ingest/csv against an accidental multi-GB upload being buffered whole

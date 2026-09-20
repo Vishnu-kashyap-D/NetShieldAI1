@@ -19,3 +19,7 @@ captures/
 
 # Throwaway venv for pip-audit (see backend/README.md "Dependency auditing")
 .audit-venv/
+
+# Cross-worker "reload the model" marker (backend/app/engine_cache.py) -- runtime state, never committed.
+.model_generation
+.model_generation.tmp

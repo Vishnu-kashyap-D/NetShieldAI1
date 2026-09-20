@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -38,6 +38,9 @@ class Alert(Base):
     # Kept as JSON instead of ~76 individual columns; this is exactly the row shape
     # cyber_ai.feedback / cyber_ai.train expect when this alert is later validated.
     features: Mapped[dict] = mapped_column(JSON)
+    # Fingerprint of the feature *set* `features` was scored under (app.feature_schema). Nullable
+    # only because rows created before this column existed are backfilled by app.migrations.
+    feature_schema_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     ingested_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow, index=True)
 
@@ -81,9 +84,13 @@ class UserSession(Base):
 
 class Feedback(Base):
     __tablename__ = "feedback"
+    # One validated label per alert: resubmitting *updates* it (routers/feedback.py) instead of
+    # stacking up contradictory rows -- each of which used to be a separate retraining row.
+    # (The constraint's index also serves the foreign key, so no separate index=True is needed.)
+    __table_args__ = (UniqueConstraint("alert_id", name="uq_feedback_alert_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    alert_id: Mapped[int] = mapped_column(ForeignKey("alerts.id"), index=True)
+    alert_id: Mapped[int] = mapped_column(ForeignKey("alerts.id"))
 
     validated_label: Mapped[str] = mapped_column(String(64))
     analyst: Mapped[str | None] = mapped_column(String(128), nullable=True)

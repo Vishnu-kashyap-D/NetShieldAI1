@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.detection_service import get_engine
+from app.migrations import run_migrations
 from app.routers import alerts, auth, chat, feedback, health, ingest, retrain, stats
 from app.security import OriginVerificationMiddleware, SecurityHeadersMiddleware
 from app.seed import ensure_default_users
@@ -20,6 +21,7 @@ logger = logging.getLogger("netshield.backend")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    run_migrations(engine)
 
     db = SessionLocal()
     try:

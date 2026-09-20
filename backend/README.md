@@ -14,6 +14,16 @@ pip install -r backend/requirements.txt
 installed per the repo root `requirements.txt`; the backend imports `cyber_ai` directly,
 it doesn't duplicate those.)
 
+Both requirements files are **exact-pinned** (`==`) to a set verified working together, and one pin
+is load-bearing: the committed `artifacts/preprocessing.joblib` was saved under scikit-learn
+**1.7.2**, and 1.8.0 can't run it (every ingest fails with `'SimpleImputer' object has no attribute
+'_fill_dtype'`). Also required, though easy to miss: `tf-keras`, which `TF_USE_LEGACY_KERAS=1`
+needs in order to load the Keras-2-format models. To run the tests: `pip install -r
+backend/requirements-dev.txt`, then `python -m pytest backend/tests`. To bump a pin: change it in the
+requirements file, reinstall into a fresh venv, run `pip check`, run the tests, score the demo CSV
+(`POST /api/ingest/demo`) — and retrain if the bump touches scikit-learn or TensorFlow, so the
+artifacts are re-saved under the new version.
+
 ## 2. Configure the database connection
 
 Copy `backend/.env.example` to `backend/.env` and fill in your MySQL credentials:
@@ -104,7 +114,7 @@ What protects the API itself (all of it verified with real requests, not just re
 | **Untrusted CSV labels** | The uploaded CSV's `Label` column is pasted into the per-alert chatbot's LLM prompt, so a label outside CICIDS2017's known vocabulary is stored as `Unrecognized` instead of verbatim. | `app/detection_service.py` |
 | **Bounded inputs** | Upload size cap (`MAX_UPLOAD_BYTES`), login password ≤ 128 chars, malformed CSV → clean `422`. | `app/routers/ingest.py`, `app/schemas.py` |
 
-Limits worth knowing: the lockout and chat limits live in process memory, so they're **per worker** and reset on restart (a multi-worker deployment needs a shared store such as Redis). The client IP is the direct socket peer — `X-Forwarded-For` is deliberately *not* trusted, since any client can forge it — so behind a reverse proxy every request looks like it comes from the proxy until that's configured. Old sessions from before hashing was introduced are invalid: everyone signs in once more.
+Limits worth knowing: the lockout and chat limits live in process memory, so they're **per worker** and reset on restart (a multi-worker deployment needs a shared store such as Redis — see [Running with multiple workers](#running-with-multiple-workers)). The client IP is the direct socket peer — `X-Forwarded-For` is deliberately *not* trusted, since any client can forge it — so behind a reverse proxy every request looks like it comes from the proxy until that's configured. Old sessions from before hashing was introduced are invalid: everyone signs in once more.
 
 ### Dependency auditing
 
@@ -123,11 +133,79 @@ python -m venv .audit-venv
 A finding only matters if the vulnerable code path is reachable from this app. For example, every
 Keras advisory is about loading an *untrusted* model file, and NetShield only ever loads the
 artifacts it trained itself — so **never point `artifacts/` at model files from a source you don't
-trust.** `requirements.txt` uses lower bounds only, so a fresh install resolves to current, patched
-releases; existing environments should be refreshed by rebuilding a venv from the requirements files,
-not by upgrading packages in place.
+trust.** The requirements files are exact-pinned (see "Install dependencies"), so a fresh install reproduces
+the tested set rather than drifting to whatever is newest: a finding means bumping the affected
+pin deliberately, in a fresh venv, and re-testing — not upgrading packages in place.
 
-**Before serving this over HTTPS:** set `SESSION_COOKIE_SECURE=true` in `backend/.env`. It defaults to `false` on purpose — a `Secure` cookie is silently dropped by the browser on plain `http://localhost`, which would make login look like it does nothing — but left `false` in production the session cookie can leak over plain http. Also add the real dashboard origin to `cors_origins` (`config.py`), which both CORS and the CSRF check read.
+**Before serving this over HTTPS:** set `SESSION_COOKIE_SECURE=true` in `backend/.env`. It defaults to `false` on purpose — a `Secure` cookie is silently dropped by the browser on plain `http://localhost`, which would make login look like it does nothing — but left `false` in production the session cookie can leak over plain http. Also add the real dashboard origin to `CORS_ORIGINS` in `backend/.env` (a **JSON list**, e.g. `["https://dashboard.example.com"]` — a comma-separated value fails to parse and the app won't start), which both CORS and the CSRF check read.
+
+## Configuration reference
+
+Every setting can be overridden through an environment variable or `backend/.env`; each one, with its
+default and meaning, is documented in [`backend/.env.example`](.env.example). Two easy-to-miss facts:
+`CORS_ORIGINS` must be a **JSON list**, and the file-location settings (`ARTIFACTS_DIR`, `FEEDBACK_STORE`,
+...) default to paths inside this repo.
+
+## Database migrations
+
+`Base.metadata.create_all` only creates *missing tables* — it never alters one that already exists — so
+a column or constraint added to a model later would never reach a database created earlier. There's no
+Alembic here; instead `app/migrations.py` runs at every startup, applies the few schema changes that
+matter to an existing database, and does nothing on a current one (each step first inspects the live
+schema). It currently:
+
+- adds `alerts.feature_schema_version` and backfills it for every existing alert from that alert's own
+  stored feature keys (exact, not a guess);
+- adds a unique index on `feedback.alert_id`. This is the one step that deletes data: if the database
+  already holds several feedback rows for one alert, only each alert's **newest** is kept (logged as a
+  warning with the counts); rows already written to the retraining CSV are not touched.
+
+Starting several workers at once against a database that still needs a migration is safe: whichever
+worker loses the race sees "already exists" and carries on.
+
+## Feedback: one label per alert
+
+An alert has at most one validated label (unique constraint on `feedback.alert_id`). Submitting again
+**updates** it: same label → nothing changes (idempotent); a corrected label → the alert's earlier row in
+the retraining CSV is *replaced*, not joined by a contradictory second one. The CSV has no alert-id column
+(its columns are exactly what `cyber_ai.train` reads), so the earlier row is found by content — the
+alert's feature vector plus its old label. `created_at` on a feedback row is the time of its *current*
+label.
+
+## Feature schema versioning
+
+Every alert records `feature_schema_version`: a short fingerprint of the set of feature names it was
+scored under (returned by `GET /api/alerts/{id}`). `Alert.features` is keyed by feature name, so old rows
+stay readable if the trained feature set changes; the version says *which* set a row belongs to. It's used
+in one place: `POST /api/feedback` returns `409` for an alert scored under a different feature set than the
+deployed model's, rather than writing a training row full of silently-imputed blanks — re-ingest the traffic
+and give feedback on the fresh alert.
+
+## Running with multiple workers
+
+`uvicorn app.main:app --workers N` works, with these specifics (the default single-worker dev setup is
+unaffected):
+
+- **Model reload is shared.** After a retrain is accepted by the quality gate, *every* worker reloads the
+  new model on its next request. The signal is a small marker file (`MODEL_GENERATION_FILE`, default
+  `<repo>/.model_generation`); each worker compares it with the value its loaded model was read under.
+  It is deliberately not derived from the model files' modification times: the retrain overwrites
+  `artifacts/` in place while training and only afterwards decides whether the result may go live, so
+  watching those files would hot-swap an unvetted model. Logged as `Model reloaded after a retrain in
+  process <pid>`. Verified with two real worker processes.
+- **Still per worker:** the login-lockout and chat rate limits (in-memory; a shared store such as Redis
+  would be needed for true global limits), and the lock around the feedback CSV. The database is
+  protected across workers by the unique constraint, but the CSV file has no cross-process lock, so two
+  workers rewriting it at the same instant could lose a line. Feedback volume is tiny, so the practical
+  advice is one worker for anything that writes feedback, or a real file lock if that ever changes.
+
+## Tests
+
+`backend/tests/` holds the pytest suite (`pip install -r backend/requirements-dev.txt`, then
+`python -m pytest backend/tests`). It runs against an in-memory SQLite database and a stub model — no
+MySQL, no `artifacts/` — except one test that spawns a real second process to check the cross-worker
+reload. Currently covers the feedback upsert, feature-schema versioning, the startup migration (including
+the multi-worker startup race), and the reload signal.
 
 ## API surface
 
@@ -148,7 +226,7 @@ not by upgrading packages in place.
 | `POST /api/chat` | Any role | General project/network-threat chatbot (not tied to an alert) |
 | `GET /api/stats/summary` | Any role | Counts by risk level / category, for dashboard tiles |
 | `GET /api/stats/timeseries` | Any role | Per-minute alert counts for the last N minutes, for a chart |
-| `POST /api/feedback` | Security Analyst, Threat Hunter, Administrator | Analyst submits a validated label for an alert; appends to `data/feedback/validated_traffic.csv` (same file `cyber_ai.train --feedback-csv` reads) |
+| `POST /api/feedback` | Security Analyst, Threat Hunter, Administrator | Analyst submits a validated label for an alert (one per alert — resubmitting updates it, see [Feedback](#feedback-one-label-per-alert)); writes the training row to `data/feedback/validated_traffic.csv` (same file `cyber_ai.train --feedback-csv` reads) |
 | `GET /api/feedback` | Any role | List submitted feedback |
 | `POST /api/retrain` | Administrator | Kick off `cyber_ai.train` with accumulated feedback, in the background |
 | `GET /api/retrain` / `GET /api/retrain/{id}` | Any role | Check retraining run status/metrics |
@@ -216,7 +294,7 @@ pass — is *meant* to look like fresh traffic arriving, so it opts out of the d
   chunks, is never mistaken for a duplicate. Re-sending the same file with `include_all_windows`
   turned on after a Medium/High-only pass adds just the Low windows the first pass skipped.
 - `POST /api/retrain` runs `cyber_ai.train` as a background subprocess (it can take
-  several minutes); poll `GET /api/retrain/{id}` for status. On success it automatically
-  reloads the in-process model so the very next `/api/ingest/*` call uses the retrained
-  weights — no server restart needed.
+  several minutes); poll `GET /api/retrain/{id}` for status. When the quality gate accepts the
+  new model, every worker process reloads it on its next request — no server restart needed (see
+  [Running with multiple workers](#running-with-multiple-workers)).
 - Every route below `/api/health` requires a session -- see [Authentication](#authentication).
