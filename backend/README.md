@@ -201,11 +201,39 @@ unaffected):
 
 ## Tests
 
-`backend/tests/` holds the pytest suite (`pip install -r backend/requirements-dev.txt`, then
-`python -m pytest backend/tests`). It runs against an in-memory SQLite database and a stub model — no
-MySQL, no `artifacts/` — except one test that spawns a real second process to check the cross-worker
-reload. Currently covers the feedback upsert, feature-schema versioning, the startup migration (including
-the multi-worker startup race), and the reload signal.
+```bash
+pip install -r backend/requirements-dev.txt
+python -m pytest backend/tests                       # everything (~1 min)
+python -m pytest backend/tests -m "not real_model"   # skip the ~30s tests that load the real TensorFlow model
+```
+
+Nearly all of it runs against an in-memory SQLite database and **stand-in models** (`tests/stub_engine.py`:
+a real `DetectionEngine` whose two networks are replaced by tiny predictable ones), so a known CSV has an
+expected result that can be worked out by hand — no MySQL, no `artifacts/`. What is covered:
+
+| File | Covers |
+|---|---|
+| `test_auth.py` | Login/logout, cookie flags, session hashing and expiry, lockout (per account and per address, `X-Forwarded-For` ignored) |
+| `test_rbac.py` | The role matrix: 4 roles × 9 gated actions, `401` before `403`, account management |
+| `test_ingest_api.py` | Upload → score → store on a known CSV: exact risk/category counts, idempotency, size limit, bad input → `422` |
+| `test_scoring.py`, `test_hybrid_risk.py` | `score_dataframe` and the pure functions (`compute_risk_score`, thresholds, label mapping, windowing) |
+| `test_retrain.py` | The `409` concurrency guard; the quality gate (accept / reject + restore / failure paths) |
+| `test_alerts_stats_chat.py` | Alert filters and paging, stats, model-metrics, chatbot limits and no-LLM degradation |
+| `test_security_middleware.py` | CSRF Origin checks, security headers, the rate limiter, `CORS_ORIGINS` parsing |
+| `test_feedback_upsert.py`, `test_feature_schema_versioning.py`, `test_migrations.py`, `test_engine_cache.py` | The Phase 4 work: one label per alert, schema versioning, the startup migration (incl. the multi-worker race), cross-worker reload (spawns a real second process) |
+| `test_real_model.py` | The **committed** `artifacts/` load under the installed library versions, and the demo CSV behaves as the demo claims (marker `real_model`) |
+
+`test_real_model.py` is the one that fails first on a scikit-learn / Keras version mismatch. If a retrain
+is deliberately accepted, its "demo narrative" assertions may need updating — that is intentional.
+A guard on the suite itself: a dozen key rules (role gates, the 409 guard, the quality gate, CSRF check,
+lockout counting, session hashing, ingest dedup, label sanitising, ...) were each broken on purpose and the
+suite failed every time.
+
+## Operations & security documents
+
+- [`docs/OPERATIONAL_RUNBOOK.md`](../docs/OPERATIONAL_RUNBOOK.md) — what an analyst does when a High-risk alert appears; administrator tasks.
+- [`docs/THREAT_MODEL.md`](../docs/THREAT_MODEL.md) — NetShield's own attack surface, mitigations and open risks.
+- [`docs/LAB_RULES_OF_ENGAGEMENT.md`](../docs/LAB_RULES_OF_ENGAGEMENT.md) — rules for generating real attack traffic in the VM lab.
 
 ## API surface
 

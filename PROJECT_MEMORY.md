@@ -100,9 +100,12 @@ were added** (by the user's teammate + Claude, commit `b62b05b`). Current router
 - `uvicorn` script not on PATH after pip install — always use `python -m uvicorn`.
 - `/api/stats/timeseries` defaulted to minute-wide buckets, which collapsed a fast
   stream-simulator run into one point — fixed with a `bucket_seconds` query param.
-- Retrain hot-swap has **no quality gate** — any successful retrain unconditionally
-  replaces the live model even if worse. Flagged as the #1 priority item in the
-  improvement roadmap (see section 7); not yet fixed.
+- (Fixed since) Retrain hot-swap used to have no quality gate; now `retrain.py` rejects a
+  model whose BiLSTM accuracy / Autoencoder balanced accuracy regresses by >0.01 and restores
+  the previous artifacts. Model reload is also shared across `uvicorn` workers (marker file).
+- scikit-learn version is load-bearing: the committed `artifacts/preprocessing.joblib` was
+  pickled under **1.7.2**; 1.8.0 fails every ingest with `'SimpleImputer' object has no
+  attribute '_fill_dtype'`. Both requirements files are now exact-pinned (and `tf-keras` added).
 - Keras-2-vs-Keras-3 incompatibility broke loading models trained on a different
   machine — root cause, not yet re-hit: `TF_USE_LEGACY_KERAS=1` is now set in
   `app/config.py` before any TensorFlow import, specifically to prevent this recurring.
@@ -181,6 +184,20 @@ deliberately **not** pushed to the live repo per the user's explicit instruction
 ---
 
 ## 7. Open Items / Roadmap (see the Improvement Roadmap PDF for the full ~90-item list)
+
+**Fix Plan v2 status (`E:\bmsit\NetShield_Fix_Plan_v2.pdf`), as of 2026-09-20:**
+- Phase 4 (DB/infra polish) — done and committed locally (`fec13b6 phase 4 done`): unique
+  `Feedback.alert_id` + upsert, `.env.example` documented, exact pins, cross-worker model
+  reload, `feature_schema_version` on alerts, startup migration (`app/migrations.py`).
+- Phase 5 (testing & process) — done, **uncommitted** when written: `backend/tests/` (~200
+  tests; see `backend/README.md` "Tests"), plus `docs/OPERATIONAL_RUNBOOK.md`,
+  `docs/THREAT_MODEL.md`, `docs/LAB_RULES_OF_ENGAGEMENT.md` (R5-R10 there are *proposed*
+  wording for the user to confirm — only R1-R4 record existing practice).
+- Phase 6 (research stretch: OOD rejection, calibration, adversarial, drift, ...) — not started.
+- Known small open items found while writing the threat model (not fixed): feedback `analyst`
+  is client-supplied; scoring blocks the event loop in `ingest_csv`; `/api/health` leaks the
+  artifacts path; unknown-email login is faster than wrong-password (timing); no
+  password-change/delete-account endpoint (seeded demo accounts share a public password).
 
 Top priority (Phase 1 of the roadmap):
 1. Retrain quality gate (don't hot-swap the live model if new metrics are worse)

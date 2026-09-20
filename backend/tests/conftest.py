@@ -7,12 +7,30 @@ from types import SimpleNamespace
 # Make `import app...` work no matter which directory pytest is launched from.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import bcrypt
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "real_model: loads the committed artifacts/ and scores the demo CSV (~30s); deselect with -m 'not real_model'"
+    )
+
+
 FEATURES = ["Flow Duration", "Total Fwd Packets", "Flow Bytes/s"]
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits():
+    """The login/chat limiters are module-level, in-memory state -- without this, failed logins in one
+    test would lock out the next test's (same "testclient" address) login."""
+    from app.routers import auth as auth_router, chat as chat_router
+
+    for limiter in (auth_router._login_account_limiter, auth_router._login_ip_limiter, chat_router._chat_limiter):
+        limiter._events.clear()
+    yield
 
 
 @pytest.fixture()
@@ -58,12 +76,21 @@ def api(session_factory, tmp_path, monkeypatch):
             db.close()
 
     app.dependency_overrides[get_db] = override_get_db
+    # bcrypt at production cost (12 rounds) is ~0.25s per hash/verify -- minutes across a suite that
+    # signs in hundreds of times. Rounds are stored inside each hash, so verification still works.
+    real_gensalt = bcrypt.gensalt
+    monkeypatch.setattr(bcrypt, "gensalt", lambda rounds=4, prefix=b"2b": real_gensalt(rounds=4, prefix=prefix))
     monkeypatch.setattr(settings, "feedback_store", tmp_path / "validated_traffic.csv")
     engine_stub = SimpleNamespace(feature_names=FEATURES, feature_schema_version=feature_schema_version(FEATURES))
     monkeypatch.setattr(feedback_router, "get_engine", lambda: engine_stub)
 
     with session_factory() as db:
-        for email, role in [("analyst@example.com", Role.SECURITY_ANALYST), ("viewer@example.com", Role.VIEWER)]:
+        for email, role in [
+            ("analyst@example.com", Role.SECURITY_ANALYST),
+            ("viewer@example.com", Role.VIEWER),
+            ("hunter@example.com", Role.THREAT_HUNTER),
+            ("admin@example.com", Role.ADMINISTRATOR),
+        ]:
             db.add(User(name=email.split("@")[0], email=email, password_hash=hash_password("pw-12345"), role=role))
         db.commit()
 

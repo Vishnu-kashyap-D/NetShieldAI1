@@ -109,8 +109,10 @@ def me(user: User = Depends(get_current_user)) -> UserOut:
 
 
 @router.get("/roles")
-def list_roles() -> list[str]:
-    """The fixed set of roles an admin can assign when creating a user -- not user-editable."""
+def list_roles(_user: User = Depends(get_current_user)) -> list[str]:
+    """The fixed set of roles an admin can assign when creating a user -- not user-editable.
+
+    Needs a session like every route except /health (it used to be open, which contradicted that rule)."""
     return list(ALL_ROLES)
 
 
