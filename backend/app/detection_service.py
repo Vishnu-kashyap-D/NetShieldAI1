@@ -289,7 +289,7 @@ def _pipeline_action(is_anomaly: bool, abstained: bool) -> str:
         return "Ignored as normal"
     return "Flagged as anomalous, category unknown" if abstained else "Classified and alerted"
 
-
+'''
 def _json_safe(value: object) -> object:
     if isinstance(value, (np.floating,)):
         value = float(value)
@@ -298,7 +298,19 @@ def _json_safe(value: object) -> object:
         return int(value)
     if isinstance(value, float) and np.isnan(value):
         return None
+    return value'''
+
+def _json_safe(value: object) -> object:
+    if isinstance(value, (np.floating,)):
+        value = float(value)
+    elif isinstance(value, (np.integer,)):
+        return int(value)
+
+    if isinstance(value, float):
+        return value if np.isfinite(value) else None
+
     return value
+
 
 
 def load_csv_as_traffic_frame(path_or_buffer, source_name: str) -> pd.DataFrame:

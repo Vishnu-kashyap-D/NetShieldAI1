@@ -1,0 +1,6 @@
+1) open vs code
+2)  cd backend
+3) $env:DB_PASSWORD = Read-Host "Enter your MySQL root password"
+4) .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+5) cd C:\Users\tanis\Projects\NetShield\NetShieldAI1\frontend\dashboard-app
+6) npm.cmd run dev
