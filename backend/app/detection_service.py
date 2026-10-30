@@ -202,7 +202,8 @@ class DetectionEngine:
         classifier_explanations: dict[int, str] = {}
         anomaly_explanations: dict[int, str] = {}
         if shap and len(classifier_starts) > 0:
-            explain_starts = classifier_starts[:shap_max_alerts]
+            #explain_starts = classifier_starts[:shap_max_alerts]
+            explain_starts = classifier_starts[-shap_max_alerts:]
             background_starts = self._choose_background_starts(starts, shap_background)
             # Each explainer runs independently and is never allowed to fail the whole batch --
             # a GradientExplainer error (numerical issue, shap-library version mismatch, etc.)
