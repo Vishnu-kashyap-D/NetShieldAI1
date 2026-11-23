@@ -14,6 +14,16 @@ def _cookie(client):
     return client.cookies.get(settings.session_cookie_name)
 
 
+def _replace_cookie(client, value):
+    """Makes `value` the only session cookie the client sends.
+
+    A bare `client.cookies.set(name, value)` adds a second, domain-less cookie *next to* the one the
+    server set (domain "testserver.local"), so both go out in one Cookie header and the server reads
+    the original -- which once let a "tampered cookie" test pass a valid token without noticing."""
+    client.cookies.clear()
+    client.cookies.set(settings.session_cookie_name, value)
+
+
 def test_login_returns_the_account_and_sets_an_httponly_session_cookie(api):
     response = api.post("/api/auth/login", json={"email": "analyst@example.com", "password": "pw-12345"})
     assert response.status_code == 200
@@ -62,7 +72,7 @@ def test_logout_really_ends_the_session(api):
     stolen_copy = _cookie(api)
     assert api.post("/api/auth/logout").json() == {"status": "signed_out"}
 
-    api.cookies.set(settings.session_cookie_name, stolen_copy)  # replay the old cookie
+    _replace_cookie(api, stolen_copy)  # replay the old cookie
     assert api.get("/api/auth/me").status_code == 401
 
 
@@ -78,7 +88,7 @@ def test_logging_out_one_browser_leaves_the_users_other_sessions_alone(api, sess
     assert first != second
 
     api.post("/api/auth/logout")  # signs out `second`
-    api.cookies.set(settings.session_cookie_name, first)
+    _replace_cookie(api, first)
     assert api.get("/api/auth/me").status_code == 200
 
 
@@ -93,8 +103,10 @@ def test_only_a_hash_of_the_session_token_is_stored(api, session_factory):
 
 def test_a_tampered_cookie_is_rejected(api):
     login(api, "analyst@example.com")
-    api.cookies.set(settings.session_cookie_name, _cookie(api) + "x")
-    assert api.get("/api/auth/me").status_code == 401
+    _replace_cookie(api, _cookie(api) + "x")
+    response = api.get("/api/auth/me")
+    assert response.request.headers["cookie"].count(settings.session_cookie_name) == 1
+    assert response.status_code == 401
 
 
 def test_an_expired_session_is_rejected_and_removed(api, session_factory):
