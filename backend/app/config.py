@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     # honest "unavailable" answer instead of a crash (see chat_service.py).
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-3.6-flash"
+    # Upper bound on one Gemini request. Without it, a slow or overloaded Gemini kept a chat request (and
+    # the worker thread serving it) waiting for minutes; now it fails fast with the honest "unavailable" answer.
+    gemini_timeout_seconds: float = 30.0
 
     # Authentication (backend/app/auth.py). Sessions are opaque random tokens stored in the
     # `sessions` table, not JWTs -- no signing secret to manage, and revoking a session (logout)

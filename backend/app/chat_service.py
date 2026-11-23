@@ -18,6 +18,14 @@ logger = logging.getLogger("netshield.backend")
 class LlmUnavailableError(Exception):
     """The LLM explanation layer could not be reached or is not configured."""
 
+def _gemini_client(genai, genai_types):
+    """One Gemini client for both chatbots, with a request timeout (settings.gemini_timeout_seconds)."""
+    return genai.Client(
+        api_key=settings.gemini_api_key,
+        http_options=genai_types.HttpOptions(timeout=int(settings.gemini_timeout_seconds * 1000)),  # milliseconds
+    )
+
+
 
 @dataclass
 class ChatSources:
@@ -424,7 +432,7 @@ def answer_with_llm(question: str, context: dict, history: list[dict] | None = N
     contents.append({"role": "user", "parts": [{"text": user_content}]})
 
     try:
-        client = genai.Client(api_key=settings.gemini_api_key)
+        client = _gemini_client(genai, genai_types)
         response = client.models.generate_content(
             model=settings.gemini_model,
             contents=contents,
@@ -578,7 +586,7 @@ def answer_project_question(question: str, history: list[dict] | None = None) ->
     contents.append({"role": "user", "parts": [{"text": question}]})
 
     try:
-        client = genai.Client(api_key=settings.gemini_api_key)
+        client = _gemini_client(genai, genai_types)
         response = client.models.generate_content(
             model=settings.gemini_model,
             contents=contents,
