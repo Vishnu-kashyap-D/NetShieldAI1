@@ -1,0 +1,3 @@
+# Generated PDFs can contain only ASCII bytes, so git would otherwise treat them as text and
+# rewrite line endings on checkout, which corrupts their internal byte offsets.
+*.pdf binary
