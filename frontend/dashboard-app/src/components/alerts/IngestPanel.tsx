@@ -58,13 +58,23 @@ export function IngestPanel({ onIngested }: { onIngested?: () => void }) {
   }
 
   function handleUpload() {
-    if (!selectedFile) return;
-    void runIngest(() => provider.ingestCsv(selectedFile, { include_all_windows: includeAllWindows }));
-  }
+  if (!selectedFile) return;
+  void runIngest(() =>
+    provider.ingestCsv(selectedFile, {
+      include_all_windows: includeAllWindows,
+      shap: true,
+    })
+  );
+}
 
-  function handleDemoIngest() {
-    void runIngest(() => provider.ingestDemo({ include_all_windows: includeAllWindows }));
-  }
+function handleDemoIngest() {
+  void runIngest(() =>
+    provider.ingestDemo({
+      include_all_windows: includeAllWindows,
+      shap: true,
+    })
+  );
+}
 
   if (!canIngest) {
     return (
