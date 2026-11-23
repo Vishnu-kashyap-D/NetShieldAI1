@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import tempfile
 from pathlib import Path
 
 import joblib
@@ -48,6 +49,7 @@ from cyber_ai.modeling import (
     supervised_f1_threshold,
 )
 from cyber_ai.reporting import write_json
+from cyber_ai.training_feedback import install_feedback_snapshot, stage_feedback_snapshot
 from cyber_ai.windowing import WindowSequence
 
 # Roadmap guidance: a class with fewer than this many raw samples can't produce a
@@ -143,7 +145,13 @@ def _resolve_config(args: argparse.Namespace) -> dict:
 def main() -> None:
     args = parse_args()
     config = _resolve_config(args)
+    # Feedback is copied up front and trained from the copy; the copy is installed beside the model only
+    # once training succeeds (see cyber_ai/training_feedback.py for why the split depends on it).
+    with tempfile.TemporaryDirectory(prefix="netshield-feedback-") as staging:
+        _train(config, Path(staging))
 
+
+def _train(config: dict, feedback_staging_dir: Path) -> None:
     data_config = config["data"]
     preprocessing_config = config["preprocessing"]
     training_config = config["training"]
@@ -161,9 +169,10 @@ def main() -> None:
     set_global_seed(random_state)
 
     print("Loading and cleaning CICIDS2017 traffic data...")
+    staged_feedback = stage_feedback_snapshot(data_config.get("feedback_csvs") or [], feedback_staging_dir)
     df = load_cicids2017(
         data_dir=data_config["data_dir"],
-        feedback_csvs=data_config.get("feedback_csvs") or [],
+        feedback_csvs=staged_feedback,
         random_state=random_state,
     )
     X_raw, raw_labels, feature_names = dataframe_to_features(df)
@@ -533,6 +542,7 @@ def main() -> None:
         "config": config,
     }
     joblib.dump(preprocessing_artifact, artifacts_dir / "preprocessing.joblib")
+    install_feedback_snapshot(feedback_staging_dir, artifacts_dir)
 
     # What the quiet end of this model's anomaly scores looks like on validation traffic, so the backend can
     # notice later if live traffic stops scoring like it (cyber_ai/drift.py). Skipped, never fatal, if there

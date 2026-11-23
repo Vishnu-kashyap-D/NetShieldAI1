@@ -132,6 +132,8 @@ python -m cyber_ai.correlation_eval         # do cross-window "campaigns" catch 
 
 Results and caveats: [`docs/PHASE6_FINDINGS.md`](docs/PHASE6_FINDINGS.md).
 
+These scripts rebuild the split from the feedback rows the model was actually trained on: every training run copies the feedback CSVs it used into `artifacts/training_feedback/`, so feedback submitted after training (the live store keeps growing) doesn't change the rebuilt split. Models trained before this existed fall back to the recorded feedback path.
+
 ## Latency Benchmark
 
 Measures real per-window detection latency (not batched — one window at a time, matching how a live stream would actually be scored) across three stages, using the trained artifacts:

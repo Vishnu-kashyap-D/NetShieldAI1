@@ -28,6 +28,7 @@ from cyber_ai.data import (
 )
 from cyber_ai.modeling import classifier_probabilities, reconstruction_errors
 from cyber_ai.windowing import WindowSequence
+from cyber_ai.training_feedback import training_feedback_csvs
 
 
 def parse_args() -> argparse.Namespace:
@@ -41,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _rebuild_test_split(preprocessing: dict):
+def _rebuild_test_split(preprocessing: dict, artifacts_dir: Path):
     """Reconstruct the exact test-window split train.py used, from the same stored config
     and random_state — deterministic, so this reproduces the identical held-out windows
     without needing them to have been saved separately."""
@@ -52,16 +53,16 @@ def _rebuild_test_split(preprocessing: dict):
 
     df = load_cicids2017(
         data_dir=data_config["data_dir"],
-        feedback_csvs=data_config.get("feedback_csvs") or [],
+        feedback_csvs=training_feedback_csvs(artifacts_dir, preprocessing),
         random_state=random_state,
     )
     feature_names = preprocessing["feature_names"]
     X_raw, raw_labels, _ = dataframe_to_features(df, feature_names=feature_names)
 
     raw_label_encoder = preprocessing["raw_label_encoder"]
-    # A feedback CSV can grow after training finished (an analyst submits more feedback
-    # through the live app), and an analyst-entered label isn't guaranteed to match the raw
-    # CICIDS label vocabulary the encoder was fit on. Drop only those rows here -- this is
+    # Models trained before feedback snapshots existed (cyber_ai/training_feedback.py) re-read the live
+    # feedback CSV, which can have grown since training, and an analyst-entered label isn't guaranteed
+    # to match the raw CICIDS label vocabulary the encoder was fit on. Drop only those rows here -- this is
     # for regenerating report figures, not retraining, so exact reproduction of a handful of
     # post-training feedback rows isn't required; failing outright on one bad label would be.
     known_labels = set(raw_label_encoder.classes_)
@@ -251,7 +252,7 @@ def main() -> None:
     pd.DataFrame(rows).to_csv(figures_dir / "per_class_metrics.csv", index=False)
 
     print("Rebuilding the exact test split used for training (same config, same seed)...")
-    split = _rebuild_test_split(preprocessing)
+    split = _rebuild_test_split(preprocessing, artifacts_dir)
     window_size = split["window_size"]
 
     print("3/5  ROC curves (rescoring the classifier on the rebuilt test set)...")

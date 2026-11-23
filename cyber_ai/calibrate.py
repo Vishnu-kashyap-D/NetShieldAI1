@@ -32,6 +32,7 @@ from cyber_ai.modeling import (
 )
 from cyber_ai.reporting import write_json
 from cyber_ai.windowing import WindowSequence
+from cyber_ai.training_feedback import training_feedback_csvs
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,7 +73,7 @@ def main() -> None:
     random_state = int(data_config["random_state"])
     df = load_cicids2017(
         data_dir=data_config["data_dir"],
-        feedback_csvs=data_config.get("feedback_csvs") or [],
+        feedback_csvs=training_feedback_csvs(artifacts_dir, preprocessing),
         random_state=random_state,
     )
     X_raw, raw_labels, _ = dataframe_to_features(df, feature_names=feature_names)

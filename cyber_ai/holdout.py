@@ -30,6 +30,7 @@ from cyber_ai.data import (
 )
 from cyber_ai.modeling import classifier_probabilities, reconstruction_errors
 from cyber_ai.windowing import WindowSequence
+from cyber_ai.training_feedback import training_feedback_csvs
 
 
 @dataclass
@@ -67,7 +68,7 @@ def build_holdout(artifacts_dir: Path, data_dir: Path | None = None) -> Holdout:
 
     df = load_cicids2017(
         data_dir=data_dir or data_config["data_dir"],
-        feedback_csvs=data_config.get("feedback_csvs") or [],
+        feedback_csvs=training_feedback_csvs(artifacts_dir, preprocessing),
         random_state=random_state,
     )
     X_raw, raw_labels, _ = dataframe_to_features(df, feature_names=feature_names)
