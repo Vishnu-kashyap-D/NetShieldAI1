@@ -5,6 +5,7 @@ import math
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth import (
@@ -21,7 +22,7 @@ from app.config import settings
 from app.database import get_db
 from app.models import User
 from app.ratelimit import SlidingWindowLimiter
-from app.schemas import LoginIn, RegisterIn, UserOut
+from app.schemas import LoginIn, RegisterIn, SignupIn, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -33,6 +34,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # out doesn't extend the lockout). A successful login clears that account's counter.
 _login_account_limiter = SlidingWindowLimiter(settings.login_max_failures, settings.login_window_seconds)
 _login_ip_limiter = SlidingWindowLimiter(settings.login_ip_max_failures, settings.login_window_seconds)
+# Self-registration throttle: every attempt counts (not just failures), per client IP. See the
+# allow_self_registration comment in config.py for why this matters beyond spam.
+_register_ip_limiter = SlidingWindowLimiter(settings.register_ip_max_attempts, settings.register_window_seconds)
+
+_DUPLICATE_EMAIL_DETAIL = "An account with this email already exists."
 
 
 @functools.lru_cache(maxsize=1)
@@ -130,26 +136,70 @@ def list_roles(_user: User = Depends(get_current_user)) -> list[str]:
     return list(ALL_ROLES)
 
 
+def _insert_user(db: Session, *, name: str, email: str, password: str, role: str) -> User:
+    """Creates the account, or 409s if the email is taken.
+
+    The up-front lookup gives the normal case a clean error; the IntegrityError catch covers two
+    requests for the same email racing past that lookup at once -- the unique index on users.email
+    lets only one insert win, and the loser gets the same 409 instead of a 500."""
+    if db.execute(select(User).where(User.email == email)).scalar_one_or_none() is not None:
+        raise HTTPException(status_code=409, detail=_DUPLICATE_EMAIL_DETAIL)
+    user = User(name=name, email=email, password_hash=hash_password(password), role=role)
+    db.add(user)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=_DUPLICATE_EMAIL_DETAIL) from None
+    db.refresh(user)
+    return user
+
+
+@router.post("/register", response_model=UserOut, status_code=201)
+def register(payload: SignupIn, request: Request, response: Response, db: Session = Depends(get_db)) -> UserOut:
+    """Public self-registration. Always creates a **Viewer** (the payload has no role field), then signs
+    the new user in by setting the session cookie, the same way /login does.
+
+    Throttled per client IP on every attempt, successful or not: a duplicate email has to be refused, so
+    unlike /login this endpoint can't hide whether an email has an account -- the throttle is what stops it
+    being used to check thousands of emails quickly. Disabled entirely with ALLOW_SELF_REGISTRATION=false."""
+    if not settings.allow_self_registration:
+        raise HTTPException(
+            status_code=403,
+            detail="Self-registration is turned off on this server. Ask an Administrator for an account.",
+        )
+
+    wait = _register_ip_limiter.acquire(_client_ip(request))
+    if wait > 0:
+        seconds = math.ceil(wait)
+        minutes = math.ceil(seconds / 60)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many sign-up attempts from this address. Try again in {minutes} minute{'s' if minutes != 1 else ''}.",
+            headers={"Retry-After": str(seconds)},
+        )
+
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="Name must not be blank.")
+
+    user = _insert_user(db, name=name, email=payload.email.lower(), password=payload.password, role="Viewer")
+    _, raw_token = create_session(db, user)
+    _set_session_cookie(response, raw_token)
+    return UserOut.model_validate(user)
+
+
 @router.post("/users", response_model=UserOut, status_code=201)
 def create_user(
     payload: RegisterIn,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_role(*CAN_MANAGE_USERS)),
 ) -> UserOut:
-    """Administrator-only: create a new account. There is no public self-registration endpoint --
-    a real access-controlled system doesn't let a visitor grant themselves a role."""
+    """Administrator-only: create an account with any role. The only way to get a role above Viewer --
+    public sign-up (/register) always creates Viewers, so a visitor can never grant themselves a role."""
     if payload.role not in ALL_ROLES:
         raise HTTPException(status_code=422, detail=f"role must be one of: {', '.join(ALL_ROLES)}")
-
-    email = payload.email.lower()
-    existing = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
-    if existing is not None:
-        raise HTTPException(status_code=409, detail="An account with this email already exists.")
-
-    user = User(name=payload.name, email=email, password_hash=hash_password(payload.password), role=payload.role)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    user = _insert_user(db, name=payload.name, email=payload.email.lower(), password=payload.password, role=payload.role)
     return UserOut.model_validate(user)
 
 

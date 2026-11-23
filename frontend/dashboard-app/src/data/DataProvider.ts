@@ -158,4 +158,11 @@ export interface DataProvider {
    * SessionProvider's sessionStorage logic, not this method.
    */
   getCurrentUser(): Promise<UserOut | null>;
+
+  /**
+   * POST /api/auth/register -- public self-registration (real mode only).
+   * Creates a Viewer account and signs the user in immediately (sets session cookie).
+   * @throws ApiRequestError with status 409 if the email is already taken.
+   */
+  register(payload: { name: string; email: string; password: string }): Promise<UserOut>;
 }

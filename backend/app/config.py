@@ -100,6 +100,14 @@ class Settings(BaseSettings):
     login_max_failures: int = 5
     login_ip_max_failures: int = 20
     login_window_seconds: int = 300
+    # Public self-registration (POST /api/auth/register). Every attempt -- success or failure -- counts
+    # against the client IP, which caps both account-creation spam and probing which emails already
+    # have accounts (a duplicate email has to be refused somehow, so the endpoint can't hide that the
+    # way login does; throttling is what keeps it from being a fast enumeration oracle).
+    # Set ALLOW_SELF_REGISTRATION=false to make accounts Administrator-created only.
+    allow_self_registration: bool = True
+    register_ip_max_attempts: int = 5
+    register_window_seconds: int = 3600
     # Requests per minute per signed-in user, shared across both chatbots (each may call a paid LLM).
     chat_max_requests_per_minute: int = 20
 

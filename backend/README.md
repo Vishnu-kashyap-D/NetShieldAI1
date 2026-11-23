@@ -95,8 +95,14 @@ self-selected at login:
 | `hunter@netshield.ai` | Threat Hunter |
 | `viewer@netshield.ai` | Viewer |
 
-There's no public self-registration endpoint — an Administrator creates further accounts via
-`POST /api/auth/users`. The frontend's mock/demo data mode (see `frontend/dashboard-app/`) does
+**Self-registration:** anyone can create an account at `POST /api/auth/register` (the dashboard's
+*Create account* page). It always creates a **Viewer** — the request has no role field — and signs the
+new user straight in. Only an Administrator can create accounts with higher roles
+(`POST /api/auth/users`); there is no role-change endpoint or user-management page yet. Every sign-up
+attempt counts against the client IP (5 per hour by default, `REGISTER_IP_MAX_ATTEMPTS` /
+`REGISTER_WINDOW_SECONDS`). A duplicate email has to be refused (`409`), so unlike login this endpoint
+can't hide which emails have accounts; the throttle stops it being used to check many emails quickly. Set
+`ALLOW_SELF_REGISTRATION=false` to turn sign-up off (`403`) and make accounts Administrator-created only. The frontend's mock/demo data mode (see `frontend/dashboard-app/`) does
 **not** use any of this — it's a cosmetic, client-side-only session for presenting the UI without
 a backend; only "Live API" mode talks to real auth.
 

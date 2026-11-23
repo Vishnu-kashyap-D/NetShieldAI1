@@ -25,7 +25,7 @@ export function RequireSession({ children }: { children: ReactNode }) {
   }
 
   if (!analyst) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/welcome" replace />;
   }
   return <>{children}</>;
 }

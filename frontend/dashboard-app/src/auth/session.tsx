@@ -24,6 +24,8 @@ interface SessionState {
   /** Real mode only: verifies email/password against the backend; throws on failure (the
    * Login page shows the thrown error's message rather than swallowing it). */
   signInReal: (email: string, password: string) => Promise<void>;
+  /** Real mode only: creates a new Viewer account and signs in immediately; throws on failure. */
+  signUpReal: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -105,6 +107,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       signInReal: async (email, password) => {
         const user = await provider.login({ email, password }); // throws on 401 -- Login.tsx surfaces the message
+        setAnalyst(user);
+      },
+      signUpReal: async (name, email, password) => {
+        const user = await provider.register({ name, email, password }); // throws on 409 (duplicate) etc.
         setAnalyst(user);
       },
       signOut: async () => {

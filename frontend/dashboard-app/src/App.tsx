@@ -4,6 +4,8 @@ import { RequireSession } from "./auth/RequireSession";
 import { DataModeProvider } from "./data/DataModeContext";
 import { AppShell } from "./components/layout/AppShell";
 import { Login } from "./pages/Login/Login";
+import { LandingPage } from "./pages/Landing/LandingPage";
+import { SignupPage } from "./pages/Signup/SignupPage";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
 import { AlertsPage } from "./pages/Alerts/AlertsPage";
 import { AlertDetailPage } from "./pages/AlertDetail/AlertDetailPage";
@@ -20,7 +22,9 @@ function App() {
       <SessionProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/welcome" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route
               path="/"
               element={

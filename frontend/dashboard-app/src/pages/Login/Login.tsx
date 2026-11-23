@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { DEFAULT_DEMO_ANALYST, useSession, type DemoAnalyst } from "../../auth/session";
 import { useDataMode } from "../../data/DataModeContext";
 import { describeApiError } from "../../data/errors";
@@ -40,6 +40,10 @@ export function Login() {
             signInDemo={signInDemo}
           />
         )}
+
+        <div className="login-signup-link">
+          New to NetShield AI? <Link to="/signup">Create an account</Link>
+        </div>
       </div>
     </div>
   );
@@ -119,7 +123,8 @@ function RealLoginForm({
       <div className="login-note">
         Real accounts, verified by the backend. Your role (Viewer / Security Analyst / Threat Hunter /
         Administrator) is set on your account and determines what you can do — it isn't something you choose here.
-        There's no public sign-up; an Administrator creates accounts. On a fresh database, four demo accounts exist
+        Self-registered accounts start as Viewer; only an Administrator can create higher-role accounts. On a fresh
+        database, four demo accounts exist
         (admin@netshield.ai, analyst@netshield.ai, hunter@netshield.ai, viewer@netshield.ai — see backend/README.md
         for the shared password).
       </div>

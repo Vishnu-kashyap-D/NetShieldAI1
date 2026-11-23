@@ -21,6 +21,13 @@ class LoginIn(BaseModel):
     password: str = Field(max_length=128)
 
 
+class SignupIn(BaseModel):
+    """POST /api/auth/register (public). No role field: self-registered accounts are always Viewer."""
+    name: str = Field(min_length=1, max_length=128)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+
 class RegisterIn(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     email: EmailStr

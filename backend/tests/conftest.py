@@ -28,7 +28,12 @@ def _fresh_rate_limits():
     test would lock out the next test's (same "testclient" address) login."""
     from app.routers import auth as auth_router, chat as chat_router
 
-    for limiter in (auth_router._login_account_limiter, auth_router._login_ip_limiter, chat_router._chat_limiter):
+    for limiter in (
+        auth_router._login_account_limiter,
+        auth_router._login_ip_limiter,
+        auth_router._register_ip_limiter,
+        chat_router._chat_limiter,
+    ):
         limiter._events.clear()
     yield
 

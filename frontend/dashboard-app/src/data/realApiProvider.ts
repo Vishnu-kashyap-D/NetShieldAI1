@@ -27,7 +27,7 @@ import { SESSION_EXPIRED_EVENT } from "./events";
 // itself; /auth/me's 401 is the expected "no session yet" case on a fresh load (see
 // getCurrentUser() below). Neither means an existing session just expired, so neither should
 // fire SESSION_EXPIRED_EVENT.
-const PATHS_EXEMPT_FROM_SESSION_EXPIRED = new Set(["/api/auth/login", "/api/auth/me"]);
+const PATHS_EXEMPT_FROM_SESSION_EXPIRED = new Set(["/api/auth/login", "/api/auth/me", "/api/auth/register"]);
 
 function toQuery(params: object | undefined): string {
   if (!params) return "";
@@ -222,6 +222,14 @@ export class RealApiProvider implements DataProvider {
 
   login(payload: LoginIn): Promise<UserOut> {
     return this.request<UserOut>("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  register(payload: { name: string; email: string; password: string }): Promise<UserOut> {
+    return this.request<UserOut>("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

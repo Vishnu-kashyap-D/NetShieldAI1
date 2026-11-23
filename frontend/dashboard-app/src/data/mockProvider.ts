@@ -394,6 +394,12 @@ export class MockDataProvider implements DataProvider {
     return null;
   }
 
+  async register(payload: { name: string; email: string; password: string }): Promise<UserOut> {
+    // Mock mode: cosmetic registration, same as mock login -- no real server call.
+    return { id: 0, name: payload.name, email: payload.email, role: "Viewer" };
+  }
+
+
   /**
    * Mock-only, not part of the DataProvider interface: subscribes to the Demo
    * Scenario's events, immediately replaying whatever has already happened. Safe to
